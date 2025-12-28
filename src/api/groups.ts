@@ -46,6 +46,11 @@ export const groupsApi = {
     return response.data;
   },
 
+  getMy: async (): Promise<GroupInfo[]> => {
+    const response = await apiClient.get<GroupInfo[]>('/groups/my');
+    return response.data;
+  },
+
   getOne: async (id: string): Promise<GroupInfo> => {
     const response = await apiClient.get<GroupInfo>(`/groups/${id}`);
     return response.data;
