@@ -1,6 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { trainingsApi, type TrainingDetails, type PlayerBrief } from '../api/trainings';
+import { useAuth } from '../contexts/AuthContext';
+import { UserRole } from '../types';
 import {
   attendanceApi,
   AttendanceStatus,
@@ -36,6 +38,10 @@ type Tab = 'attendance' | 'evaluations';
 export function TrainingDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const canEdit = user?.role === UserRole.ADMIN || user?.role === UserRole.COACH;
+  const isReadOnly = !canEdit;
 
   const [training, setTraining] = useState<TrainingDetails | null>(null);
   const [attendance, setAttendance] = useState<Attendance[]>([]);
@@ -272,48 +278,63 @@ export function TrainingDetailsPage() {
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold text-gray-900">
-                  Players ({training.group.players.length})
+                  {isReadOnly ? 'Attendance' : `Players (${training.group.players.length})`}
                 </h2>
-                <button
-                  onClick={saveAttendance}
-                  disabled={isSaving}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
-                >
-                  {isSaving ? 'Saving...' : 'Save Attendance'}
-                </button>
+                {canEdit && (
+                  <button
+                    onClick={saveAttendance}
+                    disabled={isSaving}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                  >
+                    {isSaving ? 'Saving...' : 'Save Attendance'}
+                  </button>
+                )}
               </div>
 
               <div className="space-y-3">
-                {training.group.players.map((player) => (
-                  <div
-                    key={player.id}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-                  >
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        {player.firstName} {player.lastName}
-                      </p>
-                      <p className="text-sm text-gray-500">{player.position}</p>
-                    </div>
-                    <select
-                      value={attendanceRecords[player.id] || AttendanceStatus.PRESENT}
-                      onChange={(e) =>
-                        handleAttendanceChange(player.id, e.target.value as AttendanceStatus)
-                      }
-                      className={`px-3 py-2 rounded-lg border-0 font-medium ${
-                        AttendanceStatusColors[
-                          attendanceRecords[player.id] || AttendanceStatus.PRESENT
-                        ]
-                      }`}
+                {training.group.players.map((player) => {
+                  const playerStatus = attendanceRecords[player.id] || getPlayerAttendance(player.id);
+                  return (
+                    <div
+                      key={player.id}
+                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
                     >
-                      {Object.values(AttendanceStatus).map((status) => (
-                        <option key={status} value={status}>
-                          {AttendanceStatusLabels[status]}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                ))}
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {player.firstName} {player.lastName}
+                        </p>
+                        <p className="text-sm text-gray-500">{player.position}</p>
+                      </div>
+                      {isReadOnly ? (
+                        <span
+                          className={`px-3 py-2 rounded-lg font-medium ${
+                            playerStatus ? AttendanceStatusColors[playerStatus] : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
+                          {playerStatus ? AttendanceStatusLabels[playerStatus] : 'Not marked'}
+                        </span>
+                      ) : (
+                        <select
+                          value={attendanceRecords[player.id] || AttendanceStatus.PRESENT}
+                          onChange={(e) =>
+                            handleAttendanceChange(player.id, e.target.value as AttendanceStatus)
+                          }
+                          className={`px-3 py-2 rounded-lg border-0 font-medium ${
+                            AttendanceStatusColors[
+                              attendanceRecords[player.id] || AttendanceStatus.PRESENT
+                            ]
+                          }`}
+                        >
+                          {Object.values(AttendanceStatus).map((status) => (
+                            <option key={status} value={status}>
+                              {AttendanceStatusLabels[status]}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -323,11 +344,13 @@ export function TrainingDetailsPage() {
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold text-gray-900">
-                  Player Evaluations
+                  {isReadOnly ? 'Evaluations' : 'Player Evaluations'}
                 </h2>
-                <p className="text-sm text-gray-500">
-                  Only present players can be evaluated
-                </p>
+                {canEdit && (
+                  <p className="text-sm text-gray-500">
+                    Only present players can be evaluated
+                  </p>
+                )}
               </div>
 
               <div className="space-y-3">
@@ -336,6 +359,45 @@ export function TrainingDetailsPage() {
                   const playerCanEvaluate = canEvaluate(player.id);
                   const playerStatus = getPlayerAttendance(player.id);
 
+                  // For read-only mode, show all players with their evaluations
+                  if (isReadOnly) {
+                    return (
+                      <div key={player.id} className="p-4 rounded-lg bg-gray-50">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {player.firstName} {player.lastName}
+                            </p>
+                            <p className="text-sm text-gray-500">{player.position}</p>
+                          </div>
+                        </div>
+                        {playerEvals.length > 0 ? (
+                          <div className="grid grid-cols-4 gap-2">
+                            {Object.values(EvaluationType).map((type) => {
+                              const eval_ = playerEvals.find((e) => e.type === type);
+                              return (
+                                <div
+                                  key={type}
+                                  className="text-center p-2 bg-white rounded-lg"
+                                >
+                                  <p className="text-xs text-gray-500">
+                                    {EvaluationTypeLabels[type]}
+                                  </p>
+                                  <p className="text-lg font-bold text-gray-900">
+                                    {eval_?.rating || '-'}
+                                  </p>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-400">No evaluations yet</p>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  // Edit mode for coaches/admins
                   return (
                     <div
                       key={player.id}

@@ -1,6 +1,8 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { UserRole } from '../types';
+import { attendanceApi, type AttendanceStats } from '../api/attendance';
 
 const roleLabels: Record<UserRole, string> = {
   [UserRole.ADMIN]: 'Administrator',
@@ -18,6 +20,15 @@ const roleColors: Record<UserRole, string> = {
 
 export function DashboardPage() {
   const { user, logout } = useAuth();
+  const [attendanceStats, setAttendanceStats] = useState<AttendanceStats | null>(null);
+
+  useEffect(() => {
+    if (user?.role === UserRole.PLAYER || user?.role === UserRole.PARENT) {
+      attendanceApi.getMyStats()
+        .then(setAttendanceStats)
+        .catch(() => setAttendanceStats(null));
+    }
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -85,7 +96,7 @@ export function DashboardPage() {
             </div>
           </div>
 
-          {user?.role && [UserRole.COACH, UserRole.PLAYER, UserRole.PARENT].includes(user.role) && (
+          {user?.role && user.role !== UserRole.ADMIN && (
             <div className="border-t border-gray-200 pt-8">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -140,7 +151,7 @@ export function DashboardPage() {
                   </div>
                 </div>
 
-                {[UserRole.PLAYER, UserRole.PARENT].includes(user.role) && (
+                {(user.role === UserRole.PLAYER || user.role === UserRole.PARENT) && (
                   <div className="bg-gray-50 rounded-xl p-6">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -160,7 +171,14 @@ export function DashboardPage() {
                       </div>
                       <div>
                         <p className="text-sm text-gray-600">Attendance Rate</p>
-                        <p className="text-2xl font-bold text-gray-900">-</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {attendanceStats ? `${attendanceStats.rate}%` : '-'}
+                        </p>
+                        {attendanceStats && attendanceStats.total > 0 && (
+                          <p className="text-xs text-gray-500">
+                            {attendanceStats.present + attendanceStats.late} / {attendanceStats.total} trainings
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>

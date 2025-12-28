@@ -1,12 +1,14 @@
 import { apiClient } from './client';
 
-export enum AttendanceStatus {
-  PRESENT = 'PRESENT',
-  ABSENT = 'ABSENT',
-  SICK = 'SICK',
-  LATE = 'LATE',
-  EXCUSED = 'EXCUSED',
-}
+export const AttendanceStatus = {
+  PRESENT: 'PRESENT',
+  ABSENT: 'ABSENT',
+  SICK: 'SICK',
+  LATE: 'LATE',
+  EXCUSED: 'EXCUSED',
+} as const;
+
+export type AttendanceStatus = (typeof AttendanceStatus)[keyof typeof AttendanceStatus];
 
 export interface AttendanceRecord {
   playerId: string;
@@ -31,6 +33,16 @@ export interface MarkAttendanceBatchRequest {
   records: AttendanceRecord[];
 }
 
+export interface AttendanceStats {
+  total: number;
+  present: number;
+  absent: number;
+  late: number;
+  sick: number;
+  excused: number;
+  rate: number;
+}
+
 export const attendanceApi = {
   getByTraining: async (trainingId: string): Promise<Attendance[]> => {
     const response = await apiClient.get<Attendance[]>(`/attendance/training/${trainingId}`);
@@ -39,6 +51,11 @@ export const attendanceApi = {
 
   markBatch: async (data: MarkAttendanceBatchRequest): Promise<Attendance[]> => {
     const response = await apiClient.post<Attendance[]>('/attendance/batch', data);
+    return response.data;
+  },
+
+  getMyStats: async (): Promise<AttendanceStats> => {
+    const response = await apiClient.get<AttendanceStats>('/attendance/my/stats');
     return response.data;
   },
 };

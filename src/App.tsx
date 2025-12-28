@@ -53,7 +53,7 @@ function App() {
           <Route
             path="/trainings/:id"
             element={
-              <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH]}>
+              <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH, UserRole.PLAYER, UserRole.PARENT]}>
                 <TrainingDetailsPage />
               </RoleRoute>
             }

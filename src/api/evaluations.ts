@@ -1,11 +1,13 @@
 import { apiClient } from './client';
 
-export enum EvaluationType {
-  TECHNICAL = 'TECHNICAL',
-  TACTICAL = 'TACTICAL',
-  PHYSICAL = 'PHYSICAL',
-  PSYCHOLOGICAL = 'PSYCHOLOGICAL',
-}
+export const EvaluationType = {
+  TECHNICAL: 'TECHNICAL',
+  TACTICAL: 'TACTICAL',
+  PHYSICAL: 'PHYSICAL',
+  PSYCHOLOGICAL: 'PSYCHOLOGICAL',
+} as const;
+
+export type EvaluationType = (typeof EvaluationType)[keyof typeof EvaluationType];
 
 export const EvaluationTypeLabels: Record<EvaluationType, string> = {
   [EvaluationType.TECHNICAL]: 'Technical',
