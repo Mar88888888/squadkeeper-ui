@@ -132,9 +132,12 @@ export function DashboardPage() {
                   </div>
                 </Link>
 
-                <div className="bg-gray-50 rounded-xl p-6">
+                <Link
+                  to="/matches"
+                  className="bg-gray-50 hover:bg-blue-50 rounded-xl p-6 transition-colors group"
+                >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <div className="w-12 h-12 bg-blue-100 group-hover:bg-blue-200 rounded-lg flex items-center justify-center transition-colors">
                       <svg
                         className="w-6 h-6 text-blue-600"
                         fill="none"
@@ -150,11 +153,11 @@ export function DashboardPage() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Upcoming Matches</p>
-                      <p className="text-2xl font-bold text-gray-900">-</p>
+                      <p className="text-sm text-gray-600">Matches</p>
+                      <p className="text-sm font-medium text-blue-600 group-hover:text-blue-700">View schedule</p>
                     </div>
                   </div>
-                </div>
+                </Link>
 
                 {user.role === UserRole.PLAYER && (
                   <div className="bg-gray-50 rounded-xl p-6">
@@ -181,7 +184,12 @@ export function DashboardPage() {
                         </p>
                         {attendanceStats && attendanceStats.total > 0 && (
                           <p className="text-xs text-gray-500">
-                            {attendanceStats.present + attendanceStats.late} / {attendanceStats.total} trainings
+                            {attendanceStats.present + attendanceStats.late} / {attendanceStats.total} events
+                            {attendanceStats.totalTrainings > 0 && attendanceStats.totalMatches > 0 && (
+                              <span className="ml-1">
+                                ({attendanceStats.totalTrainings} trainings, {attendanceStats.totalMatches} matches)
+                              </span>
+                            )}
                           </p>
                         )}
                       </div>
@@ -212,7 +220,12 @@ export function DashboardPage() {
                         <p className="text-2xl font-bold text-gray-900">{child.rate}%</p>
                         {child.total > 0 && (
                           <p className="text-xs text-gray-500">
-                            {child.present + child.late} / {child.total} trainings
+                            {child.present + child.late} / {child.total} events
+                            {child.totalTrainings > 0 && child.totalMatches > 0 && (
+                              <span className="ml-1">
+                                ({child.totalTrainings} trainings, {child.totalMatches} matches)
+                              </span>
+                            )}
                           </p>
                         )}
                       </div>
@@ -250,6 +263,32 @@ export function DashboardPage() {
                     <div>
                       <p className="font-medium text-gray-900">Trainings</p>
                       <p className="text-sm text-gray-600">Schedule and manage trainings</p>
+                    </div>
+                  </div>
+                </Link>
+                <Link
+                  to="/matches"
+                  className="bg-blue-50 hover:bg-blue-100 rounded-xl p-6 transition-colors group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-blue-100 group-hover:bg-blue-200 rounded-lg flex items-center justify-center transition-colors">
+                      <svg
+                        className="w-6 h-6 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">Matches</p>
+                      <p className="text-sm text-gray-600">Schedule and manage matches</p>
                     </div>
                   </div>
                 </Link>
@@ -362,6 +401,32 @@ export function DashboardPage() {
                     <div>
                       <p className="font-medium text-gray-900">Trainings</p>
                       <p className="text-sm text-gray-600">Schedule and manage trainings</p>
+                    </div>
+                  </div>
+                </Link>
+                <Link
+                  to="/matches"
+                  className="bg-blue-50 hover:bg-blue-100 rounded-xl p-6 transition-colors group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-blue-100 group-hover:bg-blue-200 rounded-lg flex items-center justify-center transition-colors">
+                      <svg
+                        className="w-6 h-6 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">Matches</p>
+                      <p className="text-sm text-gray-600">Schedule and manage matches</p>
                     </div>
                   </div>
                 </Link>

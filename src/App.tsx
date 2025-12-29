@@ -10,6 +10,8 @@ import { UserListPage } from './pages/UserListPage';
 import { GroupManagementPage } from './pages/GroupManagementPage';
 import { TrainingsPage } from './pages/TrainingsPage';
 import { TrainingDetailsPage } from './pages/TrainingDetailsPage';
+import { MatchesPage } from './pages/MatchesPage';
+import { MatchDetailsPage } from './pages/MatchDetailsPage';
 import { UserRole } from './types';
 
 function App() {
@@ -55,6 +57,22 @@ function App() {
             element={
               <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH, UserRole.PLAYER, UserRole.PARENT]}>
                 <TrainingDetailsPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/matches"
+            element={
+              <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH, UserRole.PLAYER, UserRole.PARENT]}>
+                <MatchesPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/matches/:id"
+            element={
+              <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH, UserRole.PLAYER, UserRole.PARENT]}>
+                <MatchDetailsPage />
               </RoleRoute>
             }
           />

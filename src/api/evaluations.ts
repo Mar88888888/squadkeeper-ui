@@ -41,13 +41,19 @@ export interface Evaluation {
 }
 
 export interface CreateEvaluationBatchRequest {
-  trainingId: string;
+  trainingId?: string;
+  matchId?: string;
   records: EvaluationRecord[];
 }
 
 export const evaluationsApi = {
   getByTraining: async (trainingId: string): Promise<Evaluation[]> => {
     const response = await apiClient.get<Evaluation[]>(`/evaluations/training/${trainingId}`);
+    return response.data;
+  },
+
+  getByMatch: async (matchId: string): Promise<Evaluation[]> => {
+    const response = await apiClient.get<Evaluation[]>(`/evaluations/match/${matchId}`);
     return response.data;
   },
 

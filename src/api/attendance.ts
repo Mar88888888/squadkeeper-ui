@@ -41,6 +41,8 @@ export interface AttendanceStats {
   sick: number;
   excused: number;
   rate: number;
+  totalTrainings: number;
+  totalMatches: number;
 }
 
 export interface PlayerAttendanceStats extends AttendanceStats {
@@ -51,6 +53,11 @@ export interface PlayerAttendanceStats extends AttendanceStats {
 export const attendanceApi = {
   getByTraining: async (trainingId: string): Promise<Attendance[]> => {
     const response = await apiClient.get<Attendance[]>(`/attendance/training/${trainingId}`);
+    return response.data;
+  },
+
+  getByMatch: async (matchId: string): Promise<Attendance[]> => {
+    const response = await apiClient.get<Attendance[]>(`/attendance/match/${matchId}`);
     return response.data;
   },
 
