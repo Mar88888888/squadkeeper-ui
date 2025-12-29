@@ -12,6 +12,10 @@ import { TrainingsPage } from './pages/TrainingsPage';
 import { TrainingDetailsPage } from './pages/TrainingDetailsPage';
 import { MatchesPage } from './pages/MatchesPage';
 import { MatchDetailsPage } from './pages/MatchDetailsPage';
+import { CalendarPage } from './pages/CalendarPage';
+import { MyStatsPage } from './pages/MyStatsPage';
+import { TeamStatsPage } from './pages/TeamStatsPage';
+import { ChildStatsPage } from './pages/ChildStatsPage';
 import { UserRole } from './types';
 
 function App() {
@@ -73,6 +77,38 @@ function App() {
             element={
               <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH, UserRole.PLAYER, UserRole.PARENT]}>
                 <MatchDetailsPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/calendar"
+            element={
+              <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH, UserRole.PLAYER, UserRole.PARENT]}>
+                <CalendarPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/stats/my"
+            element={
+              <RoleRoute allowedRoles={[UserRole.PLAYER]}>
+                <MyStatsPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/stats/team"
+            element={
+              <RoleRoute allowedRoles={[UserRole.COACH, UserRole.ADMIN]}>
+                <TeamStatsPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/stats/children"
+            element={
+              <RoleRoute allowedRoles={[UserRole.PARENT]}>
+                <ChildStatsPage />
               </RoleRoute>
             }
           />

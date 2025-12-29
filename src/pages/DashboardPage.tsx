@@ -159,79 +159,164 @@ export function DashboardPage() {
                   </div>
                 </Link>
 
-                {user.role === UserRole.PLAYER && (
-                  <div className="bg-gray-50 rounded-xl p-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                        <svg
-                          className="w-6 h-6 text-yellow-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Attendance Rate</p>
-                        <p className="text-2xl font-bold text-gray-900">
-                          {attendanceStats ? `${attendanceStats.rate}%` : '-'}
-                        </p>
-                        {attendanceStats && attendanceStats.total > 0 && (
-                          <p className="text-xs text-gray-500">
-                            {attendanceStats.present + attendanceStats.late} / {attendanceStats.total} events
-                            {attendanceStats.totalTrainings > 0 && attendanceStats.totalMatches > 0 && (
-                              <span className="ml-1">
-                                ({attendanceStats.totalTrainings} trainings, {attendanceStats.totalMatches} matches)
-                              </span>
-                            )}
-                          </p>
-                        )}
-                      </div>
+                <Link
+                  to="/calendar"
+                  className="bg-gray-50 hover:bg-purple-50 rounded-xl p-6 transition-colors group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-purple-100 group-hover:bg-purple-200 rounded-lg flex items-center justify-center transition-colors">
+                      <svg
+                        className="w-6 h-6 text-purple-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Calendar</p>
+                      <p className="text-sm font-medium text-purple-600 group-hover:text-purple-700">View calendar</p>
                     </div>
                   </div>
+                </Link>
+
+                {user.role === UserRole.PLAYER && (
+                  <>
+                    <Link
+                      to="/stats/my"
+                      className="bg-gray-50 hover:bg-orange-50 rounded-xl p-6 transition-colors group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-orange-100 group-hover:bg-orange-200 rounded-lg flex items-center justify-center transition-colors">
+                          <svg
+                            className="w-6 h-6 text-orange-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">My Statistics</p>
+                          <p className="text-sm font-medium text-orange-600 group-hover:text-orange-700">Goals, assists & more</p>
+                        </div>
+                      </div>
+                    </Link>
+                    <div className="bg-gray-50 rounded-xl p-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                          <svg
+                            className="w-6 h-6 text-yellow-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Attendance Rate</p>
+                          <p className="text-2xl font-bold text-gray-900">
+                            {attendanceStats ? `${attendanceStats.rate}%` : '-'}
+                          </p>
+                          {attendanceStats && attendanceStats.total > 0 && (
+                            <p className="text-xs text-gray-500">
+                              {attendanceStats.present + attendanceStats.late} / {attendanceStats.total} events
+                              {attendanceStats.totalTrainings > 0 && attendanceStats.totalMatches > 0 && (
+                                <span className="ml-1">
+                                  ({attendanceStats.totalTrainings} trainings, {attendanceStats.totalMatches} matches)
+                                </span>
+                              )}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </>
                 )}
 
-                {user.role === UserRole.PARENT && childrenStats.length > 0 && childrenStats.map((child) => (
-                  <div key={child.playerId} className="bg-gray-50 rounded-xl p-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                        <svg
-                          className="w-6 h-6 text-yellow-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
+                {user.role === UserRole.PARENT && (
+                  <>
+                    <Link
+                      to="/stats/children"
+                      className="bg-gray-50 hover:bg-orange-50 rounded-xl p-6 transition-colors group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-orange-100 group-hover:bg-orange-200 rounded-lg flex items-center justify-center transition-colors">
+                          <svg
+                            className="w-6 h-6 text-orange-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Child Statistics</p>
+                          <p className="text-sm font-medium text-orange-600 group-hover:text-orange-700">Goals, assists & more</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-600">{child.playerName}</p>
-                        <p className="text-2xl font-bold text-gray-900">{child.rate}%</p>
-                        {child.total > 0 && (
-                          <p className="text-xs text-gray-500">
-                            {child.present + child.late} / {child.total} events
-                            {child.totalTrainings > 0 && child.totalMatches > 0 && (
-                              <span className="ml-1">
-                                ({child.totalTrainings} trainings, {child.totalMatches} matches)
-                              </span>
+                    </Link>
+                    {childrenStats.length > 0 && childrenStats.map((child) => (
+                      <div key={child.playerId} className="bg-gray-50 rounded-xl p-6">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                            <svg
+                              className="w-6 h-6 text-yellow-600"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">{child.playerName}</p>
+                            <p className="text-2xl font-bold text-gray-900">{child.rate}%</p>
+                            {child.total > 0 && (
+                              <p className="text-xs text-gray-500">
+                                {child.present + child.late} / {child.total} events
+                                {child.totalTrainings > 0 && child.totalMatches > 0 && (
+                                  <span className="ml-1">
+                                    ({child.totalTrainings} trainings, {child.totalMatches} matches)
+                                  </span>
+                                )}
+                              </p>
                             )}
-                          </p>
-                        )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
+                    ))}
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -289,6 +374,58 @@ export function DashboardPage() {
                     <div>
                       <p className="font-medium text-gray-900">Matches</p>
                       <p className="text-sm text-gray-600">Schedule and manage matches</p>
+                    </div>
+                  </div>
+                </Link>
+                <Link
+                  to="/calendar"
+                  className="bg-purple-50 hover:bg-purple-100 rounded-xl p-6 transition-colors group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-purple-100 group-hover:bg-purple-200 rounded-lg flex items-center justify-center transition-colors">
+                      <svg
+                        className="w-6 h-6 text-purple-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">Calendar</p>
+                      <p className="text-sm text-gray-600">View full schedule</p>
+                    </div>
+                  </div>
+                </Link>
+                <Link
+                  to="/stats/team"
+                  className="bg-orange-50 hover:bg-orange-100 rounded-xl p-6 transition-colors group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-orange-100 group-hover:bg-orange-200 rounded-lg flex items-center justify-center transition-colors">
+                      <svg
+                        className="w-6 h-6 text-orange-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">Team Statistics</p>
+                      <p className="text-sm text-gray-600">Goals, assists & more</p>
                     </div>
                   </div>
                 </Link>
@@ -427,6 +564,32 @@ export function DashboardPage() {
                     <div>
                       <p className="font-medium text-gray-900">Matches</p>
                       <p className="text-sm text-gray-600">Schedule and manage matches</p>
+                    </div>
+                  </div>
+                </Link>
+                <Link
+                  to="/calendar"
+                  className="bg-pink-50 hover:bg-pink-100 rounded-xl p-6 transition-colors group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-pink-100 group-hover:bg-pink-200 rounded-lg flex items-center justify-center transition-colors">
+                      <svg
+                        className="w-6 h-6 text-pink-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">Calendar</p>
+                      <p className="text-sm text-gray-600">View full schedule</p>
                     </div>
                   </div>
                 </Link>
