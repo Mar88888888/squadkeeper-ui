@@ -2,9 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { groupsApi, type GroupInfo } from '../api/groups';
 import { usersApi, type CoachInfo, type PlayerInfo } from '../api/users';
+import { schedulesApi, type ScheduleItem } from '../api/schedules';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 
-type ModalType = 'create' | 'edit' | 'staff' | 'players' | null;
+type ModalType = 'create' | 'edit' | 'staff' | 'players' | 'schedule' | null;
+
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAY_NAMES_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const currentYear = new Date().getFullYear();
 const minYearOfBirth = currentYear - 25;
@@ -44,6 +48,16 @@ export function GroupManagementPage() {
     groupId: string;
     groupName: string;
   }>({ isOpen: false, groupId: '', groupName: '' });
+
+  // Schedule state
+  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [generateDates, setGenerateDates] = useState({
+    fromDate: '',
+    toDate: '',
+    defaultTopic: '',
+  });
+  const [generateResult, setGenerateResult] = useState<{ created: number; skipped: number } | null>(null);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -108,6 +122,106 @@ export function GroupManagementPage() {
     setModalType(null);
     setSelectedGroup(null);
     setError('');
+    setGenerateResult(null);
+  };
+
+  const openScheduleModal = async (group: GroupInfo) => {
+    setSelectedGroup(group);
+    setScheduleLoading(true);
+    setError('');
+    setGenerateResult(null);
+    setGenerateDates({ fromDate: '', toDate: '', defaultTopic: '' });
+    setModalType('schedule');
+    try {
+      const schedule = await schedulesApi.getSchedule(group.id);
+      setScheduleItems(schedule);
+    } catch {
+      setError('Failed to load schedule');
+      setScheduleItems([]);
+    } finally {
+      setScheduleLoading(false);
+    }
+  };
+
+  const addScheduleItem = () => {
+    // Find first available day not already in schedule
+    const usedDays = new Set(scheduleItems.map((s) => s.dayOfWeek));
+    let newDay = 1; // Start with Monday
+    while (usedDays.has(newDay) && newDay <= 6) newDay++;
+    if (newDay > 6) newDay = 0; // Sunday as fallback
+    if (usedDays.has(newDay)) return; // All days used
+
+    setScheduleItems((prev) => [
+      ...prev,
+      { dayOfWeek: newDay, startTime: '16:00', endTime: '17:30', location: '' },
+    ]);
+  };
+
+  const removeScheduleItem = (index: number) => {
+    setScheduleItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const updateScheduleItem = (index: number, field: keyof ScheduleItem, value: string | number) => {
+    setScheduleItems((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
+    );
+  };
+
+  const handleSaveSchedule = async () => {
+    if (!selectedGroup) return;
+    // Validate
+    for (const item of scheduleItems) {
+      if (!item.location.trim()) {
+        setError('Location is required for all schedule items');
+        return;
+      }
+      if (item.endTime <= item.startTime) {
+        setError('End time must be after start time');
+        return;
+      }
+    }
+    try {
+      const saved = await schedulesApi.updateSchedule(selectedGroup.id, scheduleItems);
+      setScheduleItems(saved);
+      setError('');
+    } catch {
+      setError('Failed to save schedule');
+    }
+  };
+
+  const handleGenerateTrainings = async () => {
+    if (!selectedGroup) return;
+    if (!generateDates.fromDate || !generateDates.toDate) {
+      setError('Please select date range');
+      return;
+    }
+    if (generateDates.toDate < generateDates.fromDate) {
+      setError('End date must be after start date');
+      return;
+    }
+    try {
+      const result = await schedulesApi.generateTrainings(selectedGroup.id, {
+        fromDate: generateDates.fromDate,
+        toDate: generateDates.toDate,
+        defaultTopic: generateDates.defaultTopic || undefined,
+      });
+      setGenerateResult(result);
+      setError('');
+    } catch {
+      setError('Failed to generate trainings');
+    }
+  };
+
+  const handleDeleteGeneratedTrainings = async () => {
+    if (!selectedGroup) return;
+    try {
+      const result = await schedulesApi.deleteFutureGenerated(selectedGroup.id);
+      setGenerateResult({ created: 0, skipped: result.kept });
+      setError('');
+      alert(`Deleted ${result.deleted} trainings. ${result.kept} trainings with attendance were kept.`);
+    } catch {
+      setError('Failed to delete generated trainings');
+    }
   };
 
   const handleCreateGroup = async () => {
@@ -377,6 +491,15 @@ export function GroupManagementPage() {
                         </svg>
                       </button>
                       <button
+                        onClick={() => openScheduleModal(group)}
+                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                        title="Training schedule"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </button>
+                      <button
                         onClick={() => setDeleteDialog({ isOpen: true, groupId: group.id, groupName: group.name })}
                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         title="Delete group"
@@ -635,6 +758,192 @@ export function GroupManagementPage() {
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
                 Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Schedule Modal */}
+      {modalType === 'schedule' && selectedGroup && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Training Schedule - {selectedGroup.name}
+            </h2>
+
+            {scheduleLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+              </div>
+            ) : (
+              <>
+                {/* Schedule Items */}
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-medium text-gray-700">Weekly Schedule</h3>
+                    <button
+                      onClick={addScheduleItem}
+                      disabled={scheduleItems.length >= 7}
+                      className="text-sm text-purple-600 hover:text-purple-700 disabled:text-gray-400"
+                    >
+                      + Add Day
+                    </button>
+                  </div>
+
+                  {scheduleItems.length === 0 ? (
+                    <p className="text-gray-500 text-sm py-4 text-center bg-gray-50 rounded-lg">
+                      No schedule defined. Click "Add Day" to create one.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {scheduleItems
+                        .sort((a, b) => a.dayOfWeek - b.dayOfWeek)
+                        .map((item, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                          >
+                            <select
+                              value={item.dayOfWeek}
+                              onChange={(e) =>
+                                updateScheduleItem(index, 'dayOfWeek', parseInt(e.target.value))
+                              }
+                              className="px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                            >
+                              {[0, 1, 2, 3, 4, 5, 6].map((day) => (
+                                <option
+                                  key={day}
+                                  value={day}
+                                  disabled={
+                                    scheduleItems.some((s, i) => i !== index && s.dayOfWeek === day)
+                                  }
+                                >
+                                  {DAY_NAMES[day]}
+                                </option>
+                              ))}
+                            </select>
+                            <input
+                              type="time"
+                              value={item.startTime}
+                              onChange={(e) => updateScheduleItem(index, 'startTime', e.target.value)}
+                              className="px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                            />
+                            <span className="text-gray-400">-</span>
+                            <input
+                              type="time"
+                              value={item.endTime}
+                              onChange={(e) => updateScheduleItem(index, 'endTime', e.target.value)}
+                              className="px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                            />
+                            <input
+                              type="text"
+                              value={item.location}
+                              onChange={(e) => updateScheduleItem(index, 'location', e.target.value)}
+                              placeholder="Location"
+                              className="flex-1 px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                            />
+                            <button
+                              onClick={() => removeScheduleItem(index)}
+                              className="p-1 text-red-500 hover:bg-red-50 rounded"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+
+                  <button
+                    onClick={handleSaveSchedule}
+                    className="w-full py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  >
+                    Save Schedule
+                  </button>
+                </div>
+
+                {/* Generate Trainings Section */}
+                {scheduleItems.length > 0 && (
+                  <div className="border-t border-gray-200 pt-6">
+                    <h3 className="text-sm font-medium text-gray-700 mb-3">Generate Trainings</h3>
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1">From</label>
+                        <input
+                          type="date"
+                          value={generateDates.fromDate}
+                          onChange={(e) =>
+                            setGenerateDates((prev) => ({ ...prev, fromDate: e.target.value }))
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1">To</label>
+                        <input
+                          type="date"
+                          value={generateDates.toDate}
+                          onChange={(e) =>
+                            setGenerateDates((prev) => ({ ...prev, toDate: e.target.value }))
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                        />
+                      </div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="block text-xs text-gray-500 mb-1">Default Topic (optional)</label>
+                      <input
+                        type="text"
+                        value={generateDates.defaultTopic}
+                        onChange={(e) =>
+                          setGenerateDates((prev) => ({ ...prev, defaultTopic: e.target.value }))
+                        }
+                        placeholder="e.g., Technical training"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                      />
+                    </div>
+
+                    {generateResult && (
+                      <div className="mb-3 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm">
+                        Created {generateResult.created} trainings
+                        {generateResult.skipped > 0 && `, skipped ${generateResult.skipped} (already exist)`}
+                      </div>
+                    )}
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleGenerateTrainings}
+                        className="flex-1 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        Generate Trainings
+                      </button>
+                      <button
+                        onClick={handleDeleteGeneratedTrainings}
+                        className="px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
+                        title="Delete future generated trainings without attendance"
+                      >
+                        Clear Future
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {error && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={closeModal}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Close
               </button>
             </div>
           </div>

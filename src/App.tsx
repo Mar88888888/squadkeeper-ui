@@ -16,6 +16,7 @@ import { CalendarPage } from './pages/CalendarPage';
 import { MyStatsPage } from './pages/MyStatsPage';
 import { TeamStatsPage } from './pages/TeamStatsPage';
 import { ChildStatsPage } from './pages/ChildStatsPage';
+import { MyGroupsPage } from './pages/MyGroupsPage';
 import { UserRole } from './types';
 
 function App() {
@@ -109,6 +110,14 @@ function App() {
             element={
               <RoleRoute allowedRoles={[UserRole.PARENT]}>
                 <ChildStatsPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/my-groups"
+            element={
+              <RoleRoute allowedRoles={[UserRole.COACH]}>
+                <MyGroupsPage />
               </RoleRoute>
             }
           />
