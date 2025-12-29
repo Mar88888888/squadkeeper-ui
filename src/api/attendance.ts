@@ -43,6 +43,11 @@ export interface AttendanceStats {
   rate: number;
 }
 
+export interface PlayerAttendanceStats extends AttendanceStats {
+  playerId: string;
+  playerName: string;
+}
+
 export const attendanceApi = {
   getByTraining: async (trainingId: string): Promise<Attendance[]> => {
     const response = await apiClient.get<Attendance[]>(`/attendance/training/${trainingId}`);
@@ -56,6 +61,11 @@ export const attendanceApi = {
 
   getMyStats: async (): Promise<AttendanceStats> => {
     const response = await apiClient.get<AttendanceStats>('/attendance/my/stats');
+    return response.data;
+  },
+
+  getMyStatsAsParent: async (): Promise<PlayerAttendanceStats[]> => {
+    const response = await apiClient.get<PlayerAttendanceStats[]>('/attendance/my/stats');
     return response.data;
   },
 };

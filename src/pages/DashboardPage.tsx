@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { UserRole } from '../types';
-import { attendanceApi, type AttendanceStats } from '../api/attendance';
+import { attendanceApi, type AttendanceStats, type PlayerAttendanceStats } from '../api/attendance';
 
 const roleLabels: Record<UserRole, string> = {
   [UserRole.ADMIN]: 'Administrator',
@@ -21,12 +21,17 @@ const roleColors: Record<UserRole, string> = {
 export function DashboardPage() {
   const { user, logout } = useAuth();
   const [attendanceStats, setAttendanceStats] = useState<AttendanceStats | null>(null);
+  const [childrenStats, setChildrenStats] = useState<PlayerAttendanceStats[]>([]);
 
   useEffect(() => {
-    if (user?.role === UserRole.PLAYER || user?.role === UserRole.PARENT) {
+    if (user?.role === UserRole.PLAYER) {
       attendanceApi.getMyStats()
         .then(setAttendanceStats)
         .catch(() => setAttendanceStats(null));
+    } else if (user?.role === UserRole.PARENT) {
+      attendanceApi.getMyStatsAsParent()
+        .then(setChildrenStats)
+        .catch(() => setChildrenStats([]));
     }
   }, [user]);
 
@@ -151,7 +156,7 @@ export function DashboardPage() {
                   </div>
                 </div>
 
-                {(user.role === UserRole.PLAYER || user.role === UserRole.PARENT) && (
+                {user.role === UserRole.PLAYER && (
                   <div className="bg-gray-50 rounded-xl p-6">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -183,6 +188,37 @@ export function DashboardPage() {
                     </div>
                   </div>
                 )}
+
+                {user.role === UserRole.PARENT && childrenStats.length > 0 && childrenStats.map((child) => (
+                  <div key={child.playerId} className="bg-gray-50 rounded-xl p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                        <svg
+                          className="w-6 h-6 text-yellow-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">{child.playerName}</p>
+                        <p className="text-2xl font-bold text-gray-900">{child.rate}%</p>
+                        {child.total > 0 && (
+                          <p className="text-xs text-gray-500">
+                            {child.present + child.late} / {child.total} trainings
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}

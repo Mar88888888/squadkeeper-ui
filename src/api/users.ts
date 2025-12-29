@@ -115,6 +115,16 @@ export const usersApi = {
     await apiClient.delete(`/parents/${id}`);
   },
 
+  linkChildToParent: async (parentId: string, playerId: string): Promise<ParentFullInfo> => {
+    const response = await apiClient.post<ParentFullInfo>(`/parents/${parentId}/children/${playerId}`);
+    return response.data;
+  },
+
+  unlinkChildFromParent: async (parentId: string, playerId: string): Promise<ParentFullInfo> => {
+    const response = await apiClient.delete<ParentFullInfo>(`/parents/${parentId}/children/${playerId}`);
+    return response.data;
+  },
+
   // Groups
   getGroups: async (): Promise<GroupInfo[]> => {
     const response = await apiClient.get<GroupInfo[]>('/groups');
