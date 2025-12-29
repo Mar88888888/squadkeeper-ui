@@ -203,7 +203,7 @@ export function UserListPage() {
                     <div key={coach.id} className="p-4 hover:bg-gray-50 flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center select-none">
                             <span className="text-blue-600 font-medium">
                               {coach.firstName[0]}{coach.lastName[0]}
                             </span>
@@ -246,7 +246,7 @@ export function UserListPage() {
                     <div key={player.id} className="p-4 hover:bg-gray-50 flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center select-none">
                             <span className="text-green-600 font-medium">
                               {player.firstName[0]}{player.lastName[0]}
                             </span>
@@ -292,7 +292,7 @@ export function UserListPage() {
                     <div key={parent.id} className="p-4 hover:bg-gray-50 flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                          <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center select-none">
                             <span className="text-orange-600 font-medium">
                               {parent.firstName[0]}{parent.lastName[0]}
                             </span>

@@ -1,9 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { trainingsApi, type Training, type CreateTrainingRequest } from '../api/trainings';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import {
+  trainingsApi,
+  type Training,
+  type CreateTrainingRequest,
+  type TrainingTimeFilter,
+  type TrainingFilters,
+} from '../api/trainings';
 import { groupsApi, type GroupInfo } from '../api/groups';
 import { useAuth } from '../contexts/AuthContext';
 import { UserRole } from '../types';
+
+const TIME_FILTER_OPTIONS: { value: TrainingTimeFilter; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'upcoming', label: 'Upcoming' },
+  { value: 'past', label: 'Past' },
+  { value: 'this_week', label: 'This Week' },
+  { value: 'next_week', label: 'Next Week' },
+  { value: 'this_month', label: 'This Month' },
+];
 
 export function TrainingsPage() {
   const navigate = useNavigate();
@@ -13,6 +30,9 @@ export function TrainingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [filterGroupId, setFilterGroupId] = useState<string>('');
+  const [timeFilter, setTimeFilter] = useState<TrainingTimeFilter>('all');
+  const [dateFrom, setDateFrom] = useState<Date | null>(null);
+  const [dateTo, setDateTo] = useState<Date | null>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<CreateTrainingRequest>({
@@ -25,13 +45,28 @@ export function TrainingsPage() {
 
   const canCreate = user?.role === UserRole.ADMIN || user?.role === UserRole.COACH;
 
-  const loadData = async () => {
+  const formatDateForApi = (date: Date): string => {
+    return date.toISOString().split('T')[0];
+  };
+
+  const buildFilters = useCallback((): TrainingFilters => {
+    const filters: TrainingFilters = {};
+    if (timeFilter !== 'all') {
+      filters.timeFilter = timeFilter;
+    }
+    if (dateFrom) filters.dateFrom = formatDateForApi(dateFrom);
+    if (dateTo) filters.dateTo = formatDateForApi(dateTo);
+    return filters;
+  }, [timeFilter, dateFrom, dateTo]);
+
+  const loadData = useCallback(async () => {
     setIsLoading(true);
     setError('');
     try {
       const isAdmin = user?.role === UserRole.ADMIN;
+      const filters = buildFilters();
       const [trainingsData, groupsData] = await Promise.all([
-        isAdmin ? trainingsApi.getAll() : trainingsApi.getMy(),
+        isAdmin ? trainingsApi.getAll(filters) : trainingsApi.getMy(filters),
         isAdmin ? groupsApi.getAll() : groupsApi.getMy(),
       ]);
       setTrainings(trainingsData);
@@ -41,13 +76,13 @@ export function TrainingsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, buildFilters]);
 
   useEffect(() => {
     if (user) {
       loadData();
     }
-  }, [user]);
+  }, [user, loadData]);
 
   const filteredTrainings = filterGroupId
     ? trainings.filter((t) => t.group.id === filterGroupId)
@@ -120,7 +155,7 @@ export function TrainingsPage() {
 
   const formatDateTime = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('uk-UA', {
+    return date.toLocaleDateString('en-US', {
       weekday: 'short',
       day: 'numeric',
       month: 'short',
@@ -131,7 +166,7 @@ export function TrainingsPage() {
 
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleTimeString('uk-UA', {
+    return date.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
     });
@@ -165,22 +200,97 @@ export function TrainingsPage() {
 
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          {/* Filter */}
-          <div className="p-4 border-b border-gray-200">
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-gray-700">Filter by group:</label>
-              <select
-                value={filterGroupId}
-                onChange={(e) => setFilterGroupId(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              >
-                <option value="">All groups</option>
-                {groups.map((group) => (
-                  <option key={group.id} value={group.id}>
-                    {group.name}
-                  </option>
-                ))}
-              </select>
+          {/* Filters */}
+          <div className="p-4 border-b border-gray-200 space-y-4">
+            {/* Quick time filters */}
+            <div className="flex flex-wrap gap-2">
+              {TIME_FILTER_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => {
+                    setTimeFilter(option.value);
+                    setDateFrom(null);
+                    setDateTo(null);
+                  }}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-full transition-colors ${
+                    timeFilter === option.value && !dateFrom && !dateTo
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Custom date range and group filter */}
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">From:</label>
+                <DatePicker
+                  selected={dateFrom}
+                  onChange={(date: Date | null) => {
+                    setDateFrom(date);
+                    if (date) setTimeFilter('all');
+                  }}
+                  selectsStart
+                  startDate={dateFrom}
+                  endDate={dateTo}
+                  maxDate={dateTo || undefined}
+                  dateFormat="MMM d, yyyy"
+                  placeholderText="Select date"
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 w-36"
+                  calendarClassName="!font-sans"
+                  showPopperArrow={false}
+                  isClearable
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">To:</label>
+                <DatePicker
+                  selected={dateTo}
+                  onChange={(date: Date | null) => {
+                    setDateTo(date);
+                    if (date) setTimeFilter('all');
+                  }}
+                  selectsEnd
+                  startDate={dateFrom}
+                  endDate={dateTo}
+                  minDate={dateFrom || undefined}
+                  dateFormat="MMM d, yyyy"
+                  placeholderText="Select date"
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 w-36"
+                  calendarClassName="!font-sans"
+                  showPopperArrow={false}
+                  isClearable
+                />
+              </div>
+              {(dateFrom || dateTo) && (
+                <button
+                  onClick={() => {
+                    setDateFrom(null);
+                    setDateTo(null);
+                  }}
+                  className="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  Clear dates
+                </button>
+              )}
+              <div className="flex items-center gap-2 ml-auto">
+                <label className="text-sm font-medium text-gray-700">Group:</label>
+                <select
+                  value={filterGroupId}
+                  onChange={(e) => setFilterGroupId(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                >
+                  <option value="">All groups</option>
+                  {groups.map((group) => (
+                    <option key={group.id} value={group.id}>
+                      {group.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
@@ -213,7 +323,7 @@ export function TrainingsPage() {
                     <div className="flex items-start gap-4">
                       <div className="w-16 h-16 bg-green-100 rounded-lg flex flex-col items-center justify-center">
                         <span className="text-xs text-green-600 uppercase">
-                          {new Date(training.startTime).toLocaleDateString('uk-UA', {
+                          {new Date(training.startTime).toLocaleDateString('en-US', {
                             weekday: 'short',
                           })}
                         </span>

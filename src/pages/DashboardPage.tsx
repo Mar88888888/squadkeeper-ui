@@ -73,7 +73,7 @@ export function DashboardPage() {
       <main className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-2xl shadow-sm p-8">
           <div className="flex items-center gap-6 mb-8">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center select-none">
               <span className="text-3xl font-bold text-green-600">
                 {user?.firstName?.[0]}
                 {user?.lastName?.[0]}

@@ -180,7 +180,7 @@ export function TrainingDetailsPage() {
   };
 
   const formatDateTime = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('uk-UA', {
+    return new Date(dateStr).toLocaleDateString('en-US', {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
