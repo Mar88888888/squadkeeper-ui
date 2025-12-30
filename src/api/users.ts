@@ -69,6 +69,38 @@ export interface ParentFullInfo {
   }>;
 }
 
+export interface UpdateCoachRequest {
+  email?: string;
+  password?: string;
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+  dateOfBirth?: string;
+  licenseLevel?: string;
+  experienceYears?: number;
+}
+
+export interface UpdatePlayerRequest {
+  email?: string;
+  password?: string;
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+  dateOfBirth?: string;
+  position?: string;
+  height?: number;
+  weight?: number;
+  strongFoot?: string;
+}
+
+export interface UpdateParentRequest {
+  email?: string;
+  password?: string;
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+}
+
 export const usersApi = {
   // Coaches
   getCoaches: async (): Promise<CoachInfo[]> => {
@@ -83,6 +115,11 @@ export const usersApi = {
 
   deleteCoach: async (id: string): Promise<void> => {
     await apiClient.delete(`/coaches/${id}`);
+  },
+
+  updateCoach: async (id: string, data: UpdateCoachRequest): Promise<CoachInfo> => {
+    const response = await apiClient.patch<CoachInfo>(`/coaches/${id}`, data);
+    return response.data;
   },
 
   // Players
@@ -100,6 +137,11 @@ export const usersApi = {
     await apiClient.delete(`/players/${id}`);
   },
 
+  updatePlayer: async (id: string, data: UpdatePlayerRequest): Promise<PlayerInfo> => {
+    const response = await apiClient.patch<PlayerInfo>(`/players/${id}`, data);
+    return response.data;
+  },
+
   // Parents
   getParents: async (): Promise<ParentFullInfo[]> => {
     const response = await apiClient.get<ParentFullInfo[]>('/parents');
@@ -113,6 +155,11 @@ export const usersApi = {
 
   deleteParent: async (id: string): Promise<void> => {
     await apiClient.delete(`/parents/${id}`);
+  },
+
+  updateParent: async (id: string, data: UpdateParentRequest): Promise<ParentFullInfo> => {
+    const response = await apiClient.patch<ParentFullInfo>(`/parents/${id}`, data);
+    return response.data;
   },
 
   linkChildToParent: async (parentId: string, playerId: string): Promise<ParentFullInfo> => {

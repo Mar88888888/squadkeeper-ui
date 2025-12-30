@@ -1,7 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { usersApi, type CoachInfo, type PlayerInfo, type ParentFullInfo, type GroupInfo } from '../api/users';
+import {
+  usersApi,
+  type CoachInfo,
+  type PlayerInfo,
+  type ParentFullInfo,
+  type GroupInfo,
+  type UpdateCoachRequest,
+  type UpdatePlayerRequest,
+  type UpdateParentRequest,
+} from '../api/users';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { EditUserModal } from '../components/EditUserModal';
 
 type TabType = 'coaches' | 'players' | 'parents';
 
@@ -34,6 +44,12 @@ export function UserListPage() {
     playerName: string;
     currentParentName: string;
   }>({ isOpen: false, playerId: '', playerName: '', currentParentName: '' });
+
+  const [editModal, setEditModal] = useState<{
+    isOpen: boolean;
+    type: TabType;
+    user: CoachInfo | PlayerInfo | ParentFullInfo | null;
+  }>({ isOpen: false, type: 'coaches', user: null });
 
   // Modal filters
   const [modalFilterName, setModalFilterName] = useState('');
@@ -89,6 +105,25 @@ export function UserListPage() {
 
   const openDeleteDialog = (type: TabType, id: string, name: string) => {
     setDeleteDialog({ isOpen: true, type, id, name });
+  };
+
+  const openEditModal = (type: TabType, user: CoachInfo | PlayerInfo | ParentFullInfo) => {
+    setEditModal({ isOpen: true, type, user });
+  };
+
+  const handleEditSave = async (data: UpdateCoachRequest | UpdatePlayerRequest | UpdateParentRequest) => {
+    if (!editModal.user) return;
+
+    if (editModal.type === 'coaches') {
+      const updated = await usersApi.updateCoach(editModal.user.id, data as UpdateCoachRequest);
+      setCoaches((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+    } else if (editModal.type === 'players') {
+      const updated = await usersApi.updatePlayer(editModal.user.id, data as UpdatePlayerRequest);
+      setPlayers((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    } else {
+      const updated = await usersApi.updateParent(editModal.user.id, data as UpdateParentRequest);
+      setParents((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    }
   };
 
   const openLinkChildModal = async (parent: ParentFullInfo) => {
@@ -352,6 +387,15 @@ export function UserListPage() {
                           <p className="text-gray-500">{coach.experienceYears} years exp.</p>
                         </div>
                         <button
+                          onClick={() => openEditModal('coaches', coach)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Edit coach"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button
                           onClick={() => openDeleteDialog('coaches', coach.id, `${coach.firstName} ${coach.lastName}`)}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="Delete coach"
@@ -397,6 +441,15 @@ export function UserListPage() {
                             {player.group && ` | ${player.group.name}`}
                           </p>
                         </div>
+                        <button
+                          onClick={() => openEditModal('players', player)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Edit player"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
                         <button
                           onClick={() => openDeleteDialog('players', player.id, `${player.firstName} ${player.lastName}`)}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -444,6 +497,15 @@ export function UserListPage() {
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => openEditModal('parents', parent)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Edit parent"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
                           </button>
                           <button
@@ -633,6 +695,15 @@ export function UserListPage() {
         variant="warning"
         onConfirm={handleConfirmReassign}
         onCancel={() => setReassignDialog({ isOpen: false, playerId: '', playerName: '', currentParentName: '' })}
+      />
+
+      {/* Edit User Modal */}
+      <EditUserModal
+        isOpen={editModal.isOpen}
+        userType={editModal.type === 'coaches' ? 'coach' : editModal.type === 'players' ? 'player' : 'parent'}
+        user={editModal.user}
+        onSave={handleEditSave}
+        onClose={() => setEditModal({ isOpen: false, type: 'coaches', user: null })}
       />
     </div>
   );

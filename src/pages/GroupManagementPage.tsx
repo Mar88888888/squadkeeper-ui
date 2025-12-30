@@ -8,7 +8,6 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 type ModalType = 'create' | 'edit' | 'staff' | 'players' | 'schedule' | null;
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const DAY_NAMES_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const currentYear = new Date().getFullYear();
 const minYearOfBirth = currentYear - 25;

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { statsApi, type ChildrenStats, type ChildInfo, type StatsPeriod } from '../api/stats';
+import { statsApi, type ChildrenStats, type StatsPeriod } from '../api/stats';
 
 const PERIOD_OPTIONS: { value: StatsPeriod; label: string }[] = [
   { value: 'all_time', label: 'All Time' },
