@@ -4,6 +4,7 @@ import { statsApi, type TeamStats, type StatsPeriod } from '../api/stats';
 
 const PERIOD_OPTIONS: { value: StatsPeriod; label: string }[] = [
   { value: 'all_time', label: 'All Time' },
+  { value: 'this_season', label: 'This Season' },
   { value: 'this_year', label: 'This Year' },
   { value: 'this_month', label: 'This Month' },
 ];
@@ -179,7 +180,10 @@ export function TeamStatsPage() {
                       currentTeam.players.map((player, index) => (
                         <tr
                           key={player.playerId}
-                          className={index < 3 ? 'bg-green-50/50' : 'hover:bg-gray-50'}
+                          onClick={() => navigate(`/stats/player/${player.playerId}`)}
+                          className={`cursor-pointer transition-colors ${
+                            index < 3 ? 'bg-green-50/50 hover:bg-green-100/50' : 'hover:bg-gray-100'
+                          }`}
                         >
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
@@ -197,7 +201,9 @@ export function TeamStatsPage() {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="font-medium text-gray-900">{player.playerName}</span>
+                            <span className="font-medium text-gray-900 hover:text-green-600">
+                              {player.playerName}
+                            </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <span className="text-gray-600">{player.matchesPlayed}</span>

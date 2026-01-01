@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 
-export type StatsPeriod = 'all_time' | 'this_year' | 'this_month';
+export type StatsPeriod = 'all_time' | 'this_season' | 'this_year' | 'this_month';
 
 export interface PlayerStats {
   playerId: string;

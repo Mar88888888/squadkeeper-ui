@@ -16,6 +16,7 @@ import { CalendarPage } from './pages/CalendarPage';
 import { MyStatsPage } from './pages/MyStatsPage';
 import { TeamStatsPage } from './pages/TeamStatsPage';
 import { ChildStatsPage } from './pages/ChildStatsPage';
+import { PlayerStatsPage } from './pages/PlayerStatsPage';
 import { MyGroupsPage } from './pages/MyGroupsPage';
 import { ContactsPage } from './pages/ContactsPage';
 import { UserRole } from './types';
@@ -103,6 +104,14 @@ function App() {
             element={
               <RoleRoute allowedRoles={[UserRole.COACH, UserRole.ADMIN]}>
                 <TeamStatsPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/stats/player/:id"
+            element={
+              <RoleRoute allowedRoles={[UserRole.COACH, UserRole.ADMIN]}>
+                <PlayerStatsPage />
               </RoleRoute>
             }
           />

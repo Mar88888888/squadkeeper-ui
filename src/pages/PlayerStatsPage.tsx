@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { statsApi, type PlayerStats, type StatsPeriod } from '../api/stats';
 import { evaluationsApi, type RatingStats } from '../api/evaluations';
 import { PlayerStatsView } from '../components/PlayerStatsView';
@@ -11,8 +11,9 @@ const PERIOD_OPTIONS: { value: StatsPeriod; label: string }[] = [
   { value: 'this_month', label: 'This Month' },
 ];
 
-export function MyStatsPage() {
+export function PlayerStatsPage() {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const [stats, setStats] = useState<PlayerStats | null>(null);
   const [ratingStats, setRatingStats] = useState<RatingStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -21,35 +22,39 @@ export function MyStatsPage() {
 
   useEffect(() => {
     const loadStats = async () => {
+      if (!id) return;
       setIsLoading(true);
       setError('');
       try {
         const [statsData, ratingsData] = await Promise.all([
-          statsApi.getMyStats(period),
-          evaluationsApi.getMyRatingStats(period).catch(() => null),
+          statsApi.getPlayerStats(id, period),
+          evaluationsApi.getPlayerRatingStats(id, period).catch(() => null),
         ]);
         setStats(statsData);
         setRatingStats(ratingsData);
       } catch {
-        setError('Failed to load statistics');
+        setError('Failed to load player statistics');
       } finally {
         setIsLoading(false);
       }
     };
 
     loadStats();
-  }, [period]);
+  }, [id, period]);
 
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-900">My Statistics</h1>
+          <h1 className="text-xl font-bold text-gray-900">Player Statistics</h1>
           <button
-            onClick={() => navigate('/dashboard')}
-            className="text-gray-600 hover:text-gray-900"
+            onClick={() => navigate(-1)}
+            className="text-gray-600 hover:text-gray-900 flex items-center gap-2"
           >
-            Back to Dashboard
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back
           </button>
         </div>
       </header>
