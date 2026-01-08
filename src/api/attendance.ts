@@ -5,7 +5,7 @@ export const AttendanceStatus = {
   ABSENT: 'ABSENT',
   SICK: 'SICK',
   LATE: 'LATE',
-  EXCUSED: 'EXCUSED',
+  BENCHED: 'BENCHED', // Present but didn't play - no stats/evaluations
 } as const;
 
 export type AttendanceStatus = (typeof AttendanceStatus)[keyof typeof AttendanceStatus];
@@ -39,7 +39,7 @@ export interface AttendanceStats {
   absent: number;
   late: number;
   sick: number;
-  excused: number;
+  benched: number;
   rate: number;
   totalTrainings: number;
   totalMatches: number;

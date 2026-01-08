@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { statsApi, type TeamStats, type StatsPeriod } from '../api/stats';
+import { isDefensivePosition } from '../constants/player.constants';
 
 const PERIOD_OPTIONS: { value: StatsPeriod; label: string }[] = [
   { value: 'all_time', label: 'All Time' },
@@ -165,6 +166,9 @@ export function TeamStatsPage() {
                         Assists
                       </th>
                       <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        CS
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         G+A
                       </th>
                     </tr>
@@ -172,7 +176,7 @@ export function TeamStatsPage() {
                   <tbody className="divide-y divide-gray-200">
                     {currentTeam.players.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                        <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
                           No players in this group
                         </td>
                       </tr>
@@ -219,6 +223,15 @@ export function TeamStatsPage() {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
+                            {isDefensivePosition(player.position) ? (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-cyan-100 text-cyan-800">
+                                {player.cleanSheets}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
                             <span className="font-bold text-gray-900">
                               {player.goals + player.assists}
                             </span>
@@ -231,9 +244,9 @@ export function TeamStatsPage() {
               </div>
             </div>
 
-            {/* Top Scorers & Assisters */}
+            {/* Top Scorers, Assisters & Clean Sheets */}
             {currentTeam.players.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Top Scorers */}
                 <div className="bg-white rounded-xl shadow-lg p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -294,6 +307,41 @@ export function TeamStatsPage() {
                       ))}
                     {currentTeam.players.every((p) => p.assists === 0) && (
                       <p className="text-gray-500 text-sm">No assists yet</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Top Clean Sheets */}
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <span className="w-8 h-8 bg-cyan-100 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                    </span>
+                    Top Clean Sheets
+                  </h3>
+                  <div className="space-y-3">
+                    {[...currentTeam.players]
+                      .filter((p) => isDefensivePosition(p.position))
+                      .sort((a, b) => b.cleanSheets - a.cleanSheets)
+                      .slice(0, 5)
+                      .filter((p) => p.cleanSheets > 0)
+                      .map((player, index) => (
+                        <div key={player.playerId} className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm font-medium text-gray-400 w-4">
+                              {index + 1}.
+                            </span>
+                            <span className="text-gray-900">{player.playerName}</span>
+                          </div>
+                          <span className="font-bold text-cyan-600">{player.cleanSheets}</span>
+                        </div>
+                      ))}
+                    {currentTeam.players
+                      .filter((p) => isDefensivePosition(p.position))
+                      .every((p) => p.cleanSheets === 0) && (
+                      <p className="text-gray-500 text-sm">No clean sheets yet</p>
                     )}
                   </div>
                 </div>

@@ -7,6 +7,14 @@ import type {
   CreatePlayerRequest,
   CreateParentRequest,
 } from '../types';
+import {
+  Position,
+  POSITIONS,
+  POSITION_LABELS,
+  StrongFoot,
+  STRONG_FEET,
+  STRONG_FOOT_LABELS,
+} from '../constants/player.constants';
 
 type UserType = 'coach' | 'player' | 'parent';
 
@@ -37,10 +45,10 @@ export function UserManagementPage() {
   const [experienceYears, setExperienceYears] = useState(0);
 
   // Player-specific fields
-  const [position, setPosition] = useState('');
+  const [position, setPosition] = useState<Position>(Position.CM);
   const [height, setHeight] = useState(170);
   const [weight, setWeight] = useState(70);
-  const [strongFoot, setStrongFoot] = useState('right');
+  const [strongFoot, setStrongFoot] = useState<StrongFoot>(StrongFoot.RIGHT);
 
   // Parent-specific fields
   const [players, setPlayers] = useState<PlayerInfo[]>([]);
@@ -142,10 +150,10 @@ export function UserManagementPage() {
     setDateOfBirth('');
     setLicenseLevel('');
     setExperienceYears(0);
-    setPosition('');
+    setPosition(Position.CM);
     setHeight(170);
     setWeight(70);
-    setStrongFoot('right');
+    setStrongFoot(StrongFoot.RIGHT);
     setSelectedChildrenIds([]);
     setFilterName('');
     setFilterYear('');
@@ -415,21 +423,16 @@ export function UserManagementPage() {
                     </label>
                     <select
                       value={position}
-                      onChange={(e) => setPosition(e.target.value)}
+                      onChange={(e) => setPosition(e.target.value as Position)}
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
                     >
                       <option value="">Select position</option>
-                      <option value="GK">Goalkeeper</option>
-                      <option value="CB">Center Back</option>
-                      <option value="LB">Left Back</option>
-                      <option value="RB">Right Back</option>
-                      <option value="CDM">Defensive Midfielder</option>
-                      <option value="CM">Central Midfielder</option>
-                      <option value="CAM">Attacking Midfielder</option>
-                      <option value="LW">Left Winger</option>
-                      <option value="RW">Right Winger</option>
-                      <option value="ST">Striker</option>
+                      {POSITIONS.map((pos) => (
+                        <option key={pos} value={pos}>
+                          {POSITION_LABELS[pos]}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -468,13 +471,15 @@ export function UserManagementPage() {
                     </label>
                     <select
                       value={strongFoot}
-                      onChange={(e) => setStrongFoot(e.target.value)}
+                      onChange={(e) => setStrongFoot(e.target.value as StrongFoot)}
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
                     >
-                      <option value="right">Right</option>
-                      <option value="left">Left</option>
-                      <option value="both">Both</option>
+                      {STRONG_FEET.map((foot) => (
+                        <option key={foot} value={foot}>
+                          {STRONG_FOOT_LABELS[foot]}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>

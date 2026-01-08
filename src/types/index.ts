@@ -1,3 +1,5 @@
+import type { Position, StrongFoot } from '../constants/player.constants';
+
 export const UserRole = {
   ADMIN: 'ADMIN',
   COACH: 'COACH',
@@ -6,6 +8,8 @@ export const UserRole = {
 } as const;
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
+
+export type { Position, StrongFoot } from '../constants/player.constants';
 
 export interface User {
   id: string;
@@ -52,10 +56,10 @@ export interface CreatePlayerRequest {
   lastName: string;
   phoneNumber?: string;
   dateOfBirth: string;
-  position: string;
+  position: Position;
   height: number;
   weight: number;
-  strongFoot: string;
+  strongFoot: StrongFoot;
 }
 
 export interface CreateParentRequest {

@@ -70,10 +70,10 @@ describe('UserListPage', () => {
       firstName: 'Tom',
       lastName: 'Player',
       dateOfBirth: '2012-05-15',
-      position: 'FW',
+      position: 'ST',
       height: 165,
       weight: 55,
-      strongFoot: 'right',
+      strongFoot: 'RIGHT',
       group: { id: 'g1', name: 'U12' },
       parent: null,
       user: { id: 'u3', email: 'tom@player.com' },
@@ -83,10 +83,10 @@ describe('UserListPage', () => {
       firstName: 'Sara',
       lastName: 'Player',
       dateOfBirth: '2012-08-20',
-      position: 'MF',
+      position: 'CM',
       height: 160,
       weight: 50,
-      strongFoot: 'left',
+      strongFoot: 'LEFT',
       group: { id: 'g1', name: 'U12' },
       parent: { id: 'par1', firstName: 'Parent', lastName: 'One' },
       user: { id: 'u4', email: 'sara@player.com' },
@@ -269,7 +269,7 @@ describe('UserListPage', () => {
 
     it('should display player position', async () => {
       await waitFor(() => {
-        expect(screen.getByText('FW')).toBeInTheDocument();
+        expect(screen.getByText('ST')).toBeInTheDocument();
       });
     });
 

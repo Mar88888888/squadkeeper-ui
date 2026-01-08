@@ -18,18 +18,27 @@ import {
 } from '../api/attendance';
 import {
   evaluationsApi,
-  EvaluationType,
-  EvaluationTypeLabels,
+  getEvaluationAverage,
   type Evaluation,
   type EvaluationRecord,
 } from '../api/evaluations';
+
+const EVALUATION_CATEGORIES = ['technical', 'tactical', 'physical', 'psychological'] as const;
+type EvaluationCategory = (typeof EVALUATION_CATEGORIES)[number];
+
+const EvaluationCategoryLabels: Record<EvaluationCategory, string> = {
+  technical: 'Technical',
+  tactical: 'Tactical',
+  physical: 'Physical',
+  psychological: 'Psychological',
+};
 
 const AttendanceStatusLabels: Record<AttendanceStatus, string> = {
   [AttendanceStatus.PRESENT]: 'Present',
   [AttendanceStatus.ABSENT]: 'Absent',
   [AttendanceStatus.SICK]: 'Sick',
   [AttendanceStatus.LATE]: 'Late',
-  [AttendanceStatus.EXCUSED]: 'Excused',
+  [AttendanceStatus.BENCHED]: 'Benched',
 };
 
 const AttendanceStatusColors: Record<AttendanceStatus, string> = {
@@ -37,7 +46,7 @@ const AttendanceStatusColors: Record<AttendanceStatus, string> = {
   [AttendanceStatus.ABSENT]: 'bg-red-100 text-red-800',
   [AttendanceStatus.SICK]: 'bg-yellow-100 text-yellow-800',
   [AttendanceStatus.LATE]: 'bg-orange-100 text-orange-800',
-  [AttendanceStatus.EXCUSED]: 'bg-blue-100 text-blue-800',
+  [AttendanceStatus.BENCHED]: 'bg-gray-100 text-gray-800',
 };
 
 type Tab = 'attendance' | 'evaluations' | 'goals';
@@ -64,12 +73,13 @@ export function MatchDetailsPage() {
 
   // Evaluation state
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerBrief | null>(null);
-  const [evalRatings, setEvalRatings] = useState<Record<EvaluationType, number>>({
-    [EvaluationType.TECHNICAL]: 5,
-    [EvaluationType.TACTICAL]: 5,
-    [EvaluationType.PHYSICAL]: 5,
-    [EvaluationType.PSYCHOLOGICAL]: 5,
+  const [evalRatings, setEvalRatings] = useState<Record<EvaluationCategory, number>>({
+    technical: 5,
+    tactical: 5,
+    physical: 5,
+    psychological: 5,
   });
+  const [evalComment, setEvalComment] = useState('');
 
   // Goal state
   const [isAddGoalModalOpen, setIsAddGoalModalOpen] = useState(false);
@@ -160,21 +170,25 @@ export function MatchDetailsPage() {
     setIsSaving(true);
     setError('');
     try {
-      const records: EvaluationRecord[] = Object.entries(evalRatings).map(([type, rating]) => ({
+      const record: EvaluationRecord = {
         playerId: selectedPlayer.id,
-        type: type as EvaluationType,
-        rating,
-      }));
+        technical: evalRatings.technical,
+        tactical: evalRatings.tactical,
+        physical: evalRatings.physical,
+        psychological: evalRatings.psychological,
+        comment: evalComment || undefined,
+      };
 
       await evaluationsApi.createBatch({
         matchId: id,
-        records,
+        records: [record],
       });
 
       // Reload evaluations
       const evaluationsData = await evaluationsApi.getByMatch(id);
       setEvaluations(evaluationsData);
       setSelectedPlayer(null);
+      setEvalComment('');
     } catch {
       setError('Failed to save evaluations');
     } finally {
@@ -184,22 +198,29 @@ export function MatchDetailsPage() {
 
   const openEvaluationModal = (player: PlayerBrief) => {
     setSelectedPlayer(player);
-    // Load existing evaluations for this player
-    const playerEvals = evaluations.filter((e) => e.player.id === player.id);
-    const ratings: Record<EvaluationType, number> = {
-      [EvaluationType.TECHNICAL]: 5,
-      [EvaluationType.TACTICAL]: 5,
-      [EvaluationType.PHYSICAL]: 5,
-      [EvaluationType.PSYCHOLOGICAL]: 5,
-    };
-    playerEvals.forEach((e) => {
-      ratings[e.type] = e.rating;
-    });
-    setEvalRatings(ratings);
+    // Load existing evaluation for this player (now single row per player)
+    const playerEval = evaluations.find((e) => e.player.id === player.id);
+    if (playerEval) {
+      setEvalRatings({
+        technical: playerEval.technical ?? 5,
+        tactical: playerEval.tactical ?? 5,
+        physical: playerEval.physical ?? 5,
+        psychological: playerEval.psychological ?? 5,
+      });
+      setEvalComment(playerEval.comment || '');
+    } else {
+      setEvalRatings({
+        technical: 5,
+        tactical: 5,
+        physical: 5,
+        psychological: 5,
+      });
+      setEvalComment('');
+    }
   };
 
-  const getPlayerEvaluations = (playerId: string) => {
-    return evaluations.filter((e) => e.player.id === playerId);
+  const getPlayerEvaluation = (playerId: string): Evaluation | undefined => {
+    return evaluations.find((e) => e.player.id === playerId);
   };
 
   const getPlayerAttendance = (playerId: string): AttendanceStatus | null => {
@@ -519,41 +540,52 @@ export function MatchDetailsPage() {
 
               <div className="space-y-3">
                 {match.group.players.map((player) => {
-                  const playerEvals = getPlayerEvaluations(player.id);
+                  const playerEval = getPlayerEvaluation(player.id);
                   const playerCanEvaluate = canEvaluate(player.id);
                   const playerStatus = getPlayerAttendance(player.id);
+                  const avgRating = playerEval ? getEvaluationAverage(playerEval) : null;
 
                   // For read-only mode, show all players with their evaluations
                   if (isReadOnly) {
                     return (
                       <div key={player.id} className="p-4 rounded-lg bg-gray-50">
-                        <div className="flex items-center gap-3 mb-3">
+                        <div className="flex items-center justify-between mb-3">
                           <div>
                             <p className="font-medium text-gray-900">
                               {player.firstName} {player.lastName}
                             </p>
                             <p className="text-sm text-gray-500">{player.position}</p>
                           </div>
+                          {avgRating !== null && (
+                            <div className="text-right">
+                              <p className="text-xs text-gray-500">Average</p>
+                              <p className="text-xl font-bold text-green-600">{avgRating}</p>
+                            </div>
+                          )}
                         </div>
-                        {playerEvals.length > 0 ? (
-                          <div className="grid grid-cols-4 gap-2">
-                            {Object.values(EvaluationType).map((type) => {
-                              const eval_ = playerEvals.find((e) => e.type === type);
-                              return (
+                        {playerEval ? (
+                          <>
+                            <div className="grid grid-cols-4 gap-2">
+                              {EVALUATION_CATEGORIES.map((category) => (
                                 <div
-                                  key={type}
+                                  key={category}
                                   className="text-center p-2 bg-white rounded-lg"
                                 >
                                   <p className="text-xs text-gray-500">
-                                    {EvaluationTypeLabels[type]}
+                                    {EvaluationCategoryLabels[category]}
                                   </p>
                                   <p className="text-lg font-bold text-gray-900">
-                                    {eval_?.rating || '-'}
+                                    {playerEval[category] ?? '-'}
                                   </p>
                                 </div>
-                              );
-                            })}
-                          </div>
+                              ))}
+                            </div>
+                            {playerEval.comment && (
+                              <p className="mt-2 text-sm text-gray-600 italic">
+                                "{playerEval.comment}"
+                              </p>
+                            )}
+                          </>
                         ) : (
                           <p className="text-sm text-gray-400">No evaluations yet</p>
                         )}
@@ -581,39 +613,48 @@ export function MatchDetailsPage() {
                             </span>
                           )}
                         </div>
-                        {playerCanEvaluate ? (
-                          <button
-                            onClick={() => openEvaluationModal(player)}
-                            className="px-3 py-1 text-sm text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                          >
-                            {playerEvals.length > 0 ? 'Edit' : 'Add'} Evaluation
-                          </button>
-                        ) : (
-                          <span className="text-sm text-gray-400">
-                            {playerStatus ? 'Not present' : 'Mark attendance first'}
-                          </span>
-                        )}
+                        <div className="flex items-center gap-3">
+                          {avgRating !== null && (
+                            <span className="text-lg font-bold text-green-600">{avgRating}</span>
+                          )}
+                          {playerCanEvaluate ? (
+                            <button
+                              onClick={() => openEvaluationModal(player)}
+                              className="px-3 py-1 text-sm text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            >
+                              {playerEval ? 'Edit' : 'Add'} Evaluation
+                            </button>
+                          ) : (
+                            <span className="text-sm text-gray-400">
+                              {playerStatus ? 'Not present' : 'Mark attendance first'}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-                      {playerEvals.length > 0 && playerCanEvaluate && (
-                        <div className="mt-3 grid grid-cols-4 gap-2">
-                          {Object.values(EvaluationType).map((type) => {
-                            const eval_ = playerEvals.find((e) => e.type === type);
-                            return (
+                      {playerEval && playerCanEvaluate && (
+                        <>
+                          <div className="mt-3 grid grid-cols-4 gap-2">
+                            {EVALUATION_CATEGORIES.map((category) => (
                               <div
-                                key={type}
+                                key={category}
                                 className="text-center p-2 bg-white rounded-lg"
                               >
                                 <p className="text-xs text-gray-500">
-                                  {EvaluationTypeLabels[type]}
+                                  {EvaluationCategoryLabels[category]}
                                 </p>
                                 <p className="text-lg font-bold text-gray-900">
-                                  {eval_?.rating || '-'}
+                                  {playerEval[category] ?? '-'}
                                 </p>
                               </div>
-                            );
-                          })}
-                        </div>
+                            ))}
+                          </div>
+                          {playerEval.comment && (
+                            <p className="mt-2 text-sm text-gray-600 italic">
+                              "{playerEval.comment}"
+                            </p>
+                          )}
+                        </>
                       )}
                     </div>
                   );
@@ -703,36 +744,52 @@ export function MatchDetailsPage() {
             <p className="text-sm text-gray-500 mb-6">Rate from 1 to 10</p>
 
             <div className="space-y-4">
-              {Object.values(EvaluationType).map((type) => (
-                <div key={type}>
+              {EVALUATION_CATEGORIES.map((category) => (
+                <div key={category}>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {EvaluationTypeLabels[type]}
+                    {EvaluationCategoryLabels[category]}
                   </label>
                   <div className="flex items-center gap-2">
                     <input
                       type="range"
                       min="1"
                       max="10"
-                      value={evalRatings[type]}
+                      value={evalRatings[category]}
                       onChange={(e) =>
                         setEvalRatings((prev) => ({
                           ...prev,
-                          [type]: parseInt(e.target.value),
+                          [category]: parseInt(e.target.value),
                         }))
                       }
                       className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600"
                     />
                     <span className="w-8 text-center font-bold text-gray-900">
-                      {evalRatings[type]}
+                      {evalRatings[category]}
                     </span>
                   </div>
                 </div>
               ))}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Comment (optional)
+                </label>
+                <textarea
+                  value={evalComment}
+                  onChange={(e) => setEvalComment(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  rows={3}
+                  placeholder="Add a comment about this player's performance..."
+                />
+              </div>
             </div>
 
             <div className="mt-6 flex justify-end gap-3">
               <button
-                onClick={() => setSelectedPlayer(null)}
+                onClick={() => {
+                  setSelectedPlayer(null);
+                  setEvalComment('');
+                }}
                 className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 Cancel

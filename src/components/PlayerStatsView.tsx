@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   LineChart,
   Line,
@@ -5,11 +6,20 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from 'recharts';
 import type { PlayerStats, StatsPeriod } from '../api/stats';
 import type { RatingStats } from '../api/evaluations';
+import { isDefensivePosition } from '../constants/player.constants';
+
+// Category configuration for the chart
+const CHART_CATEGORIES = [
+  { key: 'average', name: 'Average', color: '#f59e0b', bgColor: 'bg-amber-500', bgLight: 'bg-amber-100', isMain: true },
+  { key: 'technical', name: 'Technical', color: '#3b82f6', bgColor: 'bg-blue-500', bgLight: 'bg-blue-100' },
+  { key: 'tactical', name: 'Tactical', color: '#22c55e', bgColor: 'bg-green-500', bgLight: 'bg-green-100' },
+  { key: 'physical', name: 'Physical', color: '#ef4444', bgColor: 'bg-red-500', bgLight: 'bg-red-100' },
+  { key: 'psychological', name: 'Mental', color: '#a855f7', bgColor: 'bg-purple-500', bgLight: 'bg-purple-100' },
+] as const;
 
 const PERIOD_LABELS: Record<StatsPeriod, string> = {
   all_time: 'All Time Statistics',
@@ -27,6 +37,24 @@ interface PlayerStatsViewProps {
 
 export function PlayerStatsView({ stats, ratingStats, period, playerName }: PlayerStatsViewProps) {
   const displayName = playerName || stats.playerName;
+  const isDefensive = isDefensivePosition(stats.position);
+
+  // State for toggling chart categories
+  const [visibleCategories, setVisibleCategories] = useState<Set<string>>(
+    new Set(CHART_CATEGORIES.map(c => c.key))
+  );
+
+  const toggleCategory = (key: string) => {
+    setVisibleCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(key)) {
+        newSet.delete(key);
+      } else {
+        newSet.add(key);
+      }
+      return newSet;
+    });
+  };
 
   const formatChartData = (history: RatingStats['history']) => {
     return history.map((point) => ({
@@ -57,7 +85,7 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className={`grid grid-cols-1 gap-6 ${isDefensive ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
         <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
           <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
             <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -87,6 +115,18 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
           <p className="text-4xl font-bold text-gray-900">{stats.assists}</p>
           <p className="text-gray-500 mt-2">Assists</p>
         </div>
+
+        {isDefensive && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-cyan-100 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <p className="text-4xl font-bold text-gray-900">{stats.cleanSheets}</p>
+            <p className="text-gray-500 mt-2">Clean Sheets</p>
+          </div>
+        )}
       </div>
 
       {/* Goal Contributions */}
@@ -119,7 +159,7 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
       {stats.matchesPlayed > 0 && (
         <div className="bg-white rounded-2xl shadow-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Per Match Averages</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className={`grid gap-4 ${isDefensive ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <div className="text-center p-4 bg-gray-50 rounded-xl">
               <p className="text-2xl font-bold text-green-600">
                 {(stats.goals / stats.matchesPlayed).toFixed(2)}
@@ -132,6 +172,74 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
               </p>
               <p className="text-sm text-gray-500">Assists per match</p>
             </div>
+            {isDefensive && (
+              <div className="text-center p-4 bg-gray-50 rounded-xl">
+                <p className="text-2xl font-bold text-cyan-600">
+                  {((stats.cleanSheets / stats.matchesPlayed) * 100).toFixed(0)}%
+                </p>
+                <p className="text-sm text-gray-500">Clean sheet rate</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Attendance Statistics */}
+      {stats.attendance.total > 0 && (
+        <div className="bg-white rounded-2xl shadow-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Attendance</h3>
+
+          {/* Attendance Rate */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700">Attendance Rate</span>
+              <span className={`text-2xl font-bold ${
+                stats.attendance.rate >= 90 ? 'text-green-600' :
+                stats.attendance.rate >= 75 ? 'text-yellow-600' : 'text-red-600'
+              }`}>
+                {stats.attendance.rate}%
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div
+                className={`h-3 rounded-full ${
+                  stats.attendance.rate >= 90 ? 'bg-green-500' :
+                  stats.attendance.rate >= 75 ? 'bg-yellow-500' : 'bg-red-500'
+                }`}
+                style={{ width: `${stats.attendance.rate}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Attendance Breakdown */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div className="text-center p-3 bg-green-50 rounded-lg">
+              <p className="text-xl font-bold text-green-600">{stats.attendance.present}</p>
+              <p className="text-xs text-gray-500">Present</p>
+            </div>
+            <div className="text-center p-3 bg-orange-50 rounded-lg">
+              <p className="text-xl font-bold text-orange-600">{stats.attendance.late}</p>
+              <p className="text-xs text-gray-500">Late</p>
+            </div>
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <p className="text-xl font-bold text-gray-600">{stats.attendance.benched}</p>
+              <p className="text-xs text-gray-500">Benched</p>
+            </div>
+            <div className="text-center p-3 bg-red-50 rounded-lg">
+              <p className="text-xl font-bold text-red-600">{stats.attendance.absent}</p>
+              <p className="text-xs text-gray-500">Absent</p>
+            </div>
+            <div className="text-center p-3 bg-yellow-50 rounded-lg">
+              <p className="text-xl font-bold text-yellow-600">{stats.attendance.sick}</p>
+              <p className="text-xs text-gray-500">Sick</p>
+            </div>
+          </div>
+
+          {/* Events Summary */}
+          <div className="mt-4 flex justify-center gap-6 text-sm text-gray-500">
+            <span>{stats.attendance.totalTrainings} trainings</span>
+            <span>{stats.attendance.totalMatches} matches</span>
+            <span>{stats.attendance.total} total events</span>
           </div>
         </div>
       )}
@@ -181,7 +289,32 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
           {/* Rating History Chart */}
           {ratingStats.history.length > 1 && (
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Rating Progress</h3>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Rating Progress</h3>
+                {/* Category Toggle Buttons */}
+                <div className="flex flex-wrap gap-2">
+                  {CHART_CATEGORIES.map((cat) => {
+                    const isVisible = visibleCategories.has(cat.key);
+                    return (
+                      <button
+                        key={cat.key}
+                        onClick={() => toggleCategory(cat.key)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                          isVisible
+                            ? `${cat.bgLight} text-gray-800 ring-2 ring-offset-1`
+                            : 'bg-gray-100 text-gray-400'
+                        }`}
+                        style={isVisible ? { ringColor: cat.color } : undefined}
+                      >
+                        <span
+                          className={`w-2.5 h-2.5 rounded-full ${isVisible ? cat.bgColor : 'bg-gray-300'}`}
+                        />
+                        {cat.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={formatChartData(ratingStats.history)}>
@@ -199,12 +332,21 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
                         return label;
                       }}
                     />
-                    <Legend />
-                    <Line type="monotone" dataKey="average" name="Average" stroke="#f59e0b" strokeWidth={3} dot={{ fill: '#f59e0b', strokeWidth: 2, r: 4 }} activeDot={{ r: 6 }} />
-                    <Line type="monotone" dataKey="technical" name="Technical" stroke="#3b82f6" strokeWidth={1.5} dot={false} strokeDasharray="5 5" />
-                    <Line type="monotone" dataKey="tactical" name="Tactical" stroke="#22c55e" strokeWidth={1.5} dot={false} strokeDasharray="5 5" />
-                    <Line type="monotone" dataKey="physical" name="Physical" stroke="#ef4444" strokeWidth={1.5} dot={false} strokeDasharray="5 5" />
-                    <Line type="monotone" dataKey="psychological" name="Mental" stroke="#a855f7" strokeWidth={1.5} dot={false} strokeDasharray="5 5" />
+                    {visibleCategories.has('average') && (
+                      <Line type="monotone" dataKey="average" name="Average" stroke="#f59e0b" strokeWidth={3} dot={{ fill: '#f59e0b', strokeWidth: 2, r: 4 }} activeDot={{ r: 6 }} />
+                    )}
+                    {visibleCategories.has('technical') && (
+                      <Line type="monotone" dataKey="technical" name="Technical" stroke="#3b82f6" strokeWidth={1.5} dot={false} strokeDasharray="5 5" />
+                    )}
+                    {visibleCategories.has('tactical') && (
+                      <Line type="monotone" dataKey="tactical" name="Tactical" stroke="#22c55e" strokeWidth={1.5} dot={false} strokeDasharray="5 5" />
+                    )}
+                    {visibleCategories.has('physical') && (
+                      <Line type="monotone" dataKey="physical" name="Physical" stroke="#ef4444" strokeWidth={1.5} dot={false} strokeDasharray="5 5" />
+                    )}
+                    {visibleCategories.has('psychological') && (
+                      <Line type="monotone" dataKey="psychological" name="Mental" stroke="#a855f7" strokeWidth={1.5} dot={false} strokeDasharray="5 5" />
+                    )}
                   </LineChart>
                 </ResponsiveContainer>
               </div>

@@ -19,6 +19,10 @@ import { ChildStatsPage } from './pages/ChildStatsPage';
 import { PlayerStatsPage } from './pages/PlayerStatsPage';
 import { MyGroupsPage } from './pages/MyGroupsPage';
 import { ContactsPage } from './pages/ContactsPage';
+import { SquadListPage } from './pages/SquadListPage';
+import { SquadBuilderPage } from './pages/SquadBuilderPage';
+import { PerformanceScorePage } from './pages/PerformanceScorePage';
+import { TeamChemistryPage } from './pages/TeamChemistryPage';
 import { UserRole } from './types';
 
 function App() {
@@ -136,6 +140,46 @@ function App() {
             element={
               <RoleRoute allowedRoles={[UserRole.PLAYER, UserRole.PARENT, UserRole.COACH, UserRole.ADMIN]}>
                 <ContactsPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/squads"
+            element={
+              <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH]}>
+                <SquadListPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/squads/new"
+            element={
+              <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH]}>
+                <SquadBuilderPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/squads/:id"
+            element={
+              <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH]}>
+                <SquadBuilderPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/analytics/performance"
+            element={
+              <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH]}>
+                <PerformanceScorePage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/analytics/chemistry"
+            element={
+              <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH]}>
+                <TeamChemistryPage />
               </RoleRoute>
             }
           />

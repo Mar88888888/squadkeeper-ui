@@ -58,8 +58,8 @@ export const mockGroups = [
     headCoach: { id: 'c1', firstName: 'John', lastName: 'Coach' },
     assistants: [],
     players: [
-      { id: 'p1', firstName: 'Tom', lastName: 'Player', position: 'FW' },
-      { id: 'p2', firstName: 'Jane', lastName: 'Player', position: 'MF' },
+      { id: 'p1', firstName: 'Tom', lastName: 'Player', position: 'ST' },
+      { id: 'p2', firstName: 'Jane', lastName: 'Player', position: 'CM' },
     ],
   },
   {
@@ -213,7 +213,7 @@ export async function setupApiMocks(page: Page, user: typeof mockCoachUser) {
       await route.fulfill({
         status: 201,
         contentType: 'application/json',
-        body: JSON.stringify({ id: 't3', ...mockTrainings[0] }),
+        body: JSON.stringify({ ...mockTrainings[0], id: 't3' }),
       });
     }
   });
@@ -267,7 +267,7 @@ export async function setupApiMocks(page: Page, user: typeof mockCoachUser) {
       await route.fulfill({
         status: 201,
         contentType: 'application/json',
-        body: JSON.stringify({ id: 'm3', ...mockMatches[0] }),
+        body: JSON.stringify({ ...mockMatches[0], id: 'm3' }),
       });
     }
   });

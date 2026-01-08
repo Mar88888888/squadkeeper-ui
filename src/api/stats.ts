@@ -1,13 +1,29 @@
 import { apiClient } from './client';
+import { Position } from '../constants/player.constants';
 
 export type StatsPeriod = 'all_time' | 'this_season' | 'this_year' | 'this_month';
+
+export interface AttendanceBreakdown {
+  total: number;
+  present: number;
+  late: number;
+  benched: number;
+  absent: number;
+  sick: number;
+  rate: number;
+  totalTrainings: number;
+  totalMatches: number;
+}
 
 export interface PlayerStats {
   playerId: string;
   playerName: string;
+  position: Position;
   matchesPlayed: number;
   goals: number;
   assists: number;
+  cleanSheets: number;
+  attendance: AttendanceBreakdown;
   period: StatsPeriod;
 }
 

@@ -11,8 +11,7 @@ import {
 } from '../api/attendance';
 import {
   evaluationsApi,
-  EvaluationType,
-  EvaluationTypeLabels,
+  getEvaluationAverage,
   type Evaluation,
   type EvaluationRecord,
 } from '../api/evaluations';
@@ -22,7 +21,7 @@ const AttendanceStatusLabels: Record<AttendanceStatus, string> = {
   [AttendanceStatus.ABSENT]: 'Absent',
   [AttendanceStatus.SICK]: 'Sick',
   [AttendanceStatus.LATE]: 'Late',
-  [AttendanceStatus.EXCUSED]: 'Excused',
+  [AttendanceStatus.BENCHED]: 'Benched',
 };
 
 const AttendanceStatusColors: Record<AttendanceStatus, string> = {
@@ -30,9 +29,17 @@ const AttendanceStatusColors: Record<AttendanceStatus, string> = {
   [AttendanceStatus.ABSENT]: 'bg-red-100 text-red-800',
   [AttendanceStatus.SICK]: 'bg-yellow-100 text-yellow-800',
   [AttendanceStatus.LATE]: 'bg-orange-100 text-orange-800',
-  [AttendanceStatus.EXCUSED]: 'bg-blue-100 text-blue-800',
+  [AttendanceStatus.BENCHED]: 'bg-gray-100 text-gray-800',
 };
 
+const EVAL_CATEGORIES = [
+  { key: 'technical', label: 'Technical' },
+  { key: 'tactical', label: 'Tactical' },
+  { key: 'physical', label: 'Physical' },
+  { key: 'psychological', label: 'Psychological' },
+] as const;
+
+type EvalCategory = typeof EVAL_CATEGORIES[number]['key'];
 type Tab = 'attendance' | 'evaluations';
 
 export function TrainingDetailsPage() {
@@ -56,12 +63,13 @@ export function TrainingDetailsPage() {
 
   // Evaluation state
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerBrief | null>(null);
-  const [evalRatings, setEvalRatings] = useState<Record<EvaluationType, number>>({
-    [EvaluationType.TECHNICAL]: 5,
-    [EvaluationType.TACTICAL]: 5,
-    [EvaluationType.PHYSICAL]: 5,
-    [EvaluationType.PSYCHOLOGICAL]: 5,
+  const [evalRatings, setEvalRatings] = useState<Record<EvalCategory, number>>({
+    technical: 5,
+    tactical: 5,
+    physical: 5,
+    psychological: 5,
   });
+  const [evalComment, setEvalComment] = useState('');
 
   const loadData = async () => {
     if (!id) return;
@@ -127,21 +135,25 @@ export function TrainingDetailsPage() {
     setIsSaving(true);
     setError('');
     try {
-      const records: EvaluationRecord[] = Object.entries(evalRatings).map(([type, rating]) => ({
+      const record: EvaluationRecord = {
         playerId: selectedPlayer.id,
-        type: type as EvaluationType,
-        rating,
-      }));
+        technical: evalRatings.technical,
+        tactical: evalRatings.tactical,
+        physical: evalRatings.physical,
+        psychological: evalRatings.psychological,
+        comment: evalComment || undefined,
+      };
 
       await evaluationsApi.createBatch({
         trainingId: id,
-        records,
+        records: [record],
       });
 
       // Reload evaluations
       const evaluationsData = await evaluationsApi.getByTraining(id);
       setEvaluations(evaluationsData);
       setSelectedPlayer(null);
+      setEvalComment('');
     } catch {
       setError('Failed to save evaluations');
     } finally {
@@ -151,22 +163,29 @@ export function TrainingDetailsPage() {
 
   const openEvaluationModal = (player: PlayerBrief) => {
     setSelectedPlayer(player);
-    // Load existing evaluations for this player
-    const playerEvals = evaluations.filter((e) => e.player.id === player.id);
-    const ratings: Record<EvaluationType, number> = {
-      [EvaluationType.TECHNICAL]: 5,
-      [EvaluationType.TACTICAL]: 5,
-      [EvaluationType.PHYSICAL]: 5,
-      [EvaluationType.PSYCHOLOGICAL]: 5,
-    };
-    playerEvals.forEach((e) => {
-      ratings[e.type] = e.rating;
-    });
-    setEvalRatings(ratings);
+    // Load existing evaluation for this player
+    const playerEval = evaluations.find((e) => e.player.id === player.id);
+    if (playerEval) {
+      setEvalRatings({
+        technical: playerEval.technical ?? 5,
+        tactical: playerEval.tactical ?? 5,
+        physical: playerEval.physical ?? 5,
+        psychological: playerEval.psychological ?? 5,
+      });
+      setEvalComment(playerEval.comment || '');
+    } else {
+      setEvalRatings({
+        technical: 5,
+        tactical: 5,
+        physical: 5,
+        psychological: 5,
+      });
+      setEvalComment('');
+    }
   };
 
-  const getPlayerEvaluations = (playerId: string) => {
-    return evaluations.filter((e) => e.player.id === playerId);
+  const getPlayerEvaluation = (playerId: string): Evaluation | undefined => {
+    return evaluations.find((e) => e.player.id === playerId);
   };
 
   const getPlayerAttendance = (playerId: string): AttendanceStatus | null => {
@@ -355,43 +374,49 @@ export function TrainingDetailsPage() {
 
               <div className="space-y-3">
                 {training.group.players.map((player) => {
-                  const playerEvals = getPlayerEvaluations(player.id);
+                  const playerEval = getPlayerEvaluation(player.id);
                   const playerCanEvaluate = canEvaluate(player.id);
                   const playerStatus = getPlayerAttendance(player.id);
+                  const avgRating = playerEval ? getEvaluationAverage(playerEval) : null;
 
                   // For read-only mode, show all players with their evaluations
                   if (isReadOnly) {
                     return (
                       <div key={player.id} className="p-4 rounded-lg bg-gray-50">
                         <div className="flex items-center gap-3 mb-3">
-                          <div>
+                          <div className="flex-1">
                             <p className="font-medium text-gray-900">
                               {player.firstName} {player.lastName}
                             </p>
                             <p className="text-sm text-gray-500">{player.position}</p>
                           </div>
+                          {avgRating !== null && (
+                            <div className="text-center px-3 py-1 bg-yellow-100 rounded-lg">
+                              <p className="text-lg font-bold text-yellow-700">{avgRating}</p>
+                              <p className="text-xs text-yellow-600">Avg</p>
+                            </div>
+                          )}
                         </div>
-                        {playerEvals.length > 0 ? (
-                          <div className="grid grid-cols-4 gap-2">
-                            {Object.values(EvaluationType).map((type) => {
-                              const eval_ = playerEvals.find((e) => e.type === type);
-                              return (
-                                <div
-                                  key={type}
-                                  className="text-center p-2 bg-white rounded-lg"
-                                >
-                                  <p className="text-xs text-gray-500">
-                                    {EvaluationTypeLabels[type]}
-                                  </p>
+                        {playerEval ? (
+                          <>
+                            <div className="grid grid-cols-4 gap-2">
+                              {EVAL_CATEGORIES.map(({ key, label }) => (
+                                <div key={key} className="text-center p-2 bg-white rounded-lg">
+                                  <p className="text-xs text-gray-500">{label}</p>
                                   <p className="text-lg font-bold text-gray-900">
-                                    {eval_?.rating || '-'}
+                                    {playerEval[key] ?? '-'}
                                   </p>
                                 </div>
-                              );
-                            })}
-                          </div>
+                              ))}
+                            </div>
+                            {playerEval.comment && (
+                              <p className="mt-2 text-sm text-gray-600 italic">
+                                "{playerEval.comment}"
+                              </p>
+                            )}
+                          </>
                         ) : (
-                          <p className="text-sm text-gray-400">No evaluations yet</p>
+                          <p className="text-sm text-gray-400">No evaluation yet</p>
                         )}
                       </div>
                     );
@@ -416,13 +441,18 @@ export function TrainingDetailsPage() {
                               {AttendanceStatusLabels[playerStatus]}
                             </span>
                           )}
+                          {avgRating !== null && (
+                            <span className="px-2 py-1 text-sm font-bold text-yellow-700 bg-yellow-100 rounded-lg">
+                              Avg: {avgRating}
+                            </span>
+                          )}
                         </div>
                         {playerCanEvaluate ? (
                           <button
                             onClick={() => openEvaluationModal(player)}
                             className="px-3 py-1 text-sm text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                           >
-                            {playerEvals.length > 0 ? 'Edit' : 'Add'} Evaluation
+                            {playerEval ? 'Edit' : 'Add'} Evaluation
                           </button>
                         ) : (
                           <span className="text-sm text-gray-400">
@@ -431,24 +461,16 @@ export function TrainingDetailsPage() {
                         )}
                       </div>
 
-                      {playerEvals.length > 0 && playerCanEvaluate && (
+                      {playerEval && playerCanEvaluate && (
                         <div className="mt-3 grid grid-cols-4 gap-2">
-                          {Object.values(EvaluationType).map((type) => {
-                            const eval_ = playerEvals.find((e) => e.type === type);
-                            return (
-                              <div
-                                key={type}
-                                className="text-center p-2 bg-white rounded-lg"
-                              >
-                                <p className="text-xs text-gray-500">
-                                  {EvaluationTypeLabels[type]}
-                                </p>
-                                <p className="text-lg font-bold text-gray-900">
-                                  {eval_?.rating || '-'}
-                                </p>
-                              </div>
-                            );
-                          })}
+                          {EVAL_CATEGORIES.map(({ key, label }) => (
+                            <div key={key} className="text-center p-2 bg-white rounded-lg">
+                              <p className="text-xs text-gray-500">{label}</p>
+                              <p className="text-lg font-bold text-gray-900">
+                                {playerEval[key] ?? '-'}
+                              </p>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>
@@ -470,31 +492,44 @@ export function TrainingDetailsPage() {
             <p className="text-sm text-gray-500 mb-6">Rate from 1 to 10</p>
 
             <div className="space-y-4">
-              {Object.values(EvaluationType).map((type) => (
-                <div key={type}>
+              {EVAL_CATEGORIES.map(({ key, label }) => (
+                <div key={key}>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {EvaluationTypeLabels[type]}
+                    {label}
                   </label>
                   <div className="flex items-center gap-2">
                     <input
                       type="range"
                       min="1"
                       max="10"
-                      value={evalRatings[type]}
+                      value={evalRatings[key]}
                       onChange={(e) =>
                         setEvalRatings((prev) => ({
                           ...prev,
-                          [type]: parseInt(e.target.value),
+                          [key]: parseInt(e.target.value),
                         }))
                       }
                       className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600"
                     />
                     <span className="w-8 text-center font-bold text-gray-900">
-                      {evalRatings[type]}
+                      {evalRatings[key]}
                     </span>
                   </div>
                 </div>
               ))}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Comment (optional)
+                </label>
+                <textarea
+                  value={evalComment}
+                  onChange={(e) => setEvalComment(e.target.value)}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="Add a comment..."
+                />
+              </div>
             </div>
 
             <div className="mt-6 flex justify-end gap-3">

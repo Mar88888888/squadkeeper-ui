@@ -7,6 +7,14 @@ import type {
   UpdatePlayerRequest,
   UpdateParentRequest,
 } from '../api/users';
+import {
+  Position,
+  POSITIONS,
+  POSITION_LABELS,
+  StrongFoot,
+  STRONG_FEET,
+  STRONG_FOOT_LABELS,
+} from '../constants/player.constants';
 
 type UserType = 'coach' | 'player' | 'parent';
 
@@ -278,21 +286,16 @@ export function EditUserModal({ isOpen, userType, user, onSave, onClose }: EditU
                     </label>
                     <select
                       value={formData.position}
-                      onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, position: e.target.value as Position })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                       required
                     >
                       <option value="">Select position</option>
-                      <option value="GK">Goalkeeper (GK)</option>
-                      <option value="CB">Center Back (CB)</option>
-                      <option value="LB">Left Back (LB)</option>
-                      <option value="RB">Right Back (RB)</option>
-                      <option value="CDM">Defensive Mid (CDM)</option>
-                      <option value="CM">Central Mid (CM)</option>
-                      <option value="CAM">Attacking Mid (CAM)</option>
-                      <option value="LW">Left Wing (LW)</option>
-                      <option value="RW">Right Wing (RW)</option>
-                      <option value="ST">Striker (ST)</option>
+                      {POSITIONS.map((pos) => (
+                        <option key={pos} value={pos}>
+                          {POSITION_LABELS[pos]}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div>
@@ -301,14 +304,16 @@ export function EditUserModal({ isOpen, userType, user, onSave, onClose }: EditU
                     </label>
                     <select
                       value={formData.strongFoot}
-                      onChange={(e) => setFormData({ ...formData, strongFoot: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, strongFoot: e.target.value as StrongFoot })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                       required
                     >
                       <option value="">Select foot</option>
-                      <option value="left">Left</option>
-                      <option value="right">Right</option>
-                      <option value="both">Both</option>
+                      {STRONG_FEET.map((foot) => (
+                        <option key={foot} value={foot}>
+                          {STRONG_FOOT_LABELS[foot]}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>

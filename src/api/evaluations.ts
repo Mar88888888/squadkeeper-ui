@@ -1,32 +1,20 @@
 import { apiClient } from './client';
 
-export const EvaluationType = {
-  TECHNICAL: 'TECHNICAL',
-  TACTICAL: 'TACTICAL',
-  PHYSICAL: 'PHYSICAL',
-  PSYCHOLOGICAL: 'PSYCHOLOGICAL',
-} as const;
-
-export type EvaluationType = (typeof EvaluationType)[keyof typeof EvaluationType];
-
-export const EvaluationTypeLabels: Record<EvaluationType, string> = {
-  [EvaluationType.TECHNICAL]: 'Technical',
-  [EvaluationType.TACTICAL]: 'Tactical',
-  [EvaluationType.PHYSICAL]: 'Physical',
-  [EvaluationType.PSYCHOLOGICAL]: 'Psychological',
-};
-
 export interface EvaluationRecord {
   playerId: string;
-  type: EvaluationType;
-  rating: number;
+  technical?: number;
+  tactical?: number;
+  physical?: number;
+  psychological?: number;
   comment?: string;
 }
 
 export interface Evaluation {
   id: string;
-  type: EvaluationType;
-  rating: number;
+  technical: number | null;
+  tactical: number | null;
+  physical: number | null;
+  psychological: number | null;
   comment: string | null;
   player: {
     id: string;
@@ -69,6 +57,19 @@ export interface RatingStats {
     psychological: number | null;
   };
   history: RatingHistoryPoint[];
+}
+
+// Helper to calculate average rating for an evaluation
+export function getEvaluationAverage(evaluation: Evaluation): number | null {
+  const ratings = [
+    evaluation.technical,
+    evaluation.tactical,
+    evaluation.physical,
+    evaluation.psychological,
+  ].filter((r): r is number => r !== null);
+
+  if (ratings.length === 0) return null;
+  return Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10;
 }
 
 export const evaluationsApi = {
