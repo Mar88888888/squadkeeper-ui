@@ -11,7 +11,6 @@ export function MyGroupsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Schedule modal state
   const [selectedGroup, setSelectedGroup] = useState<GroupInfo | null>(null);
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
   const [scheduleLoading, setScheduleLoading] = useState(false);
@@ -224,7 +223,6 @@ export function MyGroupsPage() {
         )}
       </main>
 
-      {/* Schedule Modal */}
       {selectedGroup && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
@@ -238,7 +236,6 @@ export function MyGroupsPage() {
               </div>
             ) : (
               <>
-                {/* Schedule Items */}
                 <div className="space-y-3 mb-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-medium text-gray-700">Weekly Schedule</h3>
@@ -324,7 +321,6 @@ export function MyGroupsPage() {
                   </button>
                 </div>
 
-                {/* Generate Trainings Section */}
                 {scheduleItems.length > 0 && (
                   <div className="border-t border-gray-200 pt-6">
                     <h3 className="text-sm font-medium text-gray-700 mb-3">Generate Trainings</h3>

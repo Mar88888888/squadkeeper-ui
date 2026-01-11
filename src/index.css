@@ -1,6 +1,5 @@
 @import "tailwindcss";
 
-/* React DatePicker custom styles */
 .react-datepicker {
   font-family: inherit !important;
   border: 1px solid #e5e7eb !important;

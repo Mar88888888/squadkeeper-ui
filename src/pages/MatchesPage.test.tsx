@@ -5,12 +5,10 @@ import { matchesApi } from '../api/matches';
 import { groupsApi } from '../api/groups';
 import { UserRole } from '../types';
 
-// Mock useAuth
 jest.mock('../contexts/AuthContext', () => ({
   useAuth: jest.fn(),
 }));
 
-// Mock APIs
 jest.mock('../api/matches', () => ({
   matchesApi: {
     getAll: jest.fn(),
@@ -26,13 +24,11 @@ jest.mock('../api/groups', () => ({
   },
 }));
 
-// Mock react-router-dom
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
-// Mock react-datepicker
 jest.mock('react-datepicker', () => {
   return function MockDatePicker({ onChange, selected, placeholderText }: any) {
     return (
@@ -51,7 +47,6 @@ const mockUseAuth = useAuth as jest.Mock;
 const mockMatchesApi = matchesApi as jest.Mocked<typeof matchesApi>;
 const mockGroupsApi = groupsApi as jest.Mocked<typeof groupsApi>;
 
-// Suppress act warnings for async state updates that happen after component unmount
 beforeAll(() => {
   jest.spyOn(console, 'error').mockImplementation((message) => {
     if (typeof message === 'string' && message.includes('not wrapped in act')) {
@@ -250,7 +245,6 @@ describe('MatchesPage', () => {
 
       render(<MatchesPage />);
 
-      // Wait for data to load (groups must be loaded for modal to work correctly)
       await waitFor(() => {
         expect(screen.getByText('Stadium A')).toBeInTheDocument();
       });
@@ -261,20 +255,16 @@ describe('MatchesPage', () => {
         expect(screen.getByText('Opponent *')).toBeInTheDocument();
       });
 
-      // Fill in form
       const opponentInput = screen.getByPlaceholderText('e.g., FC Dynamo U12');
       fireEvent.change(opponentInput, { target: { value: 'New Team' } });
 
       const locationInput = screen.getByPlaceholderText('e.g., Stadium A');
       fireEvent.change(locationInput, { target: { value: 'New Stadium' } });
 
-      // Select group (inside modal)
       const groupSelects = screen.getAllByRole('combobox');
-      // The first combobox in the modal is the group selector
       const modalGroupSelect = groupSelects[groupSelects.length - 1];
       fireEvent.change(modalGroupSelect, { target: { value: 'g1' } });
 
-      // Click Schedule button inside modal (not the header button)
       const scheduleButtons = screen.getAllByRole('button');
       const submitButton = scheduleButtons.find(btn => btn.textContent === 'Schedule');
       if (submitButton) {
@@ -298,7 +288,6 @@ describe('MatchesPage', () => {
       render(<MatchesPage />);
 
       await waitFor(() => {
-        // Check for either "All Groups" or "All groups"
         const allGroups = screen.queryByText('All Groups') || screen.queryByText('All groups');
         expect(allGroups).toBeTruthy();
       });
@@ -323,7 +312,6 @@ describe('MatchesPage', () => {
       const groupSelect = screen.getByRole('combobox');
       fireEvent.change(groupSelect, { target: { value: 'g1' } });
 
-      // Matches should still be visible (filtered to g1)
       await waitFor(() => {
         expect(screen.getByText('Stadium A')).toBeInTheDocument();
       });
@@ -359,7 +347,6 @@ describe('MatchesPage', () => {
       render(<MatchesPage />);
 
       await waitFor(() => {
-        // Check for any error message
         const errorElement = screen.queryByText('Failed to load matches') ||
                             screen.queryByText('Failed to load data');
         expect(errorElement).toBeTruthy();

@@ -21,7 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
+    const storedToken = sessionStorage.getItem('token');
     if (storedToken) {
       try {
         const decoded = jwtDecode<JwtPayload>(storedToken);
@@ -36,10 +36,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             role: decoded.role as User['role'],
           });
         } else {
-          localStorage.removeItem('token');
+          sessionStorage.removeItem('token');
         }
       } catch {
-        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
       }
     }
     setIsLoading(false);
@@ -49,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const response = await authApi.login({ email, password });
     const decoded = jwtDecode<JwtPayload>(response.access_token);
 
-    localStorage.setItem('token', response.access_token);
+    sessionStorage.setItem('token', response.access_token);
     setAuthToken(response.access_token);
     setToken(response.access_token);
     setUser({
@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
     setAuthToken(null);
     setToken(null);
     setUser(null);

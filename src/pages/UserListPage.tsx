@@ -51,7 +51,6 @@ export function UserListPage() {
     user: CoachInfo | PlayerInfo | ParentFullInfo | null;
   }>({ isOpen: false, type: 'coaches', user: null });
 
-  // Modal filters
   const [modalFilterName, setModalFilterName] = useState('');
   const [modalFilterYear, setModalFilterYear] = useState('');
   const [modalFilterGroupId, setModalFilterGroupId] = useState('');
@@ -127,7 +126,6 @@ export function UserListPage() {
   };
 
   const openLinkChildModal = async (parent: ParentFullInfo) => {
-    // Load players and groups if not already loaded
     if (players.length === 0) {
       try {
         const [playersData, groupsData] = await Promise.all([
@@ -141,7 +139,6 @@ export function UserListPage() {
         return;
       }
     }
-    // Reset modal filters
     setModalFilterName('');
     setModalFilterYear('');
     setModalFilterGroupId('');
@@ -154,7 +151,6 @@ export function UserListPage() {
   };
 
   const handlePlayerClick = (player: PlayerInfo) => {
-    // Check if player already has a different parent
     if (player.parent && player.parent.id !== linkChildModal.parent?.id) {
       setReassignDialog({
         isOpen: true,
@@ -174,7 +170,6 @@ export function UserListPage() {
       setParents((prev) =>
         prev.map((p) => (p.id === updatedParent.id ? updatedParent : p))
       );
-      // Update player in local state to reflect new parent
       setPlayers((prev) =>
         prev.map((p) =>
           p.id === playerId
@@ -199,7 +194,6 @@ export function UserListPage() {
       setParents((prev) =>
         prev.map((p) => (p.id === updatedParent.id ? updatedParent : p))
       );
-      // Update player in local state
       setPlayers((prev) =>
         prev.map((p) => (p.id === playerId ? { ...p, parent: null } : p))
       );
@@ -208,7 +202,6 @@ export function UserListPage() {
     }
   };
 
-  // Get unique birth years from players
   const birthYears = useMemo(() => {
     const years = new Set<number>();
     players.forEach((p) => {
@@ -218,13 +211,11 @@ export function UserListPage() {
     return Array.from(years).sort((a, b) => b - a);
   }, [players]);
 
-  // Filter players for modal (excluding already linked to this parent)
   const modalFilteredPlayers = useMemo(() => {
     if (!linkChildModal.parent) return [];
     const linkedChildIds = linkChildModal.parent.children.map((c) => c.id);
 
     return players.filter((player) => {
-      // Exclude already linked children
       if (linkedChildIds.includes(player.id)) return false;
 
       const fullName = `${player.firstName} ${player.lastName}`.toLowerCase();
@@ -243,7 +234,6 @@ export function UserListPage() {
     parents: 'Parents',
   };
 
-  // Filter by name
   const filterByName = <T extends { firstName: string; lastName: string }>(items: T[]) => {
     if (!searchQuery.trim()) return items;
     const query = searchQuery.toLowerCase();
@@ -283,7 +273,6 @@ export function UserListPage() {
 
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          {/* Tabs */}
           <div className="border-b border-gray-200">
             <div className="flex">
               {(['coaches', 'players', 'parents'] as TabType[]).map((tab) => (
@@ -309,7 +298,6 @@ export function UserListPage() {
             </div>
           </div>
 
-          {/* Search */}
           <div className="p-4 border-b border-gray-200">
             <div className="relative">
               <svg
@@ -357,7 +345,6 @@ export function UserListPage() {
             </div>
           ) : (
             <div className="divide-y divide-gray-200">
-              {/* Coaches List */}
               {activeTab === 'coaches' &&
                 (filteredCoaches.length === 0 ? (
                   <div className="py-12 text-center text-gray-500">
@@ -409,7 +396,6 @@ export function UserListPage() {
                   ))
                 ))}
 
-              {/* Players List */}
               {activeTab === 'players' &&
                 (filteredPlayers.length === 0 ? (
                   <div className="py-12 text-center text-gray-500">
@@ -464,7 +450,6 @@ export function UserListPage() {
                   ))
                 ))}
 
-              {/* Parents List */}
               {activeTab === 'parents' &&
                 (filteredParents.length === 0 ? (
                   <div className="py-12 text-center text-gray-500">
@@ -519,7 +504,6 @@ export function UserListPage() {
                           </button>
                         </div>
                       </div>
-                      {/* Children list */}
                       {parent.children.length > 0 && (
                         <div className="mt-3 ml-13 pl-10 border-l-2 border-gray-100">
                           <p className="text-xs text-gray-500 mb-2">Linked children:</p>
@@ -563,7 +547,6 @@ export function UserListPage() {
         onCancel={() => setDeleteDialog((prev) => ({ ...prev, isOpen: false }))}
       />
 
-      {/* Link Child Modal */}
       {linkChildModal.isOpen && linkChildModal.parent && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[85vh] flex flex-col">
@@ -576,7 +559,6 @@ export function UserListPage() {
               </p>
             </div>
 
-            {/* Filters */}
             <div className="p-4 border-b border-gray-200 space-y-3">
               <div className="grid grid-cols-3 gap-2">
                 <input
@@ -685,7 +667,6 @@ export function UserListPage() {
         </div>
       )}
 
-      {/* Reassign Confirm Dialog */}
       <ConfirmDialog
         isOpen={reassignDialog.isOpen}
         title="Reassign Player"
@@ -697,7 +678,6 @@ export function UserListPage() {
         onCancel={() => setReassignDialog({ isOpen: false, playerId: '', playerName: '', currentParentName: '' })}
       />
 
-      {/* Edit User Modal */}
       <EditUserModal
         isOpen={editModal.isOpen}
         userType={editModal.type === 'coaches' ? 'coach' : editModal.type === 'players' ? 'player' : 'parent'}

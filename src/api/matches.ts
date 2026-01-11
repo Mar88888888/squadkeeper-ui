@@ -125,7 +125,6 @@ export const matchesApi = {
     await apiClient.delete(`/matches/${id}`);
   },
 
-  // Goals endpoints
   getGoals: async (matchId: string): Promise<Goal[]> => {
     const response = await apiClient.get<Goal[]>(`/matches/${matchId}/goals`);
     return response.data;

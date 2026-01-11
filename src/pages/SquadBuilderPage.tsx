@@ -33,10 +33,8 @@ export function SquadBuilderPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
 
-  // Selected position for assignment
   const [selectedPositionId, setSelectedPositionId] = useState<string | null>(null);
 
-  // Load groups
   useEffect(() => {
     const loadGroups = async () => {
       try {
@@ -55,7 +53,6 @@ export function SquadBuilderPage() {
     loadGroups();
   }, [user?.role, isEditMode]);
 
-  // Load existing squad if editing
   useEffect(() => {
     const loadSquad = async () => {
       if (!id) {
@@ -110,7 +107,6 @@ export function SquadBuilderPage() {
     loadSquad();
   }, [id]);
 
-  // Get players from selected group
   const groupPlayers = useMemo(() => {
     const group = groups.find((g) => g.id === selectedGroupId);
     if (!group) return [];
@@ -123,7 +119,6 @@ export function SquadBuilderPage() {
     }));
   }, [groups, selectedGroupId]);
 
-  // Get IDs of players already assigned (on pitch or bench)
   const assignedPlayerIds = useMemo(() => {
     const ids = new Set<string>();
     positions.forEach((p) => {
@@ -133,12 +128,10 @@ export function SquadBuilderPage() {
     return ids;
   }, [positions, benchPlayers]);
 
-  // Available players (not assigned yet)
   const availablePlayers = useMemo(() => {
     return groupPlayers.filter((p) => !assignedPlayerIds.has(p.id));
   }, [groupPlayers, assignedPlayerIds]);
 
-  // Initialize empty formation (no players)
   const initializeFormation = useCallback((format: GameFormat) => {
     const defaultPositions = DEFAULT_FORMATIONS[format];
     setPositions(
@@ -154,25 +147,19 @@ export function SquadBuilderPage() {
     setBenchPlayers([]);
   }, []);
 
-  // Handle format change - keep players, adjust formation
   const handleFormatChange = (format: GameFormat) => {
     setGameFormat(format);
 
-    // Get current players on the field (in order)
     const currentPlayers = positions
       .filter((p) => p.player)
       .map((p) => p.player!);
 
-    // Get new formation positions
     const newFormation = DEFAULT_FORMATIONS[format];
     const newPositionCount = newFormation.length;
 
-    // Players that fit in new formation
     const playersForField = currentPlayers.slice(0, newPositionCount);
-    // Excess players go to bench
     const playersForBench = currentPlayers.slice(newPositionCount);
 
-    // Create new positions with existing players assigned
     const newPositions = newFormation.map((pos, index) => ({
       id: crypto.randomUUID(),
       playerId: playersForField[index]?.id || null,
@@ -184,7 +171,6 @@ export function SquadBuilderPage() {
 
     setPositions(newPositions);
 
-    // Add excess players to bench (avoid duplicates)
     if (playersForBench.length > 0) {
       setBenchPlayers((prev) => {
         const existingIds = new Set(prev.map((p) => p.id));
@@ -194,32 +180,26 @@ export function SquadBuilderPage() {
     }
   };
 
-  // Handle group change - reset everything
   const handleGroupChange = (groupId: string) => {
     setSelectedGroupId(groupId);
-    // Reset positions and bench when group changes
     initializeFormation(gameFormat);
   };
 
-  // Handle clicking on a position slot
   const handlePositionClick = (positionId: string) => {
     const position = positions.find((p) => p.id === positionId);
     if (!position) return;
 
     if (position.playerId) {
-      // Position has a player - remove them
       setPositions((prev) =>
         prev.map((p) =>
           p.id === positionId ? { ...p, playerId: null, player: null } : p
         )
       );
     } else {
-      // Position is empty - open player selection
       setSelectedPositionId(positionId);
     }
   };
 
-  // Assign player to selected position
   const handleAssignPlayer = (player: PlayerData) => {
     if (!selectedPositionId) return;
 
@@ -233,17 +213,14 @@ export function SquadBuilderPage() {
     setSelectedPositionId(null);
   };
 
-  // Add player to bench
   const handleAddToBench = (player: PlayerData) => {
     setBenchPlayers((prev) => [...prev, player]);
   };
 
-  // Remove player from bench
   const handleRemoveFromBench = (playerId: string) => {
     setBenchPlayers((prev) => prev.filter((p) => p.id !== playerId));
   };
 
-  // Handle save
   const handleSave = async () => {
     if (!squadName.trim()) {
       setError('Squad name is required');
@@ -293,7 +270,6 @@ export function SquadBuilderPage() {
     }
   };
 
-  // Get position color based on role
   const getPositionColor = (role: Position | null) => {
     if (!role) return 'bg-gray-500';
     switch (role) {
@@ -312,13 +288,12 @@ export function SquadBuilderPage() {
     }
   };
 
-  // Get coordinates for a position based on formation and orderIndex
   const getPositionCoords = (orderIndex: number) => {
     const formation = DEFAULT_FORMATIONS[gameFormat];
     if (orderIndex < formation.length) {
       return { x: formation[orderIndex].x, y: formation[orderIndex].y };
     }
-    return { x: 50, y: 50 }; // fallback
+    return { x: 50, y: 50 };
   };
 
   if (isLoading) {
@@ -365,7 +340,6 @@ export function SquadBuilderPage() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left sidebar - Available Players */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow p-4 max-h-[calc(100vh-200px)] overflow-y-auto">
               <h3 className="font-semibold text-gray-900 mb-3">Available Players</h3>
@@ -403,9 +377,7 @@ export function SquadBuilderPage() {
             </div>
           </div>
 
-          {/* Center - Pitch and Controls */}
           <div className="lg:col-span-2 space-y-4">
-            {/* Squad Settings */}
             <div className="bg-white rounded-lg shadow p-4 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -460,7 +432,6 @@ export function SquadBuilderPage() {
               </div>
             </div>
 
-            {/* Football Pitch */}
             <FootballPitch>
               {positions.map((pos) => {
                 const coords = getPositionCoords(pos.orderIndex);
@@ -503,7 +474,6 @@ export function SquadBuilderPage() {
               })}
             </FootballPitch>
 
-            {/* Bench Area */}
             <div className="bg-white rounded-lg shadow p-4">
               <h4 className="font-medium text-gray-700 mb-3">
                 Substitutes ({benchPlayers.length})
@@ -538,7 +508,6 @@ export function SquadBuilderPage() {
             </div>
           </div>
 
-          {/* Right sidebar - Squad Summary */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow p-4">
               <h3 className="font-semibold text-gray-900 mb-4">Squad Summary</h3>
@@ -562,7 +531,6 @@ export function SquadBuilderPage() {
                 </div>
               </div>
 
-              {/* Starting Lineup */}
               <div className="mt-6">
                 <h4 className="text-sm font-medium text-gray-700 mb-2">Starting Lineup</h4>
                 <div className="space-y-1">
@@ -601,7 +569,6 @@ export function SquadBuilderPage() {
           </div>
         </div>
 
-        {/* Player Selection Modal */}
         {selectedPositionId && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6 max-h-[80vh] overflow-hidden flex flex-col">

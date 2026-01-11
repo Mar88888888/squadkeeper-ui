@@ -167,7 +167,6 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     );
   }
 
-  // roster variant (default)
   return (
     <div
       ref={setNodeRef}

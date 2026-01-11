@@ -6,12 +6,10 @@ import { matchesApi } from '../api/matches';
 import { groupsApi } from '../api/groups';
 import { UserRole } from '../types';
 
-// Mock useAuth
 jest.mock('../contexts/AuthContext', () => ({
   useAuth: jest.fn(),
 }));
 
-// Mock APIs
 jest.mock('../api/trainings', () => ({
   trainingsApi: {
     getAll: jest.fn(),
@@ -33,13 +31,11 @@ jest.mock('../api/groups', () => ({
   },
 }));
 
-// Mock react-router-dom
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
-// Mock Calendar component
 jest.mock('../components/Calendar', () => ({
   Calendar: ({ year, month, events, onEventClick, onPrevMonth, onNextMonth, onToday }: any) => (
     <div data-testid="calendar">
@@ -63,7 +59,6 @@ const mockTrainingsApi = trainingsApi as jest.Mocked<typeof trainingsApi>;
 const mockMatchesApi = matchesApi as jest.Mocked<typeof matchesApi>;
 const mockGroupsApi = groupsApi as jest.Mocked<typeof groupsApi>;
 
-// Suppress act warnings for async state updates that happen after component unmount
 beforeAll(() => {
   jest.spyOn(console, 'error').mockImplementation((message) => {
     if (typeof message === 'string' && message.includes('not wrapped in act')) {
@@ -207,7 +202,6 @@ describe('CalendarPage', () => {
     });
 
     fireEvent.click(screen.getByTestId('prev-month'));
-    // Month state is internal to the component
   });
 
   describe('For Admin', () => {

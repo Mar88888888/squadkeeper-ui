@@ -6,12 +6,10 @@ import { attendanceApi, AttendanceStatus } from '../api/attendance';
 import { evaluationsApi, EvaluationType } from '../api/evaluations';
 import { UserRole } from '../types';
 
-// Mock useAuth
 jest.mock('../contexts/AuthContext', () => ({
   useAuth: jest.fn(),
 }));
 
-// Mock APIs
 jest.mock('../api/matches', () => ({
   matchesApi: {
     getOne: jest.fn(),
@@ -54,7 +52,6 @@ jest.mock('../api/evaluations', () => ({
   },
 }));
 
-// Mock react-router-dom
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
@@ -66,7 +63,6 @@ const mockMatchesApi = matchesApi as jest.Mocked<typeof matchesApi>;
 const mockAttendanceApi = attendanceApi as jest.Mocked<typeof attendanceApi>;
 const mockEvaluationsApi = evaluationsApi as jest.Mocked<typeof evaluationsApi>;
 
-// Suppress act warnings for async state updates that happen after component unmount
 beforeAll(() => {
   jest.spyOn(console, 'error').mockImplementation((message) => {
     if (typeof message === 'string' && message.includes('not wrapped in act')) {
@@ -269,7 +265,6 @@ describe('MatchDetailsPage', () => {
         fireEvent.click(screen.getByText('+ Add Goal'));
 
         await waitFor(() => {
-          // Modal title will be "Add Goal"
           const addGoalElements = screen.getAllByText('Add Goal');
           expect(addGoalElements.length).toBeGreaterThan(0);
           expect(screen.getByText('Scorer *')).toBeInTheDocument();
@@ -303,13 +298,11 @@ describe('MatchDetailsPage', () => {
           expect(screen.getByText('Scorer *')).toBeInTheDocument();
         });
 
-        // Select a scorer from dropdown
         const selects = screen.getAllByRole('combobox');
         if (selects.length > 0) {
           fireEvent.change(selects[0], { target: { value: 'p1' } });
         }
 
-        // Click Add Goal button in modal
         const addButtons = screen.getAllByRole('button', { name: /Add Goal/i });
         fireEvent.click(addButtons[addButtons.length - 1]);
 
@@ -353,7 +346,6 @@ describe('MatchDetailsPage', () => {
           expect(screen.getByText('John Scorer')).toBeInTheDocument();
         });
 
-        // Find and click Save Attendance button
         const saveButton = screen.getByText('Save Attendance');
         fireEvent.click(saveButton);
 
@@ -369,13 +361,11 @@ describe('MatchDetailsPage', () => {
           expect(screen.getByText('John Scorer')).toBeInTheDocument();
         });
 
-        // Find attendance status selects
         const selects = screen.getAllByRole('combobox');
         if (selects.length > 0) {
           fireEvent.change(selects[0], { target: { value: 'ABSENT' } });
         }
 
-        // Status should be changed (no error)
         expect(selects.length).toBeGreaterThan(0);
       });
     });
@@ -391,7 +381,6 @@ describe('MatchDetailsPage', () => {
         fireEvent.click(screen.getByText('Evaluations'));
 
         await waitFor(() => {
-          // Should show players for evaluation
           expect(screen.getByText('John Scorer')).toBeInTheDocument();
         });
       });
@@ -406,7 +395,6 @@ describe('MatchDetailsPage', () => {
         fireEvent.click(screen.getByText('Evaluations'));
 
         await waitFor(() => {
-          // Players with PRESENT status should have Evaluate button
           const evaluateButtons = screen.queryAllByText('Evaluate');
           expect(evaluateButtons.length).toBeGreaterThanOrEqual(0);
         });
@@ -424,7 +412,6 @@ describe('MatchDetailsPage', () => {
         fireEvent.click(screen.getByText('Edit Score'));
 
         await waitFor(() => {
-          // Modal should show team names (U12 may appear in multiple places)
           const u12Elements = screen.getAllByText('U12');
           expect(u12Elements.length).toBeGreaterThan(0);
         });
@@ -450,14 +437,12 @@ describe('MatchDetailsPage', () => {
           expect(u12Elements.length).toBeGreaterThan(0);
         });
 
-        // Find number inputs and change values
         const numberInputs = document.querySelectorAll('input[type="number"]');
         if (numberInputs.length >= 2) {
           fireEvent.change(numberInputs[0], { target: { value: '4' } });
           fireEvent.change(numberInputs[1], { target: { value: '2' } });
         }
 
-        // Click Save button
         fireEvent.click(screen.getByText('Save'));
 
         await waitFor(() => {
@@ -479,11 +464,9 @@ describe('MatchDetailsPage', () => {
           expect(u12Elements.length).toBeGreaterThan(0);
         });
 
-        // Find and click Cancel button
         fireEvent.click(screen.getByText('Cancel'));
 
         await waitFor(() => {
-          // Modal should be closed - U12 appears only in main content now
           expect(screen.queryByText('Set Match Result')).not.toBeInTheDocument();
         });
       });
@@ -618,7 +601,6 @@ describe('MatchDetailsPage', () => {
       render(<MatchDetailsPage />);
 
       await waitFor(() => {
-        // Either shows error or not found message
         const hasError = screen.queryByText('Failed to load match details') ||
                         screen.queryByText('Match not found');
         expect(hasError).toBeTruthy();

@@ -4,7 +4,6 @@ import { groupsApi } from '../api/groups';
 import { usersApi } from '../api/users';
 import { schedulesApi } from '../api/schedules';
 
-// Mock APIs
 jest.mock('../api/groups', () => ({
   groupsApi: {
     getAll: jest.fn(),
@@ -33,7 +32,6 @@ jest.mock('../api/schedules', () => ({
   },
 }));
 
-// Mock react-router-dom
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
@@ -43,7 +41,6 @@ const mockGroupsApi = groupsApi as jest.Mocked<typeof groupsApi>;
 const mockUsersApi = usersApi as jest.Mocked<typeof usersApi>;
 const mockSchedulesApi = schedulesApi as jest.Mocked<typeof schedulesApi>;
 
-// Suppress act warnings for async state updates that happen after component unmount
 beforeAll(() => {
   jest.spyOn(console, 'error').mockImplementation((message) => {
     if (typeof message === 'string' && message.includes('not wrapped in act')) {
@@ -328,7 +325,6 @@ describe('GroupManagementPage', () => {
       fireEvent.click(staffButtons[0]);
 
       await waitFor(() => {
-        // In modal, the label "Head Coach" appears for the dropdown
         const headCoachLabels = screen.getAllByText('Head Coach');
         expect(headCoachLabels.length).toBeGreaterThan(0);
       });
@@ -371,7 +367,6 @@ describe('GroupManagementPage', () => {
         expect(screen.getByText('Manage Coaches - U12 Main')).toBeInTheDocument();
       });
 
-      // Find all Cancel buttons and click the one in the modal
       const cancelButtons = screen.getAllByText('Cancel');
       fireEvent.click(cancelButtons[cancelButtons.length - 1]);
 
@@ -443,16 +438,14 @@ describe('GroupManagementPage', () => {
         expect(screen.getByText('Manage Players - U12 Main')).toBeInTheDocument();
       });
 
-      // Find and click a checkbox for an unassigned player
       const checkboxes = screen.getAllByRole('checkbox');
       if (checkboxes.length > 0) {
-        fireEvent.click(checkboxes[checkboxes.length - 1]); // Click last checkbox (Mike - unassigned)
+        fireEvent.click(checkboxes[checkboxes.length - 1]);
       }
 
       fireEvent.click(screen.getByText('Save'));
 
       await waitFor(() => {
-        // Should call either addPlayers or removePlayers
         expect(mockGroupsApi.addPlayers.mock.calls.length + mockGroupsApi.removePlayers.mock.calls.length).toBeGreaterThanOrEqual(0);
       });
     });
@@ -471,7 +464,6 @@ describe('GroupManagementPage', () => {
         expect(screen.getByText('Manage Players - U12 Main')).toBeInTheDocument();
       });
 
-      // Find all Cancel buttons and click the one in the modal
       const cancelButtons = screen.getAllByText('Cancel');
       fireEvent.click(cancelButtons[cancelButtons.length - 1]);
 
@@ -545,7 +537,6 @@ describe('GroupManagementPage', () => {
 
       fireEvent.click(screen.getByText('+ Add Day'));
 
-      // Should now have schedule inputs
       await waitFor(() => {
         const selects = document.querySelectorAll('select');
         expect(selects.length).toBeGreaterThan(0);
@@ -620,7 +611,6 @@ describe('GroupManagementPage', () => {
       fireEvent.click(scheduleButtons[0]);
 
       await waitFor(() => {
-        // Both section header and button have "Generate Trainings" text
         const generateElements = screen.getAllByText('Generate Trainings');
         expect(generateElements.length).toBeGreaterThan(0);
       });
@@ -640,7 +630,6 @@ describe('GroupManagementPage', () => {
         expect(screen.getByText('From')).toBeInTheDocument();
       });
 
-      // Fill in dates
       const dateInputs = document.querySelectorAll('input[type="date"]');
       if (dateInputs.length >= 2) {
         fireEvent.change(dateInputs[0], { target: { value: '2024-01-01' } });
@@ -671,7 +660,6 @@ describe('GroupManagementPage', () => {
     });
 
     it('should delete future trainings when Clear Future clicked', async () => {
-      // Mock window.alert
       const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
 
       render(<GroupManagementPage />);
@@ -710,7 +698,6 @@ describe('GroupManagementPage', () => {
         expect(screen.getByText('Training Schedule - U12 Main')).toBeInTheDocument();
       });
 
-      // Find the Close button in the modal
       fireEvent.click(screen.getByText('Close'));
 
       await waitFor(() => {

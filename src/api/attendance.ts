@@ -5,7 +5,7 @@ export const AttendanceStatus = {
   ABSENT: 'ABSENT',
   SICK: 'SICK',
   LATE: 'LATE',
-  BENCHED: 'BENCHED', // Present but didn't play - no stats/evaluations
+  BENCHED: 'BENCHED',
 } as const;
 
 export type AttendanceStatus = (typeof AttendanceStatus)[keyof typeof AttendanceStatus];

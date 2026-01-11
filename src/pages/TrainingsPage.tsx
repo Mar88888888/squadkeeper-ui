@@ -200,9 +200,7 @@ export function TrainingsPage() {
 
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          {/* Filters */}
           <div className="p-4 border-b border-gray-200 space-y-4">
-            {/* Quick time filters */}
             <div className="flex flex-wrap gap-2">
               {TIME_FILTER_OPTIONS.map((option) => (
                 <button
@@ -223,7 +221,6 @@ export function TrainingsPage() {
               ))}
             </div>
 
-            {/* Custom date range and group filter */}
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium text-gray-700">From:</label>
@@ -414,7 +411,6 @@ export function TrainingsPage() {
         </div>
       </main>
 
-      {/* Create Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">

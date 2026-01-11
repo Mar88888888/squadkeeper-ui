@@ -34,10 +34,8 @@ export function EditUserModal({ isOpen, userType, user, onSave, onClose }: EditU
     lastName: '',
     phoneNumber: '',
     dateOfBirth: '',
-    // Coach specific
     licenseLevel: '',
     experienceYears: 0,
-    // Player specific
     position: '',
     height: 0,
     weight: 0,
@@ -97,7 +95,6 @@ export function EditUserModal({ isOpen, userType, user, onSave, onClose }: EditU
         phoneNumber: formData.phoneNumber || undefined,
       };
 
-      // Only include password if it was changed
       if (formData.password) {
         baseData.password = formData.password;
       }
@@ -153,7 +150,6 @@ export function EditUserModal({ isOpen, userType, user, onSave, onClose }: EditU
           )}
 
           <div className="space-y-4">
-            {/* Common fields */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -222,7 +218,6 @@ export function EditUserModal({ isOpen, userType, user, onSave, onClose }: EditU
               />
             </div>
 
-            {/* Coach/Player specific: Date of Birth */}
             {(userType === 'coach' || userType === 'player') && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -237,7 +232,6 @@ export function EditUserModal({ isOpen, userType, user, onSave, onClose }: EditU
               </div>
             )}
 
-            {/* Coach specific fields */}
             {userType === 'coach' && (
               <>
                 <div className="grid grid-cols-2 gap-4">
@@ -276,7 +270,6 @@ export function EditUserModal({ isOpen, userType, user, onSave, onClose }: EditU
               </>
             )}
 
-            {/* Player specific fields */}
             {userType === 'player' && (
               <>
                 <div className="grid grid-cols-2 gap-4">

@@ -59,7 +59,6 @@ export interface RatingStats {
   history: RatingHistoryPoint[];
 }
 
-// Helper to calculate average rating for an evaluation
 export function getEvaluationAverage(evaluation: Evaluation): number | null {
   const ratings = [
     evaluation.technical,

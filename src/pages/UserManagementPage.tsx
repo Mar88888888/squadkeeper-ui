@@ -32,7 +32,6 @@ export function UserManagementPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Common fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -40,29 +39,24 @@ export function UserManagementPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
 
-  // Coach-specific fields
   const [licenseLevel, setLicenseLevel] = useState('');
   const [experienceYears, setExperienceYears] = useState(0);
 
-  // Player-specific fields
   const [position, setPosition] = useState<Position>(Position.CM);
   const [height, setHeight] = useState(170);
   const [weight, setWeight] = useState(70);
   const [strongFoot, setStrongFoot] = useState<StrongFoot>(StrongFoot.RIGHT);
 
-  // Parent-specific fields
   const [players, setPlayers] = useState<PlayerInfo[]>([]);
   const [groups, setGroups] = useState<GroupInfo[]>([]);
   const [selectedChildrenIds, setSelectedChildrenIds] = useState<string[]>([]);
   const [loadingPlayers, setLoadingPlayers] = useState(false);
 
-  // Player filters
   const [filterName, setFilterName] = useState('');
   const [filterYear, setFilterYear] = useState('');
   const [filterGroupId, setFilterGroupId] = useState('');
   const [filterNoParent, setFilterNoParent] = useState(false);
 
-  // Confirm dialog state
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState>({
     isOpen: false,
     playerId: '',
@@ -70,7 +64,6 @@ export function UserManagementPage() {
     parentName: '',
   });
 
-  // Load players and groups when parent tab is selected
   useEffect(() => {
     if (userType === 'parent') {
       setLoadingPlayers(true);
@@ -87,7 +80,6 @@ export function UserManagementPage() {
     }
   }, [userType]);
 
-  // Get unique birth years from players
   const birthYears = useMemo(() => {
     const years = new Set<number>();
     players.forEach((p) => {
@@ -97,7 +89,6 @@ export function UserManagementPage() {
     return Array.from(years).sort((a, b) => b - a);
   }, [players]);
 
-  // Filter players
   const filteredPlayers = useMemo(() => {
     return players.filter((player) => {
       const fullName = `${player.firstName} ${player.lastName}`.toLowerCase();
@@ -114,7 +105,6 @@ export function UserManagementPage() {
     const player = players.find((p) => p.id === playerId);
     const isCurrentlySelected = selectedChildrenIds.includes(playerId);
 
-    // If selecting (not deselecting) and player has existing parent, show confirm dialog
     if (!isCurrentlySelected && player?.parent) {
       setConfirmDialog({
         isOpen: true,
@@ -246,7 +236,6 @@ export function UserManagementPage() {
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-6">Create New User</h2>
 
-          {/* User Type Selector */}
           <div className="flex space-x-2 mb-6">
             {(['coach', 'player', 'parent'] as UserType[]).map((type) => (
               <button
@@ -280,7 +269,6 @@ export function UserManagementPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Common Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -348,7 +336,6 @@ export function UserManagementPage() {
               />
             </div>
 
-            {/* Coach-specific fields */}
             {userType === 'coach' && (
               <div className="border-t pt-4">
                 <h3 className="text-md font-medium text-gray-900 mb-4">Coach Details</h3>
@@ -400,7 +387,6 @@ export function UserManagementPage() {
               </div>
             )}
 
-            {/* Player-specific fields */}
             {userType === 'player' && (
               <div className="border-t pt-4">
                 <h3 className="text-md font-medium text-gray-900 mb-4">Player Details</h3>
@@ -486,7 +472,6 @@ export function UserManagementPage() {
               </div>
             )}
 
-            {/* Parent-specific fields */}
             {userType === 'parent' && (
               <div className="border-t pt-4">
                 <h3 className="text-md font-medium text-gray-900 mb-4">Link to Players (Children)</h3>
@@ -501,7 +486,6 @@ export function UserManagementPage() {
                   </p>
                 ) : (
                   <>
-                    {/* Filters */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
                       <div>
                         <input
@@ -542,7 +526,6 @@ export function UserManagementPage() {
                       </div>
                     </div>
 
-                    {/* No parent filter */}
                     <label className="flex items-center gap-2 mb-3 cursor-pointer">
                       <input
                         type="checkbox"
@@ -555,7 +538,6 @@ export function UserManagementPage() {
                       </span>
                     </label>
 
-                    {/* Player list */}
                     <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3">
                       {filteredPlayers.length === 0 ? (
                         <p className="text-gray-500 text-sm py-2 text-center">

@@ -114,7 +114,6 @@ export function ContactsPage() {
           </div>
         ) : (
           <div className="space-y-8">
-            {/* Coaches Section */}
             <div className="bg-white rounded-2xl shadow-sm p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">Coaches</h2>
@@ -146,7 +145,6 @@ export function ContactsPage() {
               )}
             </div>
 
-            {/* Admins Section */}
             {contacts && contacts.admins.length > 0 && (
               <div className="bg-white rounded-2xl shadow-sm p-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">
@@ -181,7 +179,6 @@ function ContactCard({
       setCopiedField(field);
       setTimeout(() => setCopiedField(null), 2000);
     } catch {
-      // Fallback for older browsers
       const textArea = document.createElement('textarea');
       textArea.value = text;
       document.body.appendChild(textArea);

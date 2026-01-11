@@ -70,13 +70,11 @@ describe('ConfirmDialog', () => {
   it('should call onCancel when backdrop is clicked', () => {
     render(<ConfirmDialog {...defaultProps} />);
 
-    // Find the backdrop element by its class
     const backdrop = document.querySelector('.bg-black\\/50');
     if (backdrop) {
       fireEvent.click(backdrop);
       expect(defaultProps.onCancel).toHaveBeenCalledTimes(1);
     } else {
-      // If exact class not found, click outside the dialog content
       const outerDiv = screen.getByText('Confirm Action').closest('.fixed');
       if (outerDiv) {
         fireEvent.click(outerDiv);

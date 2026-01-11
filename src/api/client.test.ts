@@ -1,6 +1,5 @@
 import { apiClient, setAuthToken } from './client';
 
-// Mock axios
 jest.mock('axios', () => {
   const mockAxios = {
     create: jest.fn(() => mockAxios),
@@ -58,7 +57,6 @@ describe('apiClient', () => {
 
   describe('apiClient configuration', () => {
     it('should have baseURL set', () => {
-      // The apiClient should be configured with base URL
       expect(apiClient).toBeDefined();
     });
   });

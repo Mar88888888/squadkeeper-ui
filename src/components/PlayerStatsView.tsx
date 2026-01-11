@@ -12,7 +12,6 @@ import type { PlayerStats, StatsPeriod } from '../api/stats';
 import type { RatingStats } from '../api/evaluations';
 import { isDefensivePosition } from '../constants/player.constants';
 
-// Category configuration for the chart
 const CHART_CATEGORIES = [
   { key: 'average', name: 'Average', color: '#f59e0b', bgColor: 'bg-amber-500', bgLight: 'bg-amber-100', isMain: true },
   { key: 'technical', name: 'Technical', color: '#3b82f6', bgColor: 'bg-blue-500', bgLight: 'bg-blue-100' },
@@ -32,14 +31,13 @@ interface PlayerStatsViewProps {
   stats: PlayerStats;
   ratingStats: RatingStats | null;
   period: StatsPeriod;
-  playerName?: string; // Override the name from stats if needed
+  playerName?: string;
 }
 
 export function PlayerStatsView({ stats, ratingStats, period, playerName }: PlayerStatsViewProps) {
   const displayName = playerName || stats.playerName;
   const isDefensive = isDefensivePosition(stats.position);
 
-  // State for toggling chart categories
   const [visibleCategories, setVisibleCategories] = useState<Set<string>>(
     new Set(CHART_CATEGORIES.map(c => c.key))
   );
@@ -78,13 +76,11 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
 
   return (
     <div className="space-y-6">
-      {/* Player Name */}
       <div className="text-center">
         <h2 className="text-2xl font-bold text-gray-900">{displayName}</h2>
         <p className="text-gray-500">{PERIOD_LABELS[period]}</p>
       </div>
 
-      {/* Stats Cards */}
       <div className={`grid grid-cols-1 gap-6 ${isDefensive ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
         <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
           <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
@@ -129,7 +125,6 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
         )}
       </div>
 
-      {/* Goal Contributions */}
       <div className="bg-white rounded-2xl shadow-lg p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Goal Contributions</h3>
         <div className="flex items-center gap-4">
@@ -155,7 +150,6 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
         </div>
       </div>
 
-      {/* Per Match Stats */}
       {stats.matchesPlayed > 0 && (
         <div className="bg-white rounded-2xl shadow-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Per Match Averages</h3>
@@ -184,12 +178,10 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
         </div>
       )}
 
-      {/* Attendance Statistics */}
       {stats.attendance.total > 0 && (
         <div className="bg-white rounded-2xl shadow-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Attendance</h3>
 
-          {/* Attendance Rate */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-gray-700">Attendance Rate</span>
@@ -211,7 +203,6 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
             </div>
           </div>
 
-          {/* Attendance Breakdown */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <div className="text-center p-3 bg-green-50 rounded-lg">
               <p className="text-xl font-bold text-green-600">{stats.attendance.present}</p>
@@ -235,7 +226,6 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
             </div>
           </div>
 
-          {/* Events Summary */}
           <div className="mt-4 flex justify-center gap-6 text-sm text-gray-500">
             <span>{stats.attendance.totalTrainings} trainings</span>
             <span>{stats.attendance.totalMatches} matches</span>
@@ -244,7 +234,6 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
         </div>
       )}
 
-      {/* Rating Statistics */}
       {ratingStats && ratingStats.totalEvents > 0 && (
         <>
           <div className="bg-white rounded-2xl shadow-lg p-6">
@@ -286,12 +275,10 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
             </p>
           </div>
 
-          {/* Rating History Chart */}
           {ratingStats.history.length > 1 && (
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">Rating Progress</h3>
-                {/* Category Toggle Buttons */}
                 <div className="flex flex-wrap gap-2">
                   {CHART_CATEGORIES.map((cat) => {
                     const isVisible = visibleCategories.has(cat.key);

@@ -4,7 +4,6 @@ import { authApi } from '../api/auth';
 import { setAuthToken } from '../api/client';
 import type { ReactNode } from 'react';
 
-// Mock dependencies
 jest.mock('../api/auth', () => ({
   authApi: {
     login: jest.fn(),
@@ -37,23 +36,23 @@ describe('AuthContext', () => {
     role: 'PLAYER',
     firstName: 'John',
     lastName: 'Doe',
-    exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
+    exp: Math.floor(Date.now() / 1000) + 3600,
   };
 
   const expiredToken = {
     ...decodedToken,
-    exp: Math.floor(Date.now() / 1000) - 3600, // 1 hour ago
+    exp: Math.floor(Date.now() / 1000) - 3600,
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    localStorage.clear();
-    (window.localStorage.getItem as jest.Mock).mockReturnValue(null);
+    sessionStorage.clear();
+    (window.sessionStorage.getItem as jest.Mock).mockReturnValue(null);
   });
 
   describe('initial state', () => {
     it('should have null user and token when no stored token', async () => {
-      (window.localStorage.getItem as jest.Mock).mockReturnValue(null);
+      (window.sessionStorage.getItem as jest.Mock).mockReturnValue(null);
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -67,7 +66,7 @@ describe('AuthContext', () => {
     });
 
     it('should restore user from valid stored token', async () => {
-      (window.localStorage.getItem as jest.Mock).mockReturnValue(validToken);
+      (window.sessionStorage.getItem as jest.Mock).mockReturnValue(validToken);
       mockJwtDecode.mockReturnValue(decodedToken);
 
       const { result } = renderHook(() => useAuth(), { wrapper });
@@ -88,7 +87,7 @@ describe('AuthContext', () => {
     });
 
     it('should clear expired token from storage', async () => {
-      (window.localStorage.getItem as jest.Mock).mockReturnValue(validToken);
+      (window.sessionStorage.getItem as jest.Mock).mockReturnValue(validToken);
       mockJwtDecode.mockReturnValue(expiredToken);
 
       const { result } = renderHook(() => useAuth(), { wrapper });
@@ -98,11 +97,11 @@ describe('AuthContext', () => {
       });
 
       expect(result.current.user).toBeNull();
-      expect(window.localStorage.removeItem).toHaveBeenCalledWith('token');
+      expect(window.sessionStorage.removeItem).toHaveBeenCalledWith('token');
     });
 
     it('should handle invalid token gracefully', async () => {
-      (window.localStorage.getItem as jest.Mock).mockReturnValue('invalid-token');
+      (window.sessionStorage.getItem as jest.Mock).mockReturnValue('invalid-token');
       mockJwtDecode.mockImplementation(() => {
         throw new Error('Invalid token');
       });
@@ -114,7 +113,7 @@ describe('AuthContext', () => {
       });
 
       expect(result.current.user).toBeNull();
-      expect(window.localStorage.removeItem).toHaveBeenCalledWith('token');
+      expect(window.sessionStorage.removeItem).toHaveBeenCalledWith('token');
     });
   });
 
@@ -137,7 +136,7 @@ describe('AuthContext', () => {
         email: 'test@example.com',
         password: 'password123',
       });
-      expect(window.localStorage.setItem).toHaveBeenCalledWith('token', validToken);
+      expect(window.sessionStorage.setItem).toHaveBeenCalledWith('token', validToken);
       expect(mockSetAuthToken).toHaveBeenCalledWith(validToken);
       expect(result.current.user).toEqual({
         id: 'user-123',
@@ -196,7 +195,7 @@ describe('AuthContext', () => {
 
   describe('logout', () => {
     it('should logout user and clear state', async () => {
-      (window.localStorage.getItem as jest.Mock).mockReturnValue(validToken);
+      (window.sessionStorage.getItem as jest.Mock).mockReturnValue(validToken);
       mockJwtDecode.mockReturnValue(decodedToken);
 
       const { result } = renderHook(() => useAuth(), { wrapper });
@@ -211,7 +210,7 @@ describe('AuthContext', () => {
         result.current.logout();
       });
 
-      expect(window.localStorage.removeItem).toHaveBeenCalledWith('token');
+      expect(window.sessionStorage.removeItem).toHaveBeenCalledWith('token');
       expect(mockSetAuthToken).toHaveBeenCalledWith(null);
       expect(result.current.user).toBeNull();
       expect(result.current.token).toBeNull();
@@ -221,7 +220,6 @@ describe('AuthContext', () => {
 
   describe('useAuth hook', () => {
     it('should throw error when used outside AuthProvider', () => {
-      // Suppress console.error for this test
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       expect(() => {

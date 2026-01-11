@@ -2,7 +2,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { UserListPage } from './UserListPage';
 import { usersApi } from '../api/users';
 
-// Mock usersApi
 jest.mock('../api/users', () => ({
   usersApi: {
     getCoaches: jest.fn(),
@@ -20,7 +19,6 @@ jest.mock('../api/users', () => ({
   },
 }));
 
-// Mock react-router-dom
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
@@ -28,7 +26,6 @@ jest.mock('react-router-dom', () => ({
 
 const mockUsersApi = usersApi as jest.Mocked<typeof usersApi>;
 
-// Suppress act warnings for async state updates that happen after component unmount
 beforeAll(() => {
   jest.spyOn(console, 'error').mockImplementation((message) => {
     if (typeof message === 'string' && message.includes('not wrapped in act')) {
@@ -275,7 +272,6 @@ describe('UserListPage', () => {
 
     it('should display player group', async () => {
       await waitFor(() => {
-        // The group name appears in the player info
         const playerInfo = screen.getAllByText(/U12/);
         expect(playerInfo.length).toBeGreaterThan(0);
       });
@@ -333,7 +329,6 @@ describe('UserListPage', () => {
         target: { value: 'test' },
       });
 
-      // There should be a clear button (X icon)
       const clearButton = screen.getByRole('button', { name: '' });
       expect(clearButton).toBeInTheDocument();
     });
@@ -347,7 +342,6 @@ describe('UserListPage', () => {
         expect(screen.getByText('John Coach')).toBeInTheDocument();
       });
 
-      // Click delete button (title="Delete coach")
       const deleteButtons = screen.getAllByTitle('Delete coach');
       fireEvent.click(deleteButtons[0]);
 
@@ -448,12 +442,10 @@ describe('UserListPage', () => {
       });
 
       const linkButtons = screen.getAllByTitle('Link child');
-      // Click on Parent Two (second button) who has no children linked
       fireEvent.click(linkButtons[1]);
 
       await waitFor(() => {
         expect(screen.getByText(/Link Child to Parent Two/)).toBeInTheDocument();
-        // Players should be visible
         expect(screen.getByText('Tom Player')).toBeInTheDocument();
       });
     });
@@ -473,7 +465,6 @@ describe('UserListPage', () => {
         expect(screen.getByText('Sara Player')).toBeInTheDocument();
       });
 
-      // Find unlink button (the X next to child name)
       const unlinkButton = screen.getByTitle('Unlink child');
       fireEvent.click(unlinkButton);
 
@@ -639,9 +630,6 @@ describe('UserListPage', () => {
       await waitFor(() => {
         expect(screen.getByText('Edit Coach')).toBeInTheDocument();
       });
-
-      // The EditUserModal component is imported and rendered
-      // We just verify it opens - the actual save is handled by the modal component
     });
 
     it('should open edit modal for player', async () => {
@@ -692,19 +680,16 @@ describe('UserListPage', () => {
       });
 
       const linkButtons = screen.getAllByTitle('Link child');
-      // Click on Parent Two (second button) who has no children
       fireEvent.click(linkButtons[1]);
 
       await waitFor(() => {
         expect(screen.getByText(/Link Child to Parent Two/)).toBeInTheDocument();
       });
 
-      // Find and click a player to link
       await waitFor(() => {
         expect(screen.getByText('Tom Player')).toBeInTheDocument();
       });
 
-      // Click on the player to link
       fireEvent.click(screen.getByText('Tom Player'));
 
       await waitFor(() => {

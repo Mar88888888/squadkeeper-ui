@@ -60,7 +60,6 @@ export function PlayerStatsPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-6">
-        {/* Period Filter */}
         <div className="mb-6 flex justify-center">
           <div className="inline-flex rounded-lg bg-white shadow p-1">
             {PERIOD_OPTIONS.map((option) => (

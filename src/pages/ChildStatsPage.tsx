@@ -27,12 +27,10 @@ export function ChildStatsPage() {
       try {
         const result = await statsApi.getChildrenStats(period, selectedChildId || undefined);
         setData(result);
-        // Set selected child if not set yet
         const childId = selectedChildId || (result.children.length > 0 ? result.children[0].id : '');
         if (!selectedChildId && result.children.length > 0) {
           setSelectedChildId(childId);
         }
-        // Load rating stats for selected child
         if (childId) {
           const ratings = await evaluationsApi.getPlayerRatingStats(childId, period).catch(() => null);
           setRatingStats(ratings);
@@ -70,9 +68,7 @@ export function ChildStatsPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-6">
-        {/* Filters */}
         <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-center items-center">
-          {/* Child Switcher */}
           {children.length > 1 && (
             <select
               value={selectedChildId}
@@ -87,7 +83,6 @@ export function ChildStatsPage() {
             </select>
           )}
 
-          {/* Period Filter */}
           <div className="inline-flex rounded-lg bg-white shadow p-1">
             {PERIOD_OPTIONS.map((option) => (
               <button

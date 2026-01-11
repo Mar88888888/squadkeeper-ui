@@ -1,4 +1,3 @@
-// Position enum values
 export const Position = {
   GK: 'GK',
   CB: 'CB',
@@ -14,7 +13,6 @@ export const Position = {
 
 export type Position = (typeof Position)[keyof typeof Position];
 
-// Position labels for display
 export const POSITION_LABELS: Record<Position, string> = {
   GK: 'Goalkeeper',
   CB: 'Center Back',
@@ -28,7 +26,6 @@ export const POSITION_LABELS: Record<Position, string> = {
   ST: 'Striker',
 };
 
-// Position groupings for rating system
 export const POSITION_GROUPS = {
   GOALKEEPER: [Position.GK] as Position[],
   DEFENDER: [Position.CB, Position.LB, Position.RB] as Position[],
@@ -36,7 +33,6 @@ export const POSITION_GROUPS = {
   FORWARD: [Position.LW, Position.RW, Position.ST] as Position[],
 } as const;
 
-// Helper to get position group
 export function getPositionGroup(
   position: Position,
 ): 'GOALKEEPER' | 'DEFENDER' | 'MIDFIELDER' | 'FORWARD' {
@@ -46,10 +42,8 @@ export function getPositionGroup(
   return 'FORWARD';
 }
 
-// All positions as array for dropdowns
 export const POSITIONS = Object.values(Position) as Position[];
 
-// Defensive positions that can earn clean sheets
 export const DEFENSIVE_POSITIONS: Position[] = [
   Position.GK,
   Position.CB,
@@ -58,12 +52,10 @@ export const DEFENSIVE_POSITIONS: Position[] = [
   Position.CDM,
 ];
 
-// Helper to check if position is defensive (eligible for clean sheets)
 export function isDefensivePosition(position: Position): boolean {
   return DEFENSIVE_POSITIONS.includes(position);
 }
 
-// StrongFoot enum values
 export const StrongFoot = {
   RIGHT: 'RIGHT',
   LEFT: 'LEFT',
@@ -72,12 +64,10 @@ export const StrongFoot = {
 
 export type StrongFoot = (typeof StrongFoot)[keyof typeof StrongFoot];
 
-// StrongFoot labels for display
 export const STRONG_FOOT_LABELS: Record<StrongFoot, string> = {
   RIGHT: 'Right',
   LEFT: 'Left',
   BOTH: 'Both',
 };
 
-// All strong feet as array for dropdowns
 export const STRONG_FEET = Object.values(StrongFoot) as StrongFoot[];

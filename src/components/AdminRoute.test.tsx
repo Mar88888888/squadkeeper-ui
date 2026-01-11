@@ -3,12 +3,10 @@ import { AdminRoute } from './AdminRoute';
 import { useAuth } from '../contexts/AuthContext';
 import { UserRole } from '../types';
 
-// Mock useAuth
 jest.mock('../contexts/AuthContext', () => ({
   useAuth: jest.fn(),
 }));
 
-// Mock react-router-dom
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
   Navigate: ({ to }: { to: string }) => {

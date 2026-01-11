@@ -2,7 +2,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { UserManagementPage } from './UserManagementPage';
 import { usersApi } from '../api/users';
 
-// Mock usersApi
 jest.mock('../api/users', () => ({
   usersApi: {
     createCoach: jest.fn(),
@@ -13,7 +12,6 @@ jest.mock('../api/users', () => ({
   },
 }));
 
-// Mock react-router-dom
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
@@ -145,14 +143,13 @@ describe('UserManagementPage', () => {
     it('should create coach on form submit', async () => {
       render(<UserManagementPage />);
 
-      // Get all inputs by type
       const textInputs = document.querySelectorAll('input[type="text"]');
       const emailInputs = document.querySelectorAll('input[type="email"]');
       const passwordInputs = document.querySelectorAll('input[type="password"]');
       const dateInputs = document.querySelectorAll('input[type="date"]');
 
-      fireEvent.change(textInputs[0], { target: { value: 'John' } }); // First Name
-      fireEvent.change(textInputs[1], { target: { value: 'Coach' } }); // Last Name
+      fireEvent.change(textInputs[0], { target: { value: 'John' } });
+      fireEvent.change(textInputs[1], { target: { value: 'Coach' } });
       fireEvent.change(emailInputs[0], { target: { value: 'john@coach.com' } });
       fireEvent.change(passwordInputs[0], { target: { value: 'password123' } });
       fireEvent.change(dateInputs[0], { target: { value: '1980-01-15' } });
@@ -212,7 +209,6 @@ describe('UserManagementPage', () => {
     });
 
     it('should have all required player form inputs', async () => {
-      // Verify the form has all necessary input types for player creation
       const textInputs = document.querySelectorAll('input[type="text"]');
       const emailInputs = document.querySelectorAll('input[type="email"]');
       const passwordInputs = document.querySelectorAll('input[type="password"]');
@@ -220,13 +216,12 @@ describe('UserManagementPage', () => {
       const numberInputs = document.querySelectorAll('input[type="number"]');
       const selects = screen.getAllByRole('combobox');
 
-      // Verify inputs exist
-      expect(textInputs.length).toBeGreaterThanOrEqual(2); // First name, Last name
+      expect(textInputs.length).toBeGreaterThanOrEqual(2);
       expect(emailInputs.length).toBe(1);
       expect(passwordInputs.length).toBe(1);
       expect(dateInputs.length).toBe(1);
-      expect(numberInputs.length).toBeGreaterThanOrEqual(2); // Height, Weight
-      expect(selects.length).toBeGreaterThanOrEqual(2); // Position, Strong Foot
+      expect(numberInputs.length).toBeGreaterThanOrEqual(2);
+      expect(selects.length).toBeGreaterThanOrEqual(2);
     });
   });
 
@@ -309,7 +304,6 @@ describe('UserManagementPage', () => {
         expect(screen.getByText('John Player')).toBeInTheDocument();
       });
 
-      // Verify checkboxes exist for player selection
       const checkboxes = screen.getAllByRole('checkbox');
       expect(checkboxes.length).toBeGreaterThan(0);
     });

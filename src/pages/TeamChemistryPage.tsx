@@ -176,7 +176,6 @@ export function TeamChemistryPage() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-6">
-        {/* Filters */}
         <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-center">
           <div className="inline-flex rounded-lg bg-white shadow p-1">
             {PERIOD_OPTIONS.map((option) => (
@@ -223,7 +222,6 @@ export function TeamChemistryPage() {
           </div>
         ) : currentTeam ? (
           <div className="space-y-6">
-            {/* Team Header */}
             <div className="bg-gradient-to-r from-teal-600 to-cyan-600 rounded-2xl shadow-lg p-6 text-white">
               <h2 className="text-2xl font-bold">{currentTeam.groupName}</h2>
               <p className="text-teal-200">Chemistry Analysis</p>
@@ -243,7 +241,6 @@ export function TeamChemistryPage() {
               </div>
             </div>
 
-            {/* Info Banner */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-blue-800">
                 Chemistry scores are calculated based on win rate (40%), goal difference (35%), and
@@ -251,7 +248,6 @@ export function TeamChemistryPage() {
               </p>
             </div>
 
-            {/* Core Players */}
             {currentTeam.corePlayers.length > 0 && (
               <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -271,7 +267,6 @@ export function TeamChemistryPage() {
               </div>
             )}
 
-            {/* Best Pairs */}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <span className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
@@ -299,7 +294,6 @@ export function TeamChemistryPage() {
               )}
             </div>
 
-            {/* Best Trios */}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <span className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">

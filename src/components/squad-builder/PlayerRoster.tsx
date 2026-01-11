@@ -17,7 +17,6 @@ export const PlayerRoster: React.FC<PlayerRosterProps> = ({
   const filteredPlayers = useMemo(() => {
     let result = players;
 
-    // Apply position filter
     if (filter !== 'all') {
       const positionGroup =
         filter === 'gk'
@@ -31,7 +30,6 @@ export const PlayerRoster: React.FC<PlayerRosterProps> = ({
       result = result.filter((p) => positionGroup.includes(p.position as Position));
     }
 
-    // Apply search filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       result = result.filter(
@@ -59,11 +57,9 @@ export const PlayerRoster: React.FC<PlayerRosterProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-gray-50 rounded-lg border border-gray-200">
-      {/* Header */}
       <div className="p-4 border-b border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900 mb-3">Players</h3>
 
-        {/* Search */}
         <div className="relative mb-3">
           <input
             type="text"
@@ -87,7 +83,6 @@ export const PlayerRoster: React.FC<PlayerRosterProps> = ({
           </svg>
         </div>
 
-        {/* Position filters */}
         <div className="flex gap-1">
           {filterButtons.map((btn) => (
             <button
@@ -108,7 +103,6 @@ export const PlayerRoster: React.FC<PlayerRosterProps> = ({
         </div>
       </div>
 
-      {/* Player list */}
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {availablePlayers.length === 0 && usedPlayers.length === 0 ? (
           <div className="text-center text-gray-500 py-8">
@@ -116,12 +110,10 @@ export const PlayerRoster: React.FC<PlayerRosterProps> = ({
           </div>
         ) : (
           <>
-            {/* Available players */}
             {availablePlayers.map((player) => (
               <PlayerCard key={player.id} player={player} variant="roster" />
             ))}
 
-            {/* Already assigned players (shown faded) */}
             {usedPlayers.length > 0 && (
               <>
                 <div className="text-xs font-medium text-gray-400 uppercase tracking-wider pt-4 pb-2">
@@ -141,7 +133,6 @@ export const PlayerRoster: React.FC<PlayerRosterProps> = ({
         )}
       </div>
 
-      {/* Footer stats */}
       <div className="p-3 border-t border-gray-200 bg-white">
         <div className="flex justify-between text-xs text-gray-500">
           <span>Available: {availablePlayers.length}</span>

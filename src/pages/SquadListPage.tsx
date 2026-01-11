@@ -27,7 +27,6 @@ export function SquadListPage() {
     newName: string;
   }>({ isOpen: false, squadId: '', newName: '' });
 
-  // Load groups
   useEffect(() => {
     const loadGroups = async () => {
       try {
@@ -48,7 +47,6 @@ export function SquadListPage() {
     loadGroups();
   }, [user?.role]);
 
-  // Load squads when group changes
   useEffect(() => {
     const loadSquads = async () => {
       if (!selectedGroupId) {
@@ -127,7 +125,6 @@ export function SquadListPage() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8">
-        {/* Group Selector */}
         <div className="bg-white rounded-lg shadow p-4 mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Select Group
@@ -201,7 +198,6 @@ export function SquadListPage() {
                   key={squad.id}
                   className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden"
                 >
-                  {/* Squad Preview Header */}
                   <div className="bg-gradient-to-br from-green-500 to-green-600 p-4 text-white">
                     <h3 className="font-bold text-lg">{squad.name}</h3>
                     <p className="text-green-100 text-sm">
@@ -209,7 +205,6 @@ export function SquadListPage() {
                     </p>
                   </div>
 
-                  {/* Squad Info */}
                   <div className="p-4">
                     <div className="flex items-center justify-between text-sm mb-3">
                       <span className="text-gray-500">Players</span>
@@ -219,7 +214,6 @@ export function SquadListPage() {
                       </span>
                     </div>
 
-                    {/* Mini player list preview */}
                     <div className="flex flex-wrap gap-1 mb-4">
                       {squad.positions
                         .filter((p) => p.player)
@@ -248,7 +242,6 @@ export function SquadListPage() {
                       Updated {formatDate(squad.updatedAt)}
                     </div>
 
-                    {/* Actions */}
                     <div className="flex gap-2">
                       <button
                         onClick={() => navigate(`/squads/${squad.id}`)}
@@ -315,7 +308,6 @@ export function SquadListPage() {
         )}
       </main>
 
-      {/* Delete Confirmation */}
       <ConfirmDialog
         isOpen={deleteDialog.isOpen}
         title="Delete Squad"
@@ -327,7 +319,6 @@ export function SquadListPage() {
         onCancel={() => setDeleteDialog({ isOpen: false, squadId: '', squadName: '' })}
       />
 
-      {/* Duplicate Dialog */}
       {duplicateDialog.isOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">

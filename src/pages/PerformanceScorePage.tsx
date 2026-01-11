@@ -15,7 +15,7 @@ const PERIOD_OPTIONS: { value: StatsPeriod; label: string }[] = [
 ];
 
 function ScoreBar({ score, maxScore, color }: { score: number; maxScore: number; color: string }) {
-  const percentage = (score / maxScore) * 100;
+  const percentage = Math.min((score / maxScore) * 100, 100);
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 bg-gray-200 rounded-full h-2">
@@ -54,6 +54,8 @@ function PlayerScoreCard({
     return 'bg-gray-100 text-gray-600';
   };
 
+  const { weights } = player;
+
   return (
     <div
       onClick={onClick}
@@ -82,45 +84,31 @@ function PlayerScoreCard({
       <div className="space-y-2">
         <div>
           <div className="flex justify-between text-xs text-gray-500 mb-1">
-            <span>Evaluations</span>
-            <span>{player.components.evaluationScore.toFixed(1)} / 35</span>
+            <span>Skill</span>
+            <span>{player.components.skill.toFixed(1)} / {weights.skillWeight}</span>
           </div>
-          <ScoreBar score={player.components.evaluationScore} maxScore={35} color="bg-yellow-500" />
+          <ScoreBar score={player.components.skill} maxScore={weights.skillWeight} color="bg-yellow-500" />
         </div>
         <div>
           <div className="flex justify-between text-xs text-gray-500 mb-1">
-            <span>Goals</span>
-            <span>{player.components.goalContribution.toFixed(1)} / {player.maxWeights.goalMax}</span>
+            <span>Offense</span>
+            <span>{player.components.offense.toFixed(1)} / {weights.offenseWeight}</span>
           </div>
-          <ScoreBar score={player.components.goalContribution} maxScore={player.maxWeights.goalMax} color="bg-green-500" />
+          <ScoreBar score={player.components.offense} maxScore={weights.offenseWeight} color="bg-green-500" />
         </div>
         <div>
           <div className="flex justify-between text-xs text-gray-500 mb-1">
-            <span>Assists</span>
-            <span>{player.components.assistContribution.toFixed(1)} / {player.maxWeights.assistMax}</span>
+            <span>Defense</span>
+            <span>{player.components.defense.toFixed(1)} / {weights.defenseWeight}</span>
           </div>
-          <ScoreBar score={player.components.assistContribution} maxScore={player.maxWeights.assistMax} color="bg-purple-500" />
+          <ScoreBar score={player.components.defense} maxScore={weights.defenseWeight} color="bg-cyan-500" />
         </div>
         <div>
           <div className="flex justify-between text-xs text-gray-500 mb-1">
-            <span>Clean Sheets</span>
-            <span>{player.components.cleanSheetContribution.toFixed(1)} / {player.maxWeights.cleanSheetMax}</span>
+            <span>Team</span>
+            <span>{player.components.team.toFixed(1)} / {weights.teamWeight}</span>
           </div>
-          <ScoreBar score={player.components.cleanSheetContribution} maxScore={player.maxWeights.cleanSheetMax} color="bg-cyan-500" />
-        </div>
-        <div>
-          <div className="flex justify-between text-xs text-gray-500 mb-1">
-            <span>Win Rate</span>
-            <span>{player.components.winRateContribution.toFixed(1)} / 10</span>
-          </div>
-          <ScoreBar score={player.components.winRateContribution} maxScore={10} color="bg-blue-500" />
-        </div>
-        <div>
-          <div className="flex justify-between text-xs text-gray-500 mb-1">
-            <span>Participation</span>
-            <span>{player.components.participationBonus.toFixed(1)} / 5</span>
-          </div>
-          <ScoreBar score={player.components.participationBonus} maxScore={5} color="bg-orange-500" />
+          <ScoreBar score={player.components.team} maxScore={weights.teamWeight} color="bg-blue-500" />
         </div>
       </div>
 
@@ -205,7 +193,6 @@ export function PerformanceScorePage() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-6">
-        {/* Filters */}
         <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-center">
           <div className="inline-flex rounded-lg bg-white shadow p-1">
             {PERIOD_OPTIONS.map((option) => (
@@ -223,19 +210,34 @@ export function PerformanceScorePage() {
             ))}
           </div>
 
-          {teamScores.length > 1 && (
-            <select
-              value={selectedGroup}
-              onChange={(e) => setSelectedGroup(e.target.value)}
-              className="border border-gray-300 rounded-lg px-4 py-2 bg-white shadow focus:ring-2 focus:ring-green-500 focus:border-green-500"
-            >
-              {teamScores.map((team) => (
-                <option key={team.groupId} value={team.groupId}>
-                  {team.groupName}
-                </option>
-              ))}
-            </select>
-          )}
+          <div className="flex items-center gap-4">
+            {teamScores.length > 1 && (
+              <select
+                value={selectedGroup}
+                onChange={(e) => setSelectedGroup(e.target.value)}
+                className="border border-gray-300 rounded-lg px-4 py-2 bg-white shadow focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              >
+                {teamScores.map((team) => (
+                  <option key={team.groupId} value={team.groupId}>
+                    {team.groupName}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {selectedGroup && (
+              <button
+                onClick={() => navigate(`/performance-settings/${selectedGroup}`)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Settings
+              </button>
+            )}
+          </div>
         </div>
 
         {isLoading ? (
@@ -252,7 +254,6 @@ export function PerformanceScorePage() {
           </div>
         ) : currentTeam ? (
           <div className="space-y-6">
-            {/* Team Header */}
             <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-lg p-6 text-white">
               <h2 className="text-2xl font-bold">{currentTeam.groupName}</h2>
               <p className="text-indigo-200">Performance Analysis</p>
@@ -274,39 +275,28 @@ export function PerformanceScorePage() {
               </div>
             </div>
 
-            {/* Score Legend */}
             <div className="bg-white rounded-xl shadow p-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">Score Breakdown</h3>
-              <p className="text-xs text-gray-500 mb-3">Goals, Assists, and Clean Sheets weights vary by position (totaling 50%)</p>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-sm">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">Score Components</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                  <span className="text-gray-600">Evaluations (35%)</span>
+                  <span className="text-gray-600">Skill (Evaluations)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                  <span className="text-gray-600">Goals</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                  <span className="text-gray-600">Assists</span>
+                  <span className="text-gray-600">Offense (Goals + Assists)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-cyan-500"></div>
-                  <span className="text-gray-600">Clean Sheets</span>
+                  <span className="text-gray-600">Defense (Clean Sheets)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                  <span className="text-gray-600">Win Rate (10%)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                  <span className="text-gray-600">Participation (5%)</span>
+                  <span className="text-gray-600">Team (Win Rate + Participation)</span>
                 </div>
               </div>
             </div>
 
-            {/* Players Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {currentTeam.players.map((player, index) => (
                 <PlayerScoreCard

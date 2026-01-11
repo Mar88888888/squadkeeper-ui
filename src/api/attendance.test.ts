@@ -90,7 +90,7 @@ describe('attendanceApi', () => {
           { playerId: 'p2', status: AttendanceStatus.ABSENT },
           { playerId: 'p3', status: AttendanceStatus.SICK },
           { playerId: 'p4', status: AttendanceStatus.LATE },
-          { playerId: 'p5', status: AttendanceStatus.EXCUSED },
+          { playerId: 'p5', status: AttendanceStatus.BENCHED },
         ],
       };
       mockApiClient.post.mockResolvedValue({ data: [] });
@@ -109,8 +109,8 @@ describe('attendanceApi', () => {
         absent: 2,
         late: 1,
         sick: 1,
-        excused: 1,
-        rate: 0.75,
+        benched: 1,
+        rate: 75,
         totalTrainings: 15,
         totalMatches: 5,
       };
@@ -126,8 +126,8 @@ describe('attendanceApi', () => {
   describe('getMyStatsAsParent', () => {
     it('should call GET /attendance/my/stats and return array', async () => {
       const mockStats = [
-        { playerId: 'p1', playerName: 'John Doe', total: 10, present: 8, absent: 1, late: 1, sick: 0, excused: 0, rate: 0.8, totalTrainings: 8, totalMatches: 2 },
-        { playerId: 'p2', playerName: 'Jane Doe', total: 10, present: 9, absent: 0, late: 0, sick: 1, excused: 0, rate: 0.9, totalTrainings: 8, totalMatches: 2 },
+        { playerId: 'p1', playerName: 'John Doe', total: 10, present: 8, absent: 1, late: 1, sick: 0, benched: 0, rate: 80, totalTrainings: 8, totalMatches: 2 },
+        { playerId: 'p2', playerName: 'Jane Doe', total: 10, present: 9, absent: 0, late: 0, sick: 1, benched: 0, rate: 90, totalTrainings: 8, totalMatches: 2 },
       ];
       mockApiClient.get.mockResolvedValue({ data: mockStats });
 
@@ -145,6 +145,6 @@ describe('AttendanceStatus constants', () => {
     expect(AttendanceStatus.ABSENT).toBe('ABSENT');
     expect(AttendanceStatus.SICK).toBe('SICK');
     expect(AttendanceStatus.LATE).toBe('LATE');
-    expect(AttendanceStatus.EXCUSED).toBe('EXCUSED');
+    expect(AttendanceStatus.BENCHED).toBe('BENCHED');
   });
 });

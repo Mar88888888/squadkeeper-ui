@@ -4,26 +4,22 @@ import { useAuth } from '../contexts/AuthContext';
 import { contactsApi } from '../api/contacts';
 import { UserRole } from '../types';
 
-// Mock useAuth
 jest.mock('../contexts/AuthContext', () => ({
   useAuth: jest.fn(),
 }));
 
-// Mock contactsApi
 jest.mock('../api/contacts', () => ({
   contactsApi: {
     getContacts: jest.fn(),
   },
 }));
 
-// Mock react-router-dom
 jest.mock('react-router-dom', () => ({
   Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
     <a href={to}>{children}</a>
   ),
 }));
 
-// Mock clipboard API
 Object.assign(navigator, {
   clipboard: {
     writeText: jest.fn().mockResolvedValue(undefined),
@@ -33,7 +29,6 @@ Object.assign(navigator, {
 const mockUseAuth = useAuth as jest.Mock;
 const mockContactsApi = contactsApi as jest.Mocked<typeof contactsApi>;
 
-// Suppress act warnings for async state updates that happen after component unmount
 beforeAll(() => {
   jest.spyOn(console, 'error').mockImplementation((message) => {
     if (typeof message === 'string' && message.includes('not wrapped in act')) {
@@ -193,7 +188,6 @@ describe('ContactsPage', () => {
       render(<ContactsPage />);
 
       await waitFor(() => {
-        // Initials are rendered as two text nodes inside a span
         const initialsContainers = document.querySelectorAll('.bg-blue-100');
         expect(initialsContainers.length).toBeGreaterThan(0);
       });

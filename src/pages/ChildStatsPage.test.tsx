@@ -1,23 +1,28 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ChildStatsPage } from './ChildStatsPage';
 import { statsApi } from '../api/stats';
+import { evaluationsApi } from '../api/evaluations';
 
-// Mock statsApi
 jest.mock('../api/stats', () => ({
   statsApi: {
     getChildrenStats: jest.fn(),
   },
 }));
 
-// Mock react-router-dom
+jest.mock('../api/evaluations', () => ({
+  evaluationsApi: {
+    getPlayerRatingStats: jest.fn(),
+  },
+}));
+
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
 const mockStatsApi = statsApi as jest.Mocked<typeof statsApi>;
+const mockEvaluationsApi = evaluationsApi as jest.Mocked<typeof evaluationsApi>;
 
-// Suppress act warnings for async state updates that happen after component unmount
 beforeAll(() => {
   jest.spyOn(console, 'error').mockImplementation((message) => {
     if (typeof message === 'string' && message.includes('not wrapped in act')) {
@@ -40,9 +45,22 @@ describe('ChildStatsPage', () => {
     stats: {
       playerId: 'c1',
       playerName: 'Child One',
+      position: 'ST',
       matchesPlayed: 8,
       goals: 4,
       assists: 2,
+      cleanSheets: 0,
+      attendance: {
+        total: 15,
+        present: 12,
+        late: 1,
+        benched: 0,
+        absent: 1,
+        sick: 1,
+        rate: 80,
+        totalTrainings: 12,
+        totalMatches: 3,
+      },
       period: 'all_time' as const,
     },
   };
@@ -50,6 +68,7 @@ describe('ChildStatsPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockStatsApi.getChildrenStats.mockResolvedValue(mockChildrenStats);
+    mockEvaluationsApi.getPlayerRatingStats.mockResolvedValue(null);
   });
 
   it('should render Child Statistics header', async () => {
@@ -84,9 +103,9 @@ describe('ChildStatsPage', () => {
     render(<ChildStatsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('8')).toBeInTheDocument(); // matches
-      expect(screen.getByText('4')).toBeInTheDocument(); // goals
-      expect(screen.getByText('2')).toBeInTheDocument(); // assists
+      expect(screen.getByText('8')).toBeInTheDocument();
+      expect(screen.getByText('4')).toBeInTheDocument();
+      expect(screen.getByText('2')).toBeInTheDocument();
     });
   });
 
@@ -94,7 +113,7 @@ describe('ChildStatsPage', () => {
     render(<ChildStatsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('6')).toBeInTheDocument(); // 4 goals + 2 assists
+      expect(screen.getByText('6')).toBeInTheDocument();
       expect(screen.getByText('Goal Contributions')).toBeInTheDocument();
     });
   });

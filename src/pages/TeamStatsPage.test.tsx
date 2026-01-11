@@ -2,14 +2,12 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { TeamStatsPage } from './TeamStatsPage';
 import { statsApi } from '../api/stats';
 
-// Mock statsApi
 jest.mock('../api/stats', () => ({
   statsApi: {
     getTeamStats: jest.fn(),
   },
 }));
 
-// Mock react-router-dom
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
@@ -17,7 +15,6 @@ jest.mock('react-router-dom', () => ({
 
 const mockStatsApi = statsApi as jest.Mocked<typeof statsApi>;
 
-// Suppress act warnings for async state updates that happen after component unmount
 beforeAll(() => {
   jest.spyOn(console, 'error').mockImplementation((message) => {
     if (typeof message === 'string' && message.includes('not wrapped in act')) {
@@ -31,15 +28,37 @@ afterAll(() => {
   jest.restoreAllMocks();
 });
 
+const createPlayerStats = (id: string, name: string, matches: number, goals: number, assists: number, position = 'CM') => ({
+    playerId: id,
+    playerName: name,
+    position,
+    matchesPlayed: matches,
+    goals,
+    assists,
+    cleanSheets: 0,
+    attendance: {
+      total: matches + 5,
+      present: matches,
+      late: 2,
+      benched: 1,
+      absent: 1,
+      sick: 1,
+      rate: 80,
+      totalTrainings: matches,
+      totalMatches: 5,
+    },
+    period: 'all_time' as const,
+  });
+
 describe('TeamStatsPage', () => {
   const mockTeamStats = [
     {
       groupId: 'g1',
       groupName: 'U12',
       players: [
-        { playerId: 'p1', playerName: 'Player One', matchesPlayed: 10, goals: 5, assists: 3, period: 'all_time' as const },
-        { playerId: 'p2', playerName: 'Player Two', matchesPlayed: 8, goals: 3, assists: 4, period: 'all_time' as const },
-        { playerId: 'p3', playerName: 'Player Three', matchesPlayed: 6, goals: 0, assists: 0, period: 'all_time' as const },
+        createPlayerStats('p1', 'Player One', 10, 5, 3),
+        createPlayerStats('p2', 'Player Two', 8, 3, 4),
+        createPlayerStats('p3', 'Player Three', 6, 0, 0),
       ],
       period: 'all_time' as const,
     },
@@ -47,7 +66,7 @@ describe('TeamStatsPage', () => {
       groupId: 'g2',
       groupName: 'U14',
       players: [
-        { playerId: 'p4', playerName: 'Player Four', matchesPlayed: 12, goals: 8, assists: 5, period: 'all_time' as const },
+        createPlayerStats('p4', 'Player Four', 12, 8, 5),
       ],
       period: 'all_time' as const,
     },
@@ -99,7 +118,7 @@ describe('TeamStatsPage', () => {
     render(<TeamStatsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('24')).toBeInTheDocument(); // 10+8+6 appearances
+      expect(screen.getByText('24')).toBeInTheDocument();
       expect(screen.getByText('Total Appearances')).toBeInTheDocument();
     });
   });

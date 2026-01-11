@@ -99,7 +99,6 @@ export function Calendar({
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
-      {/* Header */}
       <div className="bg-gradient-to-r from-green-600 to-green-500 px-5 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -116,7 +115,6 @@ export function Calendar({
             )}
           </div>
           <div className="flex items-center gap-4">
-            {/* Legend */}
             <div className="hidden sm:flex gap-4">
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-300"></span>
@@ -151,7 +149,6 @@ export function Calendar({
         </div>
       </div>
 
-      {/* Weekday headers */}
       <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-100">
         {WEEKDAYS.map((day, index) => (
           <div
@@ -165,7 +162,6 @@ export function Calendar({
         ))}
       </div>
 
-      {/* Calendar grid */}
       <div className="grid grid-cols-7">
         {days.map((day, index) => {
           const dayEvents = day ? eventsByDay.get(day) || [] : [];

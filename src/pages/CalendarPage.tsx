@@ -161,7 +161,6 @@ export function CalendarPage() {
               onToday={handleToday}
             />
 
-            {/* Stats */}
             <div className="flex justify-center gap-6 text-sm text-gray-500">
               <span className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-500"></span>

@@ -37,7 +37,6 @@ export interface AuthContextType {
   logout: () => void;
 }
 
-// Admin user creation types
 export interface CreateCoachRequest {
   email: string;
   password: string;

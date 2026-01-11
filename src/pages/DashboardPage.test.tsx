@@ -4,12 +4,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { attendanceApi } from '../api/attendance';
 import { UserRole } from '../types';
 
-// Mock useAuth
 jest.mock('../contexts/AuthContext', () => ({
   useAuth: jest.fn(),
 }));
 
-// Mock attendanceApi
 jest.mock('../api/attendance', () => ({
   attendanceApi: {
     getMyStats: jest.fn(),
@@ -17,7 +15,6 @@ jest.mock('../api/attendance', () => ({
   },
 }));
 
-// Mock react-router-dom
 jest.mock('react-router-dom', () => ({
   Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
     <a href={to}>{children}</a>
@@ -27,7 +24,6 @@ jest.mock('react-router-dom', () => ({
 const mockUseAuth = useAuth as jest.Mock;
 const mockAttendanceApi = attendanceApi as jest.Mocked<typeof attendanceApi>;
 
-// Suppress act warnings for async state updates that happen after component unmount
 beforeAll(() => {
   jest.spyOn(console, 'error').mockImplementation((message) => {
     if (typeof message === 'string' && message.includes('not wrapped in act')) {
@@ -74,7 +70,6 @@ describe('DashboardPage', () => {
 
       render(<DashboardPage />);
 
-      // User name appears in multiple places (header and account info)
       const userNames = screen.getAllByText('John Doe');
       expect(userNames.length).toBeGreaterThan(0);
     });
@@ -140,7 +135,6 @@ describe('DashboardPage', () => {
 
       render(<DashboardPage />);
 
-      // Player text appears in multiple places (badge and account info)
       const playerTexts = screen.getAllByText('Player');
       expect(playerTexts.length).toBeGreaterThan(0);
     });
@@ -201,7 +195,6 @@ describe('DashboardPage', () => {
     it('should display Coach badge', () => {
       render(<DashboardPage />);
 
-      // Coach text appears in multiple places (badge and account info)
       const coachTexts = screen.getAllByText('Coach');
       expect(coachTexts.length).toBeGreaterThan(0);
     });
@@ -231,7 +224,6 @@ describe('DashboardPage', () => {
     it('should display Administrator badge', () => {
       render(<DashboardPage />);
 
-      // Administrator text appears in multiple places (badge and account info)
       const adminTexts = screen.getAllByText('Administrator');
       expect(adminTexts.length).toBeGreaterThan(0);
     });
@@ -270,7 +262,6 @@ describe('DashboardPage', () => {
 
       render(<DashboardPage />);
 
-      // Parent text appears in multiple places (badge and account info)
       const parentTexts = screen.getAllByText('Parent');
       expect(parentTexts.length).toBeGreaterThan(0);
     });

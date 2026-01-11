@@ -3,12 +3,10 @@ import { RoleRoute } from './RoleRoute';
 import { useAuth } from '../contexts/AuthContext';
 import { UserRole } from '../types';
 
-// Mock useAuth
 jest.mock('../contexts/AuthContext', () => ({
   useAuth: jest.fn(),
 }));
 
-// Mock react-router-dom
 jest.mock('react-router-dom', () => ({
   Navigate: ({ to }: { to: string }) => {
     return <div data-testid="navigate">Redirecting to {to}</div>;

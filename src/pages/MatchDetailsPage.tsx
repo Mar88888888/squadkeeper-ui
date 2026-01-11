@@ -68,10 +68,8 @@ export function MatchDetailsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('attendance');
   const [isSaving, setIsSaving] = useState(false);
 
-  // Attendance state
   const [attendanceRecords, setAttendanceRecords] = useState<Record<string, AttendanceStatus>>({});
 
-  // Evaluation state
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerBrief | null>(null);
   const [evalRatings, setEvalRatings] = useState<Record<EvaluationCategory, number>>({
     technical: 5,
@@ -81,7 +79,6 @@ export function MatchDetailsPage() {
   });
   const [evalComment, setEvalComment] = useState('');
 
-  // Goal state
   const [isAddGoalModalOpen, setIsAddGoalModalOpen] = useState(false);
   const [goalForm, setGoalForm] = useState<AddGoalRequest>({
     scorerId: '',
@@ -90,7 +87,6 @@ export function MatchDetailsPage() {
     isOwnGoal: false,
   });
 
-  // Score state
   const [isScoreModalOpen, setIsScoreModalOpen] = useState(false);
   const [scoreForm, setScoreForm] = useState<UpdateMatchResultRequest>({
     homeGoals: 0,
@@ -112,7 +108,6 @@ export function MatchDetailsPage() {
       setEvaluations(evaluationsData);
       setGoals(matchData.goals || []);
 
-      // Initialize attendance records from existing data
       const records: Record<string, AttendanceStatus> = {};
       matchData.group.players.forEach((player) => {
         const existing = attendanceData.find((a) => a.player.id === player.id);
@@ -120,7 +115,6 @@ export function MatchDetailsPage() {
       });
       setAttendanceRecords(records);
 
-      // Initialize score form
       if (matchData.homeGoals !== null && matchData.awayGoals !== null) {
         setScoreForm({
           homeGoals: matchData.homeGoals,
@@ -184,7 +178,6 @@ export function MatchDetailsPage() {
         records: [record],
       });
 
-      // Reload evaluations
       const evaluationsData = await evaluationsApi.getByMatch(id);
       setEvaluations(evaluationsData);
       setSelectedPlayer(null);
@@ -198,7 +191,6 @@ export function MatchDetailsPage() {
 
   const openEvaluationModal = (player: PlayerBrief) => {
     setSelectedPlayer(player);
-    // Load existing evaluation for this player (now single row per player)
     const playerEval = evaluations.find((e) => e.player.id === player.id);
     if (playerEval) {
       setEvalRatings({
@@ -421,7 +413,6 @@ export function MatchDetailsPage() {
           </div>
         )}
 
-        {/* Tabs */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="border-b border-gray-200">
             <nav className="flex">
@@ -458,7 +449,6 @@ export function MatchDetailsPage() {
             </nav>
           </div>
 
-          {/* Attendance Tab */}
           {activeTab === 'attendance' && (
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
@@ -524,7 +514,6 @@ export function MatchDetailsPage() {
             </div>
           )}
 
-          {/* Evaluations Tab */}
           {activeTab === 'evaluations' && (
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
@@ -545,7 +534,6 @@ export function MatchDetailsPage() {
                   const playerStatus = getPlayerAttendance(player.id);
                   const avgRating = playerEval ? getEvaluationAverage(playerEval) : null;
 
-                  // For read-only mode, show all players with their evaluations
                   if (isReadOnly) {
                     return (
                       <div key={player.id} className="p-4 rounded-lg bg-gray-50">
@@ -593,7 +581,6 @@ export function MatchDetailsPage() {
                     );
                   }
 
-                  // Edit mode for coaches/admins
                   return (
                     <div
                       key={player.id}
@@ -663,7 +650,6 @@ export function MatchDetailsPage() {
             </div>
           )}
 
-          {/* Goals Tab */}
           {activeTab === 'goals' && (
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
@@ -734,7 +720,6 @@ export function MatchDetailsPage() {
         </div>
       </main>
 
-      {/* Evaluation Modal */}
       {selectedPlayer && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
@@ -806,7 +791,6 @@ export function MatchDetailsPage() {
         </div>
       )}
 
-      {/* Add Goal Modal */}
       {isAddGoalModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
@@ -919,7 +903,6 @@ export function MatchDetailsPage() {
         </div>
       )}
 
-      {/* Score Modal */}
       {isScoreModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-sm w-full mx-4 p-6">

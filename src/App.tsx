@@ -22,6 +22,7 @@ import { ContactsPage } from './pages/ContactsPage';
 import { SquadListPage } from './pages/SquadListPage';
 import { SquadBuilderPage } from './pages/SquadBuilderPage';
 import { PerformanceScorePage } from './pages/PerformanceScorePage';
+import { PerformanceSettingsPage } from './pages/PerformanceSettingsPage';
 import { TeamChemistryPage } from './pages/TeamChemistryPage';
 import { UserRole } from './types';
 
@@ -172,6 +173,14 @@ function App() {
             element={
               <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH]}>
                 <PerformanceScorePage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/performance-settings/:groupId"
+            element={
+              <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH]}>
+                <PerformanceSettingsPage />
               </RoleRoute>
             }
           />

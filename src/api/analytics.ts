@@ -2,21 +2,18 @@ import { apiClient } from './client';
 import type { StatsPeriod } from './stats';
 import type { Position } from '../constants/player.constants';
 
-// Performance Score Types
 export interface PerformanceScoreComponents {
-  evaluationScore: number;        // 0-35 points
-  goalContribution: number;       // Position-dependent (part of 50 pts)
-  assistContribution: number;     // Position-dependent (part of 50 pts)
-  cleanSheetContribution: number; // Position-dependent (part of 50 pts)
-  winRateContribution: number;    // 0-10 points
-  participationBonus: number;     // 0-5 points
+  skill: number;
+  offense: number;
+  defense: number;
+  team: number;
 }
 
-// Position-specific max weights (goals + assists + cleanSheets = 50)
-export interface PositionScoreWeights {
-  goalMax: number;
-  assistMax: number;
-  cleanSheetMax: number;
+export interface PerformanceWeights {
+  skillWeight: number;
+  offenseWeight: number;
+  defenseWeight: number;
+  teamWeight: number;
 }
 
 export interface RawPerformanceStats {
@@ -44,7 +41,7 @@ export interface PerformanceScore {
   position: Position;
   performanceScore: number;
   components: PerformanceScoreComponents;
-  maxWeights: PositionScoreWeights;
+  weights: PerformanceWeights;
   rawStats: RawPerformanceStats;
   period: StatsPeriod;
 }
@@ -56,7 +53,6 @@ export interface TeamPerformanceScore {
   period: StatsPeriod;
 }
 
-// Team Chemistry Types
 export interface PlayerInfo {
   id: string;
   name: string;
@@ -97,9 +93,33 @@ export interface TeamChemistry {
   corePlayers: CorePlayer[];
 }
 
-// API Functions
+export interface PositionExpectation {
+  expectedGoalsPerMatch: number;
+  expectedAssistsPerMatch: number;
+}
+
+export type PositionExpectations = Record<Position, PositionExpectation>;
+
+export interface PerformanceSettings {
+  groupId: string;
+  groupName: string;
+  skillWeight: number;
+  offenseWeight: number;
+  defenseWeight: number;
+  teamWeight: number;
+  positionExpectations: PositionExpectations;
+  isCustom: boolean;
+}
+
+export interface UpdatePerformanceSettingsDto {
+  skillWeight?: number;
+  offenseWeight?: number;
+  defenseWeight?: number;
+  teamWeight?: number;
+  positionExpectations?: Partial<PositionExpectations>;
+}
+
 export const analyticsApi = {
-  // Performance Score
   getMyPerformanceScore: async (period: StatsPeriod = 'all_time'): Promise<PerformanceScore> => {
     const response = await apiClient.get<PerformanceScore>(
       `/analytics/performance-score/my?period=${period}`
@@ -134,7 +154,6 @@ export const analyticsApi = {
     return response.data;
   },
 
-  // Team Chemistry
   getMyTeamsChemistry: async (period: StatsPeriod = 'all_time'): Promise<TeamChemistry[]> => {
     const response = await apiClient.get<TeamChemistry[]>(
       `/analytics/chemistry/my-teams?period=${period}`
@@ -149,6 +168,49 @@ export const analyticsApi = {
   ): Promise<TeamChemistry> => {
     const response = await apiClient.get<TeamChemistry>(
       `/analytics/chemistry/${groupId}?period=${period}&minMatches=${minMatches}`
+    );
+    return response.data;
+  },
+
+  getSettings: async (groupId: string): Promise<PerformanceSettings> => {
+    const response = await apiClient.get<PerformanceSettings>(
+      `/analytics/settings/${groupId}`
+    );
+    return response.data;
+  },
+
+  updateSettings: async (
+    groupId: string,
+    dto: UpdatePerformanceSettingsDto
+  ): Promise<PerformanceSettings> => {
+    const response = await apiClient.patch<PerformanceSettings>(
+      `/analytics/settings/${groupId}`,
+      dto
+    );
+    return response.data;
+  },
+
+  resetSettings: async (groupId: string): Promise<PerformanceSettings> => {
+    const response = await apiClient.delete<PerformanceSettings>(
+      `/analytics/settings/${groupId}`
+    );
+    return response.data;
+  },
+
+  copySettings: async (
+    targetGroupId: string,
+    sourceGroupId: string
+  ): Promise<PerformanceSettings> => {
+    const response = await apiClient.post<PerformanceSettings>(
+      `/analytics/settings/${targetGroupId}/copy`,
+      { sourceGroupId }
+    );
+    return response.data;
+  },
+
+  getMyGroups: async (): Promise<{ id: string; name: string }[]> => {
+    const response = await apiClient.get<{ id: string; name: string }[]>(
+      '/analytics/settings/my-groups'
     );
     return response.data;
   },

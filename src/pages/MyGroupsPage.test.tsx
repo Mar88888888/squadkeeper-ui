@@ -3,7 +3,6 @@ import { MyGroupsPage } from './MyGroupsPage';
 import { groupsApi } from '../api/groups';
 import { schedulesApi } from '../api/schedules';
 
-// Mock APIs
 jest.mock('../api/groups', () => ({
   groupsApi: {
     getMy: jest.fn(),
@@ -19,7 +18,6 @@ jest.mock('../api/schedules', () => ({
   },
 }));
 
-// Mock react-router-dom
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
@@ -28,7 +26,6 @@ jest.mock('react-router-dom', () => ({
 const mockGroupsApi = groupsApi as jest.Mocked<typeof groupsApi>;
 const mockSchedulesApi = schedulesApi as jest.Mocked<typeof schedulesApi>;
 
-// Suppress act warnings for async state updates that happen after component unmount
 beforeAll(() => {
   jest.spyOn(console, 'error').mockImplementation((message) => {
     if (typeof message === 'string' && message.includes('not wrapped in act')) {
@@ -263,7 +260,6 @@ describe('MyGroupsPage', () => {
       fireEvent.click(scheduleButtons[0]);
 
       await waitFor(() => {
-        // Both section header and button have "Generate Trainings" text
         const generateElements = screen.getAllByText('Generate Trainings');
         expect(generateElements.length).toBeGreaterThan(0);
       });
@@ -310,7 +306,6 @@ describe('MyGroupsPage', () => {
 
       fireEvent.click(screen.getByText('+ Add Day'));
 
-      // Should now have schedule inputs
       await waitFor(() => {
         const selects = document.querySelectorAll('select');
         expect(selects.length).toBeGreaterThan(0);
@@ -442,7 +437,6 @@ describe('MyGroupsPage', () => {
         expect(screen.getByText('From')).toBeInTheDocument();
       });
 
-      // Fill in dates
       const dateInputs = document.querySelectorAll('input[type="date"]');
       if (dateInputs.length >= 2) {
         fireEvent.change(dateInputs[0], { target: { value: '2024-01-01' } });
@@ -519,7 +513,6 @@ describe('MyGroupsPage', () => {
       const scheduleButtons = screen.getAllByText('Training Schedule');
       fireEvent.click(scheduleButtons[0]);
 
-      // Modal opens and shows loading spinner
       await waitFor(() => {
         const spinners = document.querySelectorAll('.animate-spin');
         expect(spinners.length).toBeGreaterThan(0);

@@ -3,15 +3,13 @@ import { TrainingDetailsPage } from './TrainingDetailsPage';
 import { useAuth } from '../contexts/AuthContext';
 import { trainingsApi } from '../api/trainings';
 import { attendanceApi, AttendanceStatus } from '../api/attendance';
-import { evaluationsApi, EvaluationType } from '../api/evaluations';
+import { evaluationsApi, getEvaluationAverage } from '../api/evaluations';
 import { UserRole } from '../types';
 
-// Mock useAuth
 jest.mock('../contexts/AuthContext', () => ({
   useAuth: jest.fn(),
 }));
 
-// Mock APIs
 jest.mock('../api/trainings', () => ({
   trainingsApi: {
     getOne: jest.fn(),
@@ -28,7 +26,7 @@ jest.mock('../api/attendance', () => ({
     ABSENT: 'ABSENT',
     SICK: 'SICK',
     LATE: 'LATE',
-    EXCUSED: 'EXCUSED',
+    BENCHED: 'BENCHED',
   },
 }));
 
@@ -37,21 +35,13 @@ jest.mock('../api/evaluations', () => ({
     getByTraining: jest.fn(),
     createBatch: jest.fn(),
   },
-  EvaluationType: {
-    TECHNICAL: 'TECHNICAL',
-    TACTICAL: 'TACTICAL',
-    PHYSICAL: 'PHYSICAL',
-    PSYCHOLOGICAL: 'PSYCHOLOGICAL',
-  },
-  EvaluationTypeLabels: {
-    TECHNICAL: 'Technical',
-    TACTICAL: 'Tactical',
-    PHYSICAL: 'Physical',
-    PSYCHOLOGICAL: 'Psychological',
-  },
+  getEvaluationAverage: jest.fn((evaluation) => {
+    const ratings = [evaluation.technical, evaluation.tactical, evaluation.physical, evaluation.psychological].filter(r => r !== null && r !== undefined);
+    if (ratings.length === 0) return null;
+    return ratings.reduce((a, b) => a + b, 0) / ratings.length;
+  }),
 }));
 
-// Mock react-router-dom
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
@@ -63,7 +53,6 @@ const mockTrainingsApi = trainingsApi as jest.Mocked<typeof trainingsApi>;
 const mockAttendanceApi = attendanceApi as jest.Mocked<typeof attendanceApi>;
 const mockEvaluationsApi = evaluationsApi as jest.Mocked<typeof evaluationsApi>;
 
-// Suppress act warnings for async state updates that happen after component unmount
 beforeAll(() => {
   jest.spyOn(console, 'error').mockImplementation((message) => {
     if (typeof message === 'string' && message.includes('not wrapped in act')) {
@@ -99,7 +88,7 @@ describe('TrainingDetailsPage', () => {
   ];
 
   const mockEvaluations = [
-    { id: 'e1', type: EvaluationType.TECHNICAL, rating: 8, comment: null, player: { id: 'p1', firstName: 'John', lastName: 'Player' }, coach: { id: 'c1', firstName: 'Coach', lastName: 'Smith' } },
+    { id: 'e1', technical: 8, tactical: 7, physical: 8, psychological: 7, comment: null, player: { id: 'p1', firstName: 'John', lastName: 'Player' }, coach: { id: 'c1', firstName: 'Coach', lastName: 'Smith' } },
   ];
 
   beforeEach(() => {
@@ -212,7 +201,6 @@ describe('TrainingDetailsPage', () => {
       fireEvent.click(screen.getByText('Evaluations'));
 
       await waitFor(() => {
-        // John is present, should have evaluation button
         expect(screen.getByText(/Add Evaluation|Edit/)).toBeInTheDocument();
       });
     });
@@ -239,12 +227,10 @@ describe('TrainingDetailsPage', () => {
       render(<TrainingDetailsPage />);
 
       await waitFor(() => {
-        // Multiple players may show "Present" status
         const presentElements = screen.getAllByText('Present');
         expect(presentElements.length).toBeGreaterThan(0);
       });
 
-      // Should not have comboboxes in read-only mode
       expect(screen.queryAllByRole('combobox')).toHaveLength(0);
     });
   });
@@ -278,7 +264,6 @@ describe('TrainingDetailsPage', () => {
       render(<TrainingDetailsPage />);
 
       await waitFor(() => {
-        // Either shows error or not found message
         const hasError = screen.queryByText('Failed to load training details') ||
                         screen.queryByText('Training not found');
         expect(hasError).toBeTruthy();
@@ -326,11 +311,9 @@ describe('TrainingDetailsPage', () => {
         expect(selects.length).toBeGreaterThan(0);
       });
 
-      // Change a player's attendance status
       const selects = screen.getAllByRole('combobox');
       fireEvent.change(selects[0], { target: { value: 'ABSENT' } });
 
-      // Status should be updated
       expect((selects[0] as HTMLSelectElement).value).toBe('ABSENT');
     });
 
@@ -369,17 +352,14 @@ describe('TrainingDetailsPage', () => {
       fireEvent.click(screen.getByText('Evaluations'));
 
       await waitFor(() => {
-        // Look for any Add Evaluation or Edit button
         const addButtons = screen.queryAllByText(/Add Evaluation|Edit/);
         expect(addButtons.length).toBeGreaterThan(0);
       });
 
-      // Click on a player's evaluation button
       const addButtons = screen.getAllByText(/Add Evaluation|Edit/);
       fireEvent.click(addButtons[0]);
 
       await waitFor(() => {
-        // Modal should show evaluation types (multiple Technical labels will appear)
         const technicalLabels = screen.queryAllByText('Technical');
         expect(technicalLabels.length).toBeGreaterThan(0);
       });
@@ -399,17 +379,14 @@ describe('TrainingDetailsPage', () => {
         expect(addButtons.length).toBeGreaterThan(0);
       });
 
-      // Click on a player's evaluation button
       const addButtons = screen.getAllByText(/Add Evaluation|Edit/);
       fireEvent.click(addButtons[0]);
 
       await waitFor(() => {
-        // Modal should be open with Save button
         const saveButtons = screen.getAllByRole('button').filter(btn => btn.textContent === 'Save');
         expect(saveButtons.length).toBeGreaterThan(0);
       });
 
-      // Click the Save button in the modal
       const saveButtons = screen.getAllByRole('button').filter(btn => btn.textContent === 'Save');
       fireEvent.click(saveButtons[0]);
 
@@ -488,7 +465,6 @@ describe('TrainingDetailsPage', () => {
       fireEvent.click(screen.getByText('Evaluations'));
 
       await waitFor(() => {
-        // Check for existing evaluation data
         const techLabels = screen.queryAllByText(/Technical/);
         expect(techLabels.length).toBeGreaterThan(0);
       });

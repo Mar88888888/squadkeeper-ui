@@ -56,7 +56,6 @@ describe('Calendar', () => {
   it('should render all days of the month', () => {
     render(<Calendar {...defaultProps} />);
 
-    // January 2024 has 31 days
     for (let i = 1; i <= 31; i++) {
       expect(screen.getByText(String(i))).toBeInTheDocument();
     }
@@ -155,12 +154,10 @@ describe('Calendar', () => {
 
     render(<Calendar {...defaultProps} events={unsortedEvents} />);
 
-    // The calendar should render events sorted by start time
     const eventButtons = screen.getAllByRole('button').filter(btn =>
       btn.textContent?.includes('Earlier Event') || btn.textContent?.includes('Later Event')
     );
 
-    // First button should be Earlier Event (09:00)
     expect(eventButtons[0].textContent).toContain('Earlier');
   });
 

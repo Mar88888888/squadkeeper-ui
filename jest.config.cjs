@@ -1,4 +1,3 @@
-/** @type {import('jest').Config} */
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
@@ -22,5 +21,5 @@ module.exports = {
     '!src/vite-env.d.ts',
   ],
   coverageDirectory: 'coverage',
-  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
+  testPathIgnorePatterns: ['/node_modules/', '/dist/', '/e2e/'],
 };

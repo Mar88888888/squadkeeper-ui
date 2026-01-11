@@ -102,7 +102,6 @@ export interface UpdateParentRequest {
 }
 
 export const usersApi = {
-  // Coaches
   getCoaches: async (): Promise<CoachInfo[]> => {
     const response = await apiClient.get<CoachInfo[]>('/coaches');
     return response.data;
@@ -122,7 +121,6 @@ export const usersApi = {
     return response.data;
   },
 
-  // Players
   getPlayers: async (): Promise<PlayerInfo[]> => {
     const response = await apiClient.get<PlayerInfo[]>('/players');
     return response.data;
@@ -142,7 +140,6 @@ export const usersApi = {
     return response.data;
   },
 
-  // Parents
   getParents: async (): Promise<ParentFullInfo[]> => {
     const response = await apiClient.get<ParentFullInfo[]>('/parents');
     return response.data;
@@ -172,7 +169,6 @@ export const usersApi = {
     return response.data;
   },
 
-  // Groups
   getGroups: async (): Promise<GroupInfo[]> => {
     const response = await apiClient.get<GroupInfo[]>('/groups');
     return response.data;

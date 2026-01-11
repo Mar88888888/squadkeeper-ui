@@ -1,23 +1,28 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MyStatsPage } from './MyStatsPage';
 import { statsApi } from '../api/stats';
+import { evaluationsApi } from '../api/evaluations';
 
-// Mock statsApi
 jest.mock('../api/stats', () => ({
   statsApi: {
     getMyStats: jest.fn(),
   },
 }));
 
-// Mock react-router-dom
+jest.mock('../api/evaluations', () => ({
+  evaluationsApi: {
+    getMyRatingStats: jest.fn(),
+  },
+}));
+
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
 const mockStatsApi = statsApi as jest.Mocked<typeof statsApi>;
+const mockEvaluationsApi = evaluationsApi as jest.Mocked<typeof evaluationsApi>;
 
-// Suppress act warnings for async state updates that happen after component unmount
 beforeAll(() => {
   jest.spyOn(console, 'error').mockImplementation((message) => {
     if (typeof message === 'string' && message.includes('not wrapped in act')) {
@@ -35,15 +40,29 @@ describe('MyStatsPage', () => {
   const mockStats = {
     playerId: 'p1',
     playerName: 'John Player',
+    position: 'CM',
     matchesPlayed: 10,
     goals: 5,
     assists: 3,
+    cleanSheets: 2,
+    attendance: {
+      total: 20,
+      present: 15,
+      late: 2,
+      benched: 1,
+      absent: 1,
+      sick: 1,
+      rate: 75,
+      totalTrainings: 15,
+      totalMatches: 5,
+    },
     period: 'all_time' as const,
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockStatsApi.getMyStats.mockResolvedValue(mockStats);
+    mockEvaluationsApi.getMyRatingStats.mockResolvedValue(null);
   });
 
   it('should render My Statistics header', async () => {
@@ -113,7 +132,7 @@ describe('MyStatsPage', () => {
     render(<MyStatsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('8')).toBeInTheDocument(); // 5 goals + 3 assists
+      expect(screen.getByText('8')).toBeInTheDocument();
       expect(screen.getByText('Goal Contributions')).toBeInTheDocument();
     });
   });
@@ -123,8 +142,8 @@ describe('MyStatsPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Per Match Averages')).toBeInTheDocument();
-      expect(screen.getByText('0.50')).toBeInTheDocument(); // 5/10 goals per match
-      expect(screen.getByText('0.30')).toBeInTheDocument(); // 3/10 assists per match
+      expect(screen.getByText('0.50')).toBeInTheDocument();
+      expect(screen.getByText('0.30')).toBeInTheDocument();
     });
   });
 

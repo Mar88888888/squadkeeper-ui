@@ -25,30 +25,25 @@ export function GroupManagementPage() {
   const [modalType, setModalType] = useState<ModalType>(null);
   const [selectedGroup, setSelectedGroup] = useState<GroupInfo | null>(null);
 
-  // Form state for create/edit
   const [formData, setFormData] = useState({
     name: '',
     yearOfBirth: new Date().getFullYear() - 10,
   });
 
-  // Staff form state
   const [staffData, setStaffData] = useState({
     headCoachId: '' as string | null,
     assistantIds: [] as string[],
   });
 
-  // Players selection state
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<string[]>([]);
   const [playerSearchQuery, setPlayerSearchQuery] = useState('');
 
-  // Delete dialog state
   const [deleteDialog, setDeleteDialog] = useState<{
     isOpen: boolean;
     groupId: string;
     groupName: string;
   }>({ isOpen: false, groupId: '', groupName: '' });
 
-  // Schedule state
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
   const [scheduleLoading, setScheduleLoading] = useState(false);
   const [generateDates, setGenerateDates] = useState({
@@ -143,12 +138,11 @@ export function GroupManagementPage() {
   };
 
   const addScheduleItem = () => {
-    // Find first available day not already in schedule
     const usedDays = new Set(scheduleItems.map((s) => s.dayOfWeek));
-    let newDay = 1; // Start with Monday
+    let newDay = 1;
     while (usedDays.has(newDay) && newDay <= 6) newDay++;
-    if (newDay > 6) newDay = 0; // Sunday as fallback
-    if (usedDays.has(newDay)) return; // All days used
+    if (newDay > 6) newDay = 0;
+    if (usedDays.has(newDay)) return;
 
     setScheduleItems((prev) => [
       ...prev,
@@ -168,7 +162,6 @@ export function GroupManagementPage() {
 
   const handleSaveSchedule = async () => {
     if (!selectedGroup) return;
-    // Validate
     for (const item of scheduleItems) {
       if (!item.location.trim()) {
         setError('Location is required for all schedule items');
@@ -296,7 +289,6 @@ export function GroupManagementPage() {
 
       setGroups((prev) => prev.map((g) => (g.id === updated.id ? updated : g)));
 
-      // Refresh players list to update their group assignments
       const playersData = await usersApi.getPlayers();
       setAllPlayers(playersData);
 
@@ -334,7 +326,6 @@ export function GroupManagementPage() {
     );
   };
 
-  // Filter players for selection (can include players from other groups)
   const filteredPlayersForSelection = allPlayers.filter((p) => {
     if (!playerSearchQuery.trim()) return true;
     const query = playerSearchQuery.toLowerCase();
@@ -369,7 +360,6 @@ export function GroupManagementPage() {
 
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          {/* Search */}
           <div className="p-4 border-b border-gray-200">
             <div className="relative">
               <svg
@@ -428,7 +418,6 @@ export function GroupManagementPage() {
                       </div>
 
                       <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        {/* Head Coach */}
                         <div className="bg-gray-50 rounded-lg p-3">
                           <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">Head Coach</p>
                           {group.headCoach ? (
@@ -440,7 +429,6 @@ export function GroupManagementPage() {
                           )}
                         </div>
 
-                        {/* Assistants */}
                         <div className="bg-gray-50 rounded-lg p-3">
                           <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">Assistants</p>
                           {group.assistants.length > 0 ? (
@@ -452,7 +440,6 @@ export function GroupManagementPage() {
                           )}
                         </div>
 
-                        {/* Players */}
                         <div className="bg-gray-50 rounded-lg p-3">
                           <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">Players</p>
                           <p className="font-medium text-gray-900">{group.players.length} players</p>
@@ -460,7 +447,6 @@ export function GroupManagementPage() {
                       </div>
                     </div>
 
-                    {/* Actions */}
                     <div className="flex items-center gap-2 ml-4">
                       <button
                         onClick={() => openEditModal(group)}
@@ -516,7 +502,6 @@ export function GroupManagementPage() {
         </div>
       </main>
 
-      {/* Create/Edit Modal */}
       {(modalType === 'create' || modalType === 'edit') && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
@@ -577,7 +562,6 @@ export function GroupManagementPage() {
         </div>
       )}
 
-      {/* Staff Modal */}
       {modalType === 'staff' && selectedGroup && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6 max-h-[80vh] overflow-y-auto">
@@ -586,7 +570,6 @@ export function GroupManagementPage() {
             </h2>
 
             <div className="space-y-6">
-              {/* Head Coach */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Head Coach
@@ -605,7 +588,6 @@ export function GroupManagementPage() {
                 </select>
               </div>
 
-              {/* Assistants */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Assistant Coaches
@@ -659,7 +641,6 @@ export function GroupManagementPage() {
         </div>
       )}
 
-      {/* Players Modal */}
       {modalType === 'players' && selectedGroup && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 p-6 max-h-[80vh] overflow-hidden flex flex-col">
@@ -667,7 +648,6 @@ export function GroupManagementPage() {
               Manage Players - {selectedGroup.name}
             </h2>
 
-            {/* Search */}
             <div className="relative mb-4">
               <svg
                 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
@@ -695,7 +675,6 @@ export function GroupManagementPage() {
               {selectedPlayerIds.length} players selected
             </div>
 
-            {/* Players List */}
             <div className="flex-1 overflow-y-auto border border-gray-200 rounded-lg">
               {filteredPlayersForSelection.length === 0 ? (
                 <p className="text-gray-500 text-sm p-4 text-center">No players found</p>
@@ -763,7 +742,6 @@ export function GroupManagementPage() {
         </div>
       )}
 
-      {/* Schedule Modal */}
       {modalType === 'schedule' && selectedGroup && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
@@ -777,7 +755,6 @@ export function GroupManagementPage() {
               </div>
             ) : (
               <>
-                {/* Schedule Items */}
                 <div className="space-y-3 mb-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-medium text-gray-700">Weekly Schedule</h3>
@@ -863,7 +840,6 @@ export function GroupManagementPage() {
                   </button>
                 </div>
 
-                {/* Generate Trainings Section */}
                 {scheduleItems.length > 0 && (
                   <div className="border-t border-gray-200 pt-6">
                     <h3 className="text-sm font-medium text-gray-700 mb-3">Generate Trainings</h3>
@@ -949,7 +925,6 @@ export function GroupManagementPage() {
         </div>
       )}
 
-      {/* Delete Confirmation */}
       <ConfirmDialog
         isOpen={deleteDialog.isOpen}
         title="Delete Group"

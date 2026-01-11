@@ -58,10 +58,8 @@ export function TrainingDetailsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('attendance');
   const [isSaving, setIsSaving] = useState(false);
 
-  // Attendance state
   const [attendanceRecords, setAttendanceRecords] = useState<Record<string, AttendanceStatus>>({});
 
-  // Evaluation state
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerBrief | null>(null);
   const [evalRatings, setEvalRatings] = useState<Record<EvalCategory, number>>({
     technical: 5,
@@ -85,7 +83,6 @@ export function TrainingDetailsPage() {
       setAttendance(attendanceData);
       setEvaluations(evaluationsData);
 
-      // Initialize attendance records from existing data
       const records: Record<string, AttendanceStatus> = {};
       trainingData.group.players.forEach((player) => {
         const existing = attendanceData.find((a) => a.player.id === player.id);
@@ -149,7 +146,6 @@ export function TrainingDetailsPage() {
         records: [record],
       });
 
-      // Reload evaluations
       const evaluationsData = await evaluationsApi.getByTraining(id);
       setEvaluations(evaluationsData);
       setSelectedPlayer(null);
@@ -163,7 +159,6 @@ export function TrainingDetailsPage() {
 
   const openEvaluationModal = (player: PlayerBrief) => {
     setSelectedPlayer(player);
-    // Load existing evaluation for this player
     const playerEval = evaluations.find((e) => e.player.id === player.id);
     if (playerEval) {
       setEvalRatings({
@@ -265,7 +260,6 @@ export function TrainingDetailsPage() {
           </div>
         )}
 
-        {/* Tabs */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="border-b border-gray-200">
             <nav className="flex">
@@ -292,7 +286,6 @@ export function TrainingDetailsPage() {
             </nav>
           </div>
 
-          {/* Attendance Tab */}
           {activeTab === 'attendance' && (
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
@@ -358,7 +351,6 @@ export function TrainingDetailsPage() {
             </div>
           )}
 
-          {/* Evaluations Tab */}
           {activeTab === 'evaluations' && (
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
@@ -379,7 +371,6 @@ export function TrainingDetailsPage() {
                   const playerStatus = getPlayerAttendance(player.id);
                   const avgRating = playerEval ? getEvaluationAverage(playerEval) : null;
 
-                  // For read-only mode, show all players with their evaluations
                   if (isReadOnly) {
                     return (
                       <div key={player.id} className="p-4 rounded-lg bg-gray-50">
@@ -422,7 +413,6 @@ export function TrainingDetailsPage() {
                     );
                   }
 
-                  // Edit mode for coaches/admins
                   return (
                     <div
                       key={player.id}
@@ -482,7 +472,6 @@ export function TrainingDetailsPage() {
         </div>
       </main>
 
-      {/* Evaluation Modal */}
       {selectedPlayer && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">

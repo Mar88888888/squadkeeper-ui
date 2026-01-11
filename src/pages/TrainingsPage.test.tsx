@@ -5,12 +5,10 @@ import { trainingsApi } from '../api/trainings';
 import { groupsApi } from '../api/groups';
 import { UserRole } from '../types';
 
-// Mock useAuth
 jest.mock('../contexts/AuthContext', () => ({
   useAuth: jest.fn(),
 }));
 
-// Mock APIs
 jest.mock('../api/trainings', () => ({
   trainingsApi: {
     getAll: jest.fn(),
@@ -26,13 +24,11 @@ jest.mock('../api/groups', () => ({
   },
 }));
 
-// Mock react-router-dom
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
-// Mock react-datepicker
 jest.mock('react-datepicker', () => {
   return function MockDatePicker({ onChange, selected, placeholderText }: any) {
     return (
@@ -51,7 +47,6 @@ const mockUseAuth = useAuth as jest.Mock;
 const mockTrainingsApi = trainingsApi as jest.Mocked<typeof trainingsApi>;
 const mockGroupsApi = groupsApi as jest.Mocked<typeof groupsApi>;
 
-// Suppress act warnings for async state updates that happen after component unmount
 beforeAll(() => {
   jest.spyOn(console, 'error').mockImplementation((message) => {
     if (typeof message === 'string' && message.includes('not wrapped in act')) {
@@ -286,7 +281,6 @@ describe('TrainingsPage', () => {
       const groupSelect = screen.getByRole('combobox');
       fireEvent.change(groupSelect, { target: { value: 'g2' } });
 
-      // Since both trainings are g1, filtering by g2 should show no trainings
       expect(screen.queryByText('Field A')).not.toBeInTheDocument();
     });
   });
@@ -364,7 +358,7 @@ describe('TrainingsPage', () => {
       mockUseAuth.mockReturnValue({
         user: { id: '1', firstName: 'Coach', lastName: 'Smith', email: 'coach@example.com', role: UserRole.COACH },
       });
-      mockTrainingsApi.getMy.mockImplementation(() => new Promise(() => {})); // Never resolves
+      mockTrainingsApi.getMy.mockImplementation(() => new Promise(() => {}));
     });
 
     it('should show loading spinner while loading', () => {
@@ -407,10 +401,8 @@ describe('TrainingsPage', () => {
         expect(screen.getByText('Field A')).toBeInTheDocument();
       });
 
-      // Click on "This Week" filter
       fireEvent.click(screen.getByRole('button', { name: 'This Week' }));
 
-      // The filter should be applied (API will be called with the filter)
       await waitFor(() => {
         expect(mockTrainingsApi.getMy).toHaveBeenCalled();
       });
@@ -423,7 +415,6 @@ describe('TrainingsPage', () => {
         expect(screen.getByText('Field A')).toBeInTheDocument();
       });
 
-      // Find the button by role since there's also an "Upcoming" badge
       const buttons = screen.getAllByRole('button');
       const upcomingButton = buttons.find(btn => btn.textContent === 'Upcoming');
       if (upcomingButton) {
@@ -455,23 +446,19 @@ describe('TrainingsPage', () => {
 
       render(<TrainingsPage />);
 
-      // Wait for data to load
       await waitFor(() => {
         expect(screen.getByText('Field A')).toBeInTheDocument();
       });
 
-      // Open modal
       fireEvent.click(screen.getByText('+ Schedule Training'));
 
       await waitFor(() => {
         expect(screen.getByText('Group *')).toBeInTheDocument();
       });
 
-      // Fill in location
       const locationInput = screen.getByPlaceholderText('e.g., Main Field');
       fireEvent.change(locationInput, { target: { value: 'New Field' } });
 
-      // Click Schedule button
       const buttons = screen.getAllByRole('button');
       const scheduleButton = buttons.find(btn => btn.textContent === 'Schedule');
       if (scheduleButton) {
@@ -496,11 +483,9 @@ describe('TrainingsPage', () => {
         expect(screen.getByText('Group *')).toBeInTheDocument();
       });
 
-      // Clear location (if any default)
       const locationInput = screen.getByPlaceholderText('e.g., Main Field');
       fireEvent.change(locationInput, { target: { value: '' } });
 
-      // Click Schedule
       const buttons = screen.getAllByRole('button');
       const scheduleButton = buttons.find(btn => btn.textContent === 'Schedule');
       if (scheduleButton) {
@@ -527,11 +512,9 @@ describe('TrainingsPage', () => {
         expect(screen.getByText('Group *')).toBeInTheDocument();
       });
 
-      // Fill in location
       const locationInput = screen.getByPlaceholderText('e.g., Main Field');
       fireEvent.change(locationInput, { target: { value: 'New Field' } });
 
-      // Click Schedule
       const buttons = screen.getAllByRole('button');
       const scheduleButton = buttons.find(btn => btn.textContent === 'Schedule');
       if (scheduleButton) {
@@ -570,7 +553,6 @@ describe('TrainingsPage', () => {
       });
 
       const datepickers = screen.getAllByTestId('datepicker');
-      // Set the "From" date
       fireEvent.change(datepickers[0], { target: { value: '2025-01-01' } });
 
       await waitFor(() => {

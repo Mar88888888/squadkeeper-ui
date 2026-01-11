@@ -1,7 +1,6 @@
 import { authApi } from './auth';
 import { apiClient } from './client';
 
-// Mock apiClient
 jest.mock('./client', () => ({
   apiClient: {
     post: jest.fn(),

@@ -1,6 +1,5 @@
 import { Position } from './player.constants';
 
-// Game format enum values
 export const GameFormat = {
   FIVE_A_SIDE: '4+1',
   NINE_A_SIDE: '8+1',
@@ -9,14 +8,12 @@ export const GameFormat = {
 
 export type GameFormat = (typeof GameFormat)[keyof typeof GameFormat];
 
-// Game format labels for display
 export const GAME_FORMAT_LABELS: Record<GameFormat, string> = {
   '4+1': '4+1 (5 players)',
   '8+1': '8+1 (9 players)',
   '10+1': '10+1 (11 players)',
 };
 
-// Game format configs
 export const GAME_FORMAT_CONFIG: Record<
   GameFormat,
   {
@@ -50,12 +47,8 @@ export const GAME_FORMAT_CONFIG: Record<
   },
 };
 
-// All game formats as array for dropdowns
 export const GAME_FORMATS = Object.values(GameFormat) as GameFormat[];
 
-// Default formation positions for each format
-// Half-field view: Y=0 at top (attacking), Y=100 at bottom (our goal with GK)
-// X: 0=left, 100=right
 export const DEFAULT_FORMATIONS: Record<
   GameFormat,
   Array<{ x: number; y: number; role: Position }>
