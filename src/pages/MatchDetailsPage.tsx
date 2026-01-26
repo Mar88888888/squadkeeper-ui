@@ -22,6 +22,10 @@ import {
   type Evaluation,
   type EvaluationRecord,
 } from '../api/evaluations';
+import {
+  AttendanceStatusLabels,
+  AttendanceStatusColors,
+} from '../constants/attendance.constants';
 
 const EVALUATION_CATEGORIES = ['technical', 'tactical', 'physical', 'psychological'] as const;
 type EvaluationCategory = (typeof EVALUATION_CATEGORIES)[number];
@@ -31,22 +35,6 @@ const EvaluationCategoryLabels: Record<EvaluationCategory, string> = {
   tactical: 'Tactical',
   physical: 'Physical',
   psychological: 'Psychological',
-};
-
-const AttendanceStatusLabels: Record<AttendanceStatus, string> = {
-  [AttendanceStatus.PRESENT]: 'Present',
-  [AttendanceStatus.ABSENT]: 'Absent',
-  [AttendanceStatus.SICK]: 'Sick',
-  [AttendanceStatus.LATE]: 'Late',
-  [AttendanceStatus.BENCHED]: 'Benched',
-};
-
-const AttendanceStatusColors: Record<AttendanceStatus, string> = {
-  [AttendanceStatus.PRESENT]: 'bg-green-100 text-green-800',
-  [AttendanceStatus.ABSENT]: 'bg-red-100 text-red-800',
-  [AttendanceStatus.SICK]: 'bg-yellow-100 text-yellow-800',
-  [AttendanceStatus.LATE]: 'bg-orange-100 text-orange-800',
-  [AttendanceStatus.BENCHED]: 'bg-gray-100 text-gray-800',
 };
 
 type Tab = 'attendance' | 'evaluations' | 'goals';
