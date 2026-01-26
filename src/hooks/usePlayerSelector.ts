@@ -46,7 +46,8 @@ export function usePlayerSelector(enabled: boolean) {
         setPlayers(playersData);
         setGroups(groupsData);
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error('Failed to load players and groups:', error);
         setPlayers([]);
         setGroups([]);
       })

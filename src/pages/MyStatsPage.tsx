@@ -26,7 +26,10 @@ export function MyStatsPage() {
       try {
         const [statsData, ratingsData] = await Promise.all([
           statsApi.getMyStats(period),
-          evaluationsApi.getMyRatingStats(period).catch(() => null),
+          evaluationsApi.getMyRatingStats(period).catch((error) => {
+            console.error('Failed to load rating stats:', error);
+            return null;
+          }),
         ]);
         setStats(statsData);
         setRatingStats(ratingsData);

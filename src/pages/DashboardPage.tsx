@@ -27,11 +27,17 @@ export function DashboardPage() {
     if (user?.role === UserRole.PLAYER) {
       attendanceApi.getMyStats()
         .then(setAttendanceStats)
-        .catch(() => setAttendanceStats(null));
+        .catch((error) => {
+          console.error('Failed to load attendance stats:', error);
+          setAttendanceStats(null);
+        });
     } else if (user?.role === UserRole.PARENT) {
       attendanceApi.getMyStatsAsParent()
         .then(setChildrenStats)
-        .catch(() => setChildrenStats([]));
+        .catch((error) => {
+          console.error('Failed to load children stats:', error);
+          setChildrenStats([]);
+        });
     }
   }, [user]);
 

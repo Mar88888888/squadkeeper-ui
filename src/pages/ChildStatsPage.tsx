@@ -32,7 +32,10 @@ export function ChildStatsPage() {
           setSelectedChildId(childId);
         }
         if (childId) {
-          const ratings = await evaluationsApi.getPlayerRatingStats(childId, period).catch(() => null);
+          const ratings = await evaluationsApi.getPlayerRatingStats(childId, period).catch((error) => {
+            console.error('Failed to load rating stats:', error);
+            return null;
+          });
           setRatingStats(ratings);
         }
       } catch {
