@@ -53,46 +53,6 @@ export interface TeamPerformanceScore {
   period: StatsPeriod;
 }
 
-export interface PlayerInfo {
-  id: string;
-  name: string;
-  position: Position;
-}
-
-export interface PlayerCombinationStats {
-  players: PlayerInfo[];
-  matchesTogether: number;
-  wins: number;
-  draws: number;
-  losses: number;
-  winRate: number;
-  goalsScored: number;
-  goalsConceded: number;
-  goalDifference: number;
-  avgGoalDifference: number;
-  averageEvaluationRating: number | null;
-  chemistryScore: number;
-}
-
-export interface CorePlayer {
-  id: string;
-  name: string;
-  position: Position;
-  appearanceInWinningCombinations: number;
-  averageChemistryScore: number;
-}
-
-export interface TeamChemistry {
-  groupId: string;
-  groupName: string;
-  period: StatsPeriod;
-  minimumMatches: number;
-  totalMatchesAnalyzed: number;
-  bestPairs: PlayerCombinationStats[];
-  bestTrios: PlayerCombinationStats[];
-  corePlayers: CorePlayer[];
-}
-
 export interface PositionExpectation {
   expectedGoalsPerMatch: number;
   expectedAssistsPerMatch: number;
@@ -150,24 +110,6 @@ export const analyticsApi = {
   ): Promise<PerformanceScore> => {
     const response = await apiClient.get<PerformanceScore>(
       `/analytics/performance-score/${playerId}?period=${period}`
-    );
-    return response.data;
-  },
-
-  getMyTeamsChemistry: async (period: StatsPeriod = 'all_time'): Promise<TeamChemistry[]> => {
-    const response = await apiClient.get<TeamChemistry[]>(
-      `/analytics/chemistry/my-teams?period=${period}`
-    );
-    return response.data;
-  },
-
-  getTeamChemistry: async (
-    groupId: string,
-    period: StatsPeriod = 'all_time',
-    minMatches: number = 3
-  ): Promise<TeamChemistry> => {
-    const response = await apiClient.get<TeamChemistry>(
-      `/analytics/chemistry/${groupId}?period=${period}&minMatches=${minMatches}`
     );
     return response.data;
   },
