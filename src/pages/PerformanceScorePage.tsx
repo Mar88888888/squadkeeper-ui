@@ -59,7 +59,7 @@ function PlayerScoreCard({
   return (
     <div
       onClick={onClick}
-      className="bg-white rounded-xl shadow-lg p-4 cursor-pointer hover:shadow-xl transition-shadow"
+      className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 cursor-pointer hover:shadow-md transition-shadow"
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
@@ -83,28 +83,28 @@ function PlayerScoreCard({
 
       <div className="space-y-2">
         <div>
-          <div className="flex justify-between text-xs text-gray-500 mb-1">
+          <div className="flex justify-between text-xs font-medium uppercase tracking-wide text-gray-400 mb-1">
             <span>Skill</span>
             <span>{player.components.skill.toFixed(1)} / {weights.skillWeight}</span>
           </div>
           <ScoreBar score={player.components.skill} maxScore={weights.skillWeight} color="bg-yellow-500" />
         </div>
         <div>
-          <div className="flex justify-between text-xs text-gray-500 mb-1">
+          <div className="flex justify-between text-xs font-medium uppercase tracking-wide text-gray-400 mb-1">
             <span>Offense</span>
             <span>{player.components.offense.toFixed(1)} / {weights.offenseWeight}</span>
           </div>
           <ScoreBar score={player.components.offense} maxScore={weights.offenseWeight} color="bg-green-500" />
         </div>
         <div>
-          <div className="flex justify-between text-xs text-gray-500 mb-1">
+          <div className="flex justify-between text-xs font-medium uppercase tracking-wide text-gray-400 mb-1">
             <span>Defense</span>
             <span>{player.components.defense.toFixed(1)} / {weights.defenseWeight}</span>
           </div>
           <ScoreBar score={player.components.defense} maxScore={weights.defenseWeight} color="bg-cyan-500" />
         </div>
         <div>
-          <div className="flex justify-between text-xs text-gray-500 mb-1">
+          <div className="flex justify-between text-xs font-medium uppercase tracking-wide text-gray-400 mb-1">
             <span>Team</span>
             <span>{player.components.team.toFixed(1)} / {weights.teamWeight}</span>
           </div>
@@ -115,27 +115,27 @@ function PlayerScoreCard({
       <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-5 gap-2 text-center text-xs">
         <div>
           <p className="font-semibold text-gray-900">{player.rawStats.matchesPlayed}</p>
-          <p className="text-gray-500">Matches</p>
+          <p className="text-gray-400 font-medium uppercase tracking-wide">Matches</p>
         </div>
         <div>
           <p className="font-semibold text-green-600">{player.rawStats.goals}</p>
-          <p className="text-gray-500">Goals</p>
+          <p className="text-gray-400 font-medium uppercase tracking-wide">Goals</p>
         </div>
         <div>
           <p className="font-semibold text-purple-600">{player.rawStats.assists}</p>
-          <p className="text-gray-500">Assists</p>
+          <p className="text-gray-400 font-medium uppercase tracking-wide">Assists</p>
         </div>
         <div>
           <p className="font-semibold text-blue-600">
             {Math.round(player.rawStats.winRate * 100)}%
           </p>
-          <p className="text-gray-500">Win Rate</p>
+          <p className="text-gray-400 font-medium uppercase tracking-wide">Win Rate</p>
         </div>
         <div>
           <p className="font-semibold text-yellow-600">
             {player.rawStats.averageEvaluationRating?.toFixed(1) || '-'}
           </p>
-          <p className="text-gray-500">Avg Rating</p>
+          <p className="text-gray-400 font-medium uppercase tracking-wide">Avg Rating</p>
         </div>
       </div>
     </div>
@@ -182,7 +182,7 @@ export function PerformanceScorePage() {
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-900">Performance Scores</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Performance Scores</h1>
           <button
             onClick={() => navigate('/dashboard')}
             className="text-gray-600 hover:text-gray-900"
@@ -249,7 +249,7 @@ export function PerformanceScorePage() {
             {error}
           </div>
         ) : teamScores.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
             <p className="text-gray-500">No teams found</p>
           </div>
         ) : currentTeam ? (
@@ -309,7 +309,7 @@ export function PerformanceScorePage() {
             </div>
 
             {currentTeam.players.length === 0 && (
-              <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
                 <p className="text-gray-500">No players in this group</p>
               </div>
             )}

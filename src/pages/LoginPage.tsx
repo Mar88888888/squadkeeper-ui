@@ -32,7 +32,7 @@ export function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100 px-4">
       <div className="max-w-md w-full">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-green-600 rounded-full mb-4">
               <svg
@@ -49,8 +49,8 @@ export function LoginPage() {
                 />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Football Academy</h1>
-            <p className="text-gray-600 mt-2">Sign in to your account</p>
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900">Football Academy</h1>
+            <p className="text-gray-500 mt-2">Sign in to your account</p>
           </div>
 
           {error && (
@@ -94,7 +94,7 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 focus:ring-4 focus:ring-green-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 focus:ring-4 focus:ring-green-200 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">

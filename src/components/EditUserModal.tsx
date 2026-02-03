@@ -359,7 +359,7 @@ export function EditUserModal({ isOpen, userType, user, onSave, onClose }: EditU
           <button
             type="submit"
             onClick={handleSubmit}
-            className="px-4 py-2 text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-white bg-green-600 hover:bg-green-700 rounded-lg active:scale-95 transition-all disabled:opacity-50"
             disabled={isLoading}
           >
             {isLoading ? 'Saving...' : 'Save Changes'}

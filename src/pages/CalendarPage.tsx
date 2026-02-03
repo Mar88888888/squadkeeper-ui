@@ -114,7 +114,7 @@ export function CalendarPage() {
       <header className="bg-white shadow">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <h1 className="text-xl font-bold text-gray-900">Calendar</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900">Calendar</h1>
             <div className="flex items-center gap-2">
               <select
                 id="groupFilter"
@@ -163,7 +163,7 @@ export function CalendarPage() {
 
             <div className="flex justify-center gap-6 text-sm text-gray-500">
               <span className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span className="w-2 h-2 rounded-full bg-green-500"></span>
                 {events.filter((e) => e.type === 'training').length} trainings
               </span>
               <span className="flex items-center gap-2">

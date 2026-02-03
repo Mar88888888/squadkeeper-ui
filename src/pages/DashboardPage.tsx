@@ -1,8 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { UserRole } from '../types';
 import { attendanceApi, type AttendanceStats, type PlayerAttendanceStats } from '../api/attendance';
+import { trainingsApi, type Training } from '../api/trainings';
+import { matchesApi, type Match } from '../api/matches';
+import { statsApi, type PlayerStats } from '../api/stats';
+import { evaluationsApi, type RatingStats } from '../api/evaluations';
+import { usersApi } from '../api/users';
+import { roleColors } from '../constants/colors';
+import { UpcomingEventCard } from '../components/dashboard/UpcomingEventCard';
+import { QuickStatsRow, statIcons } from '../components/dashboard/QuickStatsRow';
+import { PerformanceScoreRing, defaultBreakdownColors } from '../components/dashboard/PerformanceScoreRing';
+import { RatingTrendChart } from '../components/dashboard/RatingTrendChart';
+import { CompactNavigation, navIcons } from '../components/dashboard/CompactNavigation';
+import { ParentUpcomingEvents } from '../components/dashboard/ParentUpcomingEvents';
 
 const roleLabels: Record<UserRole, string> = {
   [UserRole.ADMIN]: 'Administrator',
@@ -11,35 +22,228 @@ const roleLabels: Record<UserRole, string> = {
   [UserRole.PARENT]: 'Parent',
 };
 
-const roleColors: Record<UserRole, string> = {
-  [UserRole.ADMIN]: 'bg-purple-100 text-purple-800',
-  [UserRole.COACH]: 'bg-blue-100 text-blue-800',
-  [UserRole.PLAYER]: 'bg-green-100 text-green-800',
-  [UserRole.PARENT]: 'bg-orange-100 text-orange-800',
-};
+type UpcomingEvent =
+  | { type: 'training'; data: Training }
+  | { type: 'match'; data: Match };
+
+function findNextEvent(trainings: Training[], matches: Match[]): UpcomingEvent | null {
+  const now = new Date();
+
+  const upcomingTrainings = trainings
+    .filter(t => new Date(t.startTime) > now)
+    .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+
+  const upcomingMatches = matches
+    .filter(m => new Date(m.startTime) > now)
+    .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+
+  const nextTraining = upcomingTrainings[0];
+  const nextMatch = upcomingMatches[0];
+
+  if (!nextTraining && !nextMatch) return null;
+  if (!nextTraining) return { type: 'match', data: nextMatch };
+  if (!nextMatch) return { type: 'training', data: nextTraining };
+
+  return new Date(nextTraining.startTime) < new Date(nextMatch.startTime)
+    ? { type: 'training', data: nextTraining }
+    : { type: 'match', data: nextMatch };
+}
+
+interface ChildWithGroup {
+  id: string;
+  firstName: string;
+  lastName: string;
+  groupId: string | null;
+}
 
 export function DashboardPage() {
   const { user, logout } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [attendanceStats, setAttendanceStats] = useState<AttendanceStats | null>(null);
   const [childrenStats, setChildrenStats] = useState<PlayerAttendanceStats[]>([]);
+  const [upcomingEvent, setUpcomingEvent] = useState<UpcomingEvent | null>(null);
+  const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
+  const [ratingStats, setRatingStats] = useState<RatingStats | null>(null);
+  // Parent-specific state
+  const [parentTrainings, setParentTrainings] = useState<Training[]>([]);
+  const [parentMatches, setParentMatches] = useState<Match[]>([]);
+  const [childrenWithGroups, setChildrenWithGroups] = useState<ChildWithGroup[]>([]);
 
   useEffect(() => {
-    if (user?.role === UserRole.PLAYER) {
-      attendanceApi.getMyStats()
-        .then(setAttendanceStats)
-        .catch((error) => {
-          console.error('Failed to load attendance stats:', error);
-          setAttendanceStats(null);
-        });
-    } else if (user?.role === UserRole.PARENT) {
-      attendanceApi.getMyStatsAsParent()
-        .then(setChildrenStats)
-        .catch((error) => {
-          console.error('Failed to load children stats:', error);
-          setChildrenStats([]);
-        });
-    }
+    const loadDashboardData = async () => {
+      setLoading(true);
+      try {
+        if (user?.role === UserRole.PLAYER) {
+          const [trainings, matches, stats, attendance, ratings] = await Promise.all([
+            trainingsApi.getMy({ timeFilter: 'upcoming' }).catch(() => []),
+            matchesApi.getMy({ timeFilter: 'upcoming' }).catch(() => []),
+            statsApi.getMyStats().catch(() => null),
+            attendanceApi.getMyStats().catch(() => null),
+            evaluationsApi.getMyRatingStats().catch(() => null),
+          ]);
+
+          setUpcomingEvent(findNextEvent(trainings, matches));
+          setPlayerStats(stats);
+          setAttendanceStats(attendance);
+          setRatingStats(ratings);
+        } else if (user?.role === UserRole.PARENT) {
+          const [trainings, matches, attendanceStats, childrenData] = await Promise.all([
+            trainingsApi.getMy({ timeFilter: 'upcoming' }).catch(() => []),
+            matchesApi.getMy({ timeFilter: 'upcoming' }).catch(() => []),
+            attendanceApi.getMyStatsAsParent().catch(() => []),
+            statsApi.getChildrenStats().catch(() => ({ children: [], stats: null })),
+          ]);
+
+          // Build children info - prefer childrenData as it's more reliable
+          let childrenFromStats: ChildWithGroup[] = [];
+
+          if (childrenData.children.length > 0) {
+            // Use children from stats API
+            childrenFromStats = childrenData.children.map(c => ({
+              id: c.id,
+              firstName: c.firstName,
+              lastName: c.lastName,
+              groupId: null as string | null,
+            }));
+          } else if (attendanceStats.length > 0) {
+            // Fallback to attendance stats
+            childrenFromStats = attendanceStats.map(s => {
+              const nameParts = s.playerName.split(' ');
+              return {
+                id: s.playerId,
+                firstName: nameParts[0] || '',
+                lastName: nameParts.slice(1).join(' ') || '',
+                groupId: null as string | null,
+              };
+            });
+          }
+
+          // Collect all unique group IDs from events
+          const eventGroups = new Set<string>();
+          trainings.forEach(t => eventGroups.add(t.group.id));
+          matches.forEach(m => eventGroups.add(m.group.id));
+
+          // If single child, assign all groups to them
+          // If multiple children and multiple groups, we can't determine mapping without more data
+          if (childrenFromStats.length === 1 && eventGroups.size > 0) {
+            // Single child - all events are theirs, pick first group for mapping
+            childrenFromStats[0].groupId = Array.from(eventGroups)[0];
+            // Actually, add all groups for this child
+            const allGroupIds = Array.from(eventGroups);
+            // We need to handle multiple groups for single child
+            // For now, we'll show child name for all events
+          }
+
+          // For the component, we need to map groups to children
+          // If we have same number of children and groups, try to match them
+          // Otherwise, show group names as fallback
+          const childrenWithGroupInfo = childrenFromStats.map((child, index) => {
+            const groupIds = Array.from(eventGroups);
+            // If single child, they get all groups
+            // If multiple children and same count as groups, assign 1:1
+            if (childrenFromStats.length === 1) {
+              return { ...child, groupId: groupIds[0] || null };
+            }
+            if (childrenFromStats.length === groupIds.length) {
+              return { ...child, groupId: groupIds[index] || null };
+            }
+            return child;
+          });
+
+          setParentTrainings(trainings);
+          setParentMatches(matches);
+          setChildrenWithGroups(childrenWithGroupInfo);
+          setChildrenStats(attendanceStats);
+        } else if (user?.role === UserRole.COACH) {
+          const [trainings, matches] = await Promise.all([
+            trainingsApi.getMy({ timeFilter: 'upcoming' }).catch(() => []),
+            matchesApi.getMy({ timeFilter: 'upcoming' }).catch(() => []),
+          ]);
+          setUpcomingEvent(findNextEvent(trainings, matches));
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardData();
   }, [user]);
+
+  const playerNavItems = [
+    { to: '/trainings', label: 'Trainings', icon: navIcons.trainings },
+    { to: '/matches', label: 'Matches', icon: navIcons.matches },
+    { to: '/calendar', label: 'Calendar', icon: navIcons.calendar },
+    { to: '/stats/my', label: 'My Stats', icon: navIcons.stats },
+    { to: '/contacts', label: 'Contacts', icon: navIcons.contacts },
+  ];
+
+  const parentNavItems = [
+    { to: '/trainings', label: 'Trainings', icon: navIcons.trainings },
+    { to: '/matches', label: 'Matches', icon: navIcons.matches },
+    { to: '/calendar', label: 'Calendar', icon: navIcons.calendar },
+    { to: '/stats/children', label: 'Child Stats', icon: navIcons.children },
+    { to: '/contacts', label: 'Contacts', icon: navIcons.contacts },
+  ];
+
+  const coachNavItems = [
+    { to: '/trainings', label: 'Trainings', icon: navIcons.trainings },
+    { to: '/matches', label: 'Matches', icon: navIcons.matches },
+    { to: '/calendar', label: 'Calendar', icon: navIcons.calendar },
+    { to: '/stats/team', label: 'Team Stats', icon: navIcons.stats },
+    { to: '/my-groups', label: 'My Groups', icon: navIcons.groups },
+    { to: '/squads', label: 'Squads', icon: navIcons.squads },
+    { to: '/analytics/performance', label: 'Performance', icon: navIcons.performance },
+  ];
+
+  const adminNavItems = [
+    { to: '/admin/users', label: 'Create User', icon: navIcons.users },
+    { to: '/admin/users/list', label: 'User List', icon: navIcons.groups },
+    { to: '/admin/groups', label: 'Groups', icon: navIcons.groups },
+    { to: '/trainings', label: 'Trainings', icon: navIcons.trainings },
+    { to: '/matches', label: 'Matches', icon: navIcons.matches },
+    { to: '/calendar', label: 'Calendar', icon: navIcons.calendar },
+  ];
+
+  const getNavItems = () => {
+    switch (user?.role) {
+      case UserRole.PLAYER: return playerNavItems;
+      case UserRole.PARENT: return parentNavItems;
+      case UserRole.COACH: return coachNavItems;
+      case UserRole.ADMIN: return adminNavItems;
+      default: return [];
+    }
+  };
+
+  const getQuickStats = () => {
+    if (user?.role === UserRole.PLAYER && playerStats) {
+      return [
+        { label: 'Goals', value: playerStats.goals, icon: statIcons.goals, color: 'green' as const },
+        { label: 'Assists', value: playerStats.assists, icon: statIcons.assists, color: 'amber' as const },
+        { label: 'Matches', value: playerStats.matchesPlayed, icon: statIcons.matches, color: 'blue' as const },
+        { label: 'Attendance', value: `${attendanceStats?.rate ?? 0}%`, icon: statIcons.attendance, color: 'purple' as const },
+      ];
+    }
+    return [];
+  };
+
+  const getPerformanceBreakdown = () => {
+    if (!ratingStats?.byCategory) return undefined;
+    const { technical, tactical, physical, psychological } = ratingStats.byCategory;
+    return [
+      { label: 'Technical', value: technical ?? 0, maxValue: 10, color: defaultBreakdownColors.technical },
+      { label: 'Tactical', value: tactical ?? 0, maxValue: 10, color: defaultBreakdownColors.tactical },
+      { label: 'Physical', value: physical ?? 0, maxValue: 10, color: defaultBreakdownColors.physical },
+      { label: 'Mental', value: psychological ?? 0, maxValue: 10, color: defaultBreakdownColors.mental },
+    ];
+  };
+
+  const getRatingTrendData = () => {
+    if (!ratingStats?.history) return [];
+    return ratingStats.history.map(point => ({
+      date: point.date,
+      rating: point.averageRating,
+    }));
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -63,7 +267,7 @@ export function DashboardPage() {
                     />
                   </svg>
                 </div>
-                <span className="font-bold text-xl text-gray-900">Football Academy</span>
+                <span className="text-xl font-bold tracking-tight text-gray-900">Football Academy</span>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -72,7 +276,7 @@ export function DashboardPage() {
               </span>
               <button
                 onClick={logout}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-200 transition-all"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-200 active:scale-95 transition-all"
               >
                 Logout
               </button>
@@ -81,21 +285,22 @@ export function DashboardPage() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-2xl shadow-sm p-8">
-          <div className="flex items-center gap-6 mb-8">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center select-none">
-              <span className="text-3xl font-bold text-green-600">
+      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        {/* Welcome Header */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center select-none">
+              <span className="text-2xl font-bold text-green-600">
                 {user?.firstName?.[0]}
                 {user?.lastName?.[0]}
               </span>
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold tracking-tight text-gray-900">
                 Welcome back, {user?.firstName}!
               </h1>
-              <div className="flex items-center gap-3 mt-2">
-                <span className="text-gray-600">{user?.email}</span>
+              <div className="flex items-center gap-3 mt-1">
+                <span className="text-sm text-gray-500">{user?.email}</span>
                 {user?.role && (
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-medium ${roleColors[user.role]}`}
@@ -106,152 +311,55 @@ export function DashboardPage() {
               </div>
             </div>
           </div>
+        </div>
 
-          {user?.role && user.role !== UserRole.ADMIN && (
-            <div className="border-t border-gray-200 pt-8">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <Link
-                  to="/trainings"
-                  className="bg-gray-50 hover:bg-green-50 rounded-xl p-6 transition-colors group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-green-100 group-hover:bg-green-200 rounded-lg flex items-center justify-center transition-colors">
-                      <svg
-                        className="w-6 h-6 text-green-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Trainings</p>
-                      <p className="text-sm font-medium text-green-600 group-hover:text-green-700">View schedule</p>
-                    </div>
-                  </div>
-                </Link>
+        {/* Player Dashboard */}
+        {user?.role === UserRole.PLAYER && (
+          <div className="space-y-6">
+            {/* Hero: Upcoming Event */}
+            <UpcomingEventCard event={upcomingEvent} loading={loading} />
 
-                <Link
-                  to="/matches"
-                  className="bg-gray-50 hover:bg-blue-50 rounded-xl p-6 transition-colors group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-blue-100 group-hover:bg-blue-200 rounded-lg flex items-center justify-center transition-colors">
-                      <svg
-                        className="w-6 h-6 text-blue-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Matches</p>
-                      <p className="text-sm font-medium text-blue-600 group-hover:text-blue-700">View schedule</p>
-                    </div>
-                  </div>
-                </Link>
+            {/* Quick Stats Row */}
+            <QuickStatsRow stats={getQuickStats()} loading={loading} />
 
-                <Link
-                  to="/calendar"
-                  className="bg-gray-50 hover:bg-purple-50 rounded-xl p-6 transition-colors group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-purple-100 group-hover:bg-purple-200 rounded-lg flex items-center justify-center transition-colors">
-                      <svg
-                        className="w-6 h-6 text-purple-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Calendar</p>
-                      <p className="text-sm font-medium text-purple-600 group-hover:text-purple-700">View calendar</p>
-                    </div>
-                  </div>
-                </Link>
+            {/* Performance & Trend Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <PerformanceScoreRing
+                score={Math.round((ratingStats?.averageRating ?? 0) * 10)}
+                maxScore={100}
+                breakdown={getPerformanceBreakdown()}
+                loading={loading}
+              />
+              <RatingTrendChart data={getRatingTrendData()} loading={loading} />
+            </div>
 
-                <Link
-                  to="/contacts"
-                  className="bg-gray-50 hover:bg-teal-50 rounded-xl p-6 transition-colors group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-teal-100 group-hover:bg-teal-200 rounded-lg flex items-center justify-center transition-colors">
-                      <svg
-                        className="w-6 h-6 text-teal-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Contacts</p>
-                      <p className="text-sm font-medium text-teal-600 group-hover:text-teal-700">Coaches & staff</p>
-                    </div>
-                  </div>
-                </Link>
+            {/* Compact Navigation */}
+            <CompactNavigation items={getNavItems()} />
+          </div>
+        )}
 
-                {user.role === UserRole.PLAYER && (
-                  <>
-                    <Link
-                      to="/stats/my"
-                      className="bg-gray-50 hover:bg-orange-50 rounded-xl p-6 transition-colors group"
-                    >
+        {/* Parent Dashboard */}
+        {user?.role === UserRole.PARENT && (
+          <div className="space-y-6">
+            {/* Upcoming Events for Children */}
+            <ParentUpcomingEvents
+              trainings={parentTrainings}
+              matches={parentMatches}
+              children={childrenWithGroups}
+              loading={loading}
+            />
+
+            {/* Children Attendance Overview */}
+            {childrenStats.length > 0 && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Children Attendance</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {childrenStats.map((child) => (
+                    <div key={child.playerId} className="bg-gray-50 rounded-xl p-5">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-orange-100 group-hover:bg-orange-200 rounded-lg flex items-center justify-center transition-colors">
+                        <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
                           <svg
-                            className="w-6 h-6 text-orange-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                            />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">My Statistics</p>
-                          <p className="text-sm font-medium text-orange-600 group-hover:text-orange-700">Goals, assists & more</p>
-                        </div>
-                      </div>
-                    </Link>
-                    <div className="bg-gray-50 rounded-xl p-6">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                          <svg
-                            className="w-6 h-6 text-yellow-600"
+                            className="w-6 h-6 text-amber-600"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -265,470 +373,66 @@ export function DashboardPage() {
                           </svg>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Attendance Rate</p>
-                          <p className="text-2xl font-bold text-gray-900">
-                            {attendanceStats ? `${attendanceStats.rate}%` : '-'}
-                          </p>
-                          {attendanceStats && attendanceStats.total > 0 && (
+                          <p className="text-sm text-gray-600">{child.playerName}</p>
+                          <p className="text-2xl font-bold text-gray-900">{child.rate}%</p>
+                          {child.total > 0 && (
                             <p className="text-xs text-gray-500">
-                              {attendanceStats.present + attendanceStats.late} / {attendanceStats.total} events
-                              {attendanceStats.totalTrainings > 0 && attendanceStats.totalMatches > 0 && (
-                                <span className="ml-1">
-                                  ({attendanceStats.totalTrainings} trainings, {attendanceStats.totalMatches} matches)
-                                </span>
-                              )}
+                              {child.present + child.late} / {child.total} events
                             </p>
                           )}
                         </div>
                       </div>
                     </div>
-                  </>
-                )}
+                  ))}
+                </div>
+              </div>
+            )}
 
-                {user.role === UserRole.PARENT && (
-                  <>
-                    <Link
-                      to="/stats/children"
-                      className="bg-gray-50 hover:bg-orange-50 rounded-xl p-6 transition-colors group"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-orange-100 group-hover:bg-orange-200 rounded-lg flex items-center justify-center transition-colors">
-                          <svg
-                            className="w-6 h-6 text-orange-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                            />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Child Statistics</p>
-                          <p className="text-sm font-medium text-orange-600 group-hover:text-orange-700">Goals, assists & more</p>
-                        </div>
-                      </div>
-                    </Link>
-                    {childrenStats.length > 0 && childrenStats.map((child) => (
-                      <div key={child.playerId} className="bg-gray-50 rounded-xl p-6">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                            <svg
-                              className="w-6 h-6 text-yellow-600"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-600">{child.playerName}</p>
-                            <p className="text-2xl font-bold text-gray-900">{child.rate}%</p>
-                            {child.total > 0 && (
-                              <p className="text-xs text-gray-500">
-                                {child.present + child.late} / {child.total} events
-                                {child.totalTrainings > 0 && child.totalMatches > 0 && (
-                                  <span className="ml-1">
-                                    ({child.totalTrainings} trainings, {child.totalMatches} matches)
-                                  </span>
-                                )}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-
-          {user?.role === UserRole.COACH && (
-            <div className="border-t border-gray-200 pt-8 mt-8">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Coach Panel</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <Link
-                  to="/trainings"
-                  className="bg-green-50 hover:bg-green-100 rounded-xl p-6 transition-colors group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-green-100 group-hover:bg-green-200 rounded-lg flex items-center justify-center transition-colors">
-                      <svg
-                        className="w-6 h-6 text-green-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">Trainings</p>
-                      <p className="text-sm text-gray-600">Schedule and manage trainings</p>
-                    </div>
-                  </div>
-                </Link>
-                <Link
-                  to="/matches"
-                  className="bg-blue-50 hover:bg-blue-100 rounded-xl p-6 transition-colors group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-blue-100 group-hover:bg-blue-200 rounded-lg flex items-center justify-center transition-colors">
-                      <svg
-                        className="w-6 h-6 text-blue-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">Matches</p>
-                      <p className="text-sm text-gray-600">Schedule and manage matches</p>
-                    </div>
-                  </div>
-                </Link>
-                <Link
-                  to="/calendar"
-                  className="bg-purple-50 hover:bg-purple-100 rounded-xl p-6 transition-colors group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-purple-100 group-hover:bg-purple-200 rounded-lg flex items-center justify-center transition-colors">
-                      <svg
-                        className="w-6 h-6 text-purple-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">Calendar</p>
-                      <p className="text-sm text-gray-600">View full schedule</p>
-                    </div>
-                  </div>
-                </Link>
-                <Link
-                  to="/stats/team"
-                  className="bg-orange-50 hover:bg-orange-100 rounded-xl p-6 transition-colors group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-orange-100 group-hover:bg-orange-200 rounded-lg flex items-center justify-center transition-colors">
-                      <svg
-                        className="w-6 h-6 text-orange-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">Team Statistics</p>
-                      <p className="text-sm text-gray-600">Goals, assists & more</p>
-                    </div>
-                  </div>
-                </Link>
-                <Link
-                  to="/my-groups"
-                  className="bg-indigo-50 hover:bg-indigo-100 rounded-xl p-6 transition-colors group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-indigo-100 group-hover:bg-indigo-200 rounded-lg flex items-center justify-center transition-colors">
-                      <svg
-                        className="w-6 h-6 text-indigo-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">My Groups</p>
-                      <p className="text-sm text-gray-600">Schedules & auto-generate trainings</p>
-                    </div>
-                  </div>
-                </Link>
-                <Link
-                  to="/squads"
-                  className="bg-emerald-50 hover:bg-emerald-100 rounded-xl p-6 transition-colors group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-emerald-100 group-hover:bg-emerald-200 rounded-lg flex items-center justify-center transition-colors">
-                      <svg
-                        className="w-6 h-6 text-emerald-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">Squad Builder</p>
-                      <p className="text-sm text-gray-600">Create & manage team lineups</p>
-                    </div>
-                  </div>
-                </Link>
-                <Link
-                  to="/analytics/performance"
-                  className="bg-rose-50 hover:bg-rose-100 rounded-xl p-6 transition-colors group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-rose-100 group-hover:bg-rose-200 rounded-lg flex items-center justify-center transition-colors">
-                      <svg
-                        className="w-6 h-6 text-rose-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">Performance Scores</p>
-                      <p className="text-sm text-gray-600">Composite player ratings</p>
-                    </div>
-                  </div>
-                </Link>
-              </div>
-            </div>
-          )}
-
-          {user?.role === UserRole.ADMIN && (
-            <div className="border-t border-gray-200 pt-8 mt-8">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Admin Panel</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <Link
-                  to="/admin/users"
-                  className="bg-purple-50 hover:bg-purple-100 rounded-xl p-6 transition-colors group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-purple-100 group-hover:bg-purple-200 rounded-lg flex items-center justify-center transition-colors">
-                      <svg
-                        className="w-6 h-6 text-purple-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">Create User</p>
-                      <p className="text-sm text-gray-600">Create coaches, players, parents</p>
-                    </div>
-                  </div>
-                </Link>
-                <Link
-                  to="/admin/users/list"
-                  className="bg-indigo-50 hover:bg-indigo-100 rounded-xl p-6 transition-colors group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-indigo-100 group-hover:bg-indigo-200 rounded-lg flex items-center justify-center transition-colors">
-                      <svg
-                        className="w-6 h-6 text-indigo-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">User List</p>
-                      <p className="text-sm text-gray-600">View and manage all users</p>
-                    </div>
-                  </div>
-                </Link>
-                <Link
-                  to="/admin/groups"
-                  className="bg-teal-50 hover:bg-teal-100 rounded-xl p-6 transition-colors group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-teal-100 group-hover:bg-teal-200 rounded-lg flex items-center justify-center transition-colors">
-                      <svg
-                        className="w-6 h-6 text-teal-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">Groups</p>
-                      <p className="text-sm text-gray-600">Manage teams and squads</p>
-                    </div>
-                  </div>
-                </Link>
-                <Link
-                  to="/trainings"
-                  className="bg-green-50 hover:bg-green-100 rounded-xl p-6 transition-colors group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-green-100 group-hover:bg-green-200 rounded-lg flex items-center justify-center transition-colors">
-                      <svg
-                        className="w-6 h-6 text-green-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">Trainings</p>
-                      <p className="text-sm text-gray-600">Schedule and manage trainings</p>
-                    </div>
-                  </div>
-                </Link>
-                <Link
-                  to="/matches"
-                  className="bg-blue-50 hover:bg-blue-100 rounded-xl p-6 transition-colors group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-blue-100 group-hover:bg-blue-200 rounded-lg flex items-center justify-center transition-colors">
-                      <svg
-                        className="w-6 h-6 text-blue-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">Matches</p>
-                      <p className="text-sm text-gray-600">Schedule and manage matches</p>
-                    </div>
-                  </div>
-                </Link>
-                <Link
-                  to="/calendar"
-                  className="bg-pink-50 hover:bg-pink-100 rounded-xl p-6 transition-colors group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-pink-100 group-hover:bg-pink-200 rounded-lg flex items-center justify-center transition-colors">
-                      <svg
-                        className="w-6 h-6 text-pink-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">Calendar</p>
-                      <p className="text-sm text-gray-600">View full schedule</p>
-                    </div>
-                  </div>
-                </Link>
-              </div>
-            </div>
-          )}
-
-          <div className="border-t border-gray-200 pt-8 mt-8">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h2>
-            <dl className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-gray-50 rounded-lg p-4">
-                <dt className="text-sm font-medium text-gray-500">Full Name</dt>
-                <dd className="mt-1 text-sm text-gray-900">
-                  {user?.firstName} {user?.lastName}
-                </dd>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <dt className="text-sm font-medium text-gray-500">Email</dt>
-                <dd className="mt-1 text-sm text-gray-900">{user?.email}</dd>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <dt className="text-sm font-medium text-gray-500">Role</dt>
-                <dd className="mt-1 text-sm text-gray-900">
-                  {user?.role ? roleLabels[user.role] : '-'}
-                </dd>
-              </div>
-            </dl>
+            {/* Compact Navigation */}
+            <CompactNavigation items={getNavItems()} />
           </div>
+        )}
+
+        {/* Coach Dashboard */}
+        {user?.role === UserRole.COACH && (
+          <div className="space-y-6">
+            {/* Hero: Upcoming Event */}
+            <UpcomingEventCard event={upcomingEvent} loading={loading} />
+
+            {/* Compact Navigation */}
+            <CompactNavigation items={getNavItems()} />
+          </div>
+        )}
+
+        {/* Admin Dashboard */}
+        {user?.role === UserRole.ADMIN && (
+          <div className="space-y-6">
+            {/* Compact Navigation */}
+            <CompactNavigation items={getNavItems()} />
+          </div>
+        )}
+
+        {/* Account Information */}
+        <div className="mt-6 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">Account Information</h2>
+          <dl className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-gray-50 rounded-lg p-4">
+              <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">Full Name</dt>
+              <dd className="mt-1 text-base font-medium text-gray-900">
+                {user?.firstName} {user?.lastName}
+              </dd>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-4">
+              <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">Email</dt>
+              <dd className="mt-1 text-base font-medium text-gray-900">{user?.email}</dd>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-4">
+              <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">Role</dt>
+              <dd className="mt-1 text-base font-medium text-gray-900">
+                {user?.role ? roleLabels[user.role] : '-'}
+              </dd>
+            </div>
+          </dl>
         </div>
       </main>
     </div>

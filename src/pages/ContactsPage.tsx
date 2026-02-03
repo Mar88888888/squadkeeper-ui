@@ -69,7 +69,7 @@ export function ContactsPage() {
               </span>
               <button
                 onClick={logout}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-200 transition-all"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-200 active:scale-95 transition-all"
               >
                 Logout
               </button>
@@ -105,16 +105,16 @@ export function ContactsPage() {
         </div>
 
         {loading ? (
-          <div className="bg-white rounded-2xl shadow-sm p-8 text-center text-gray-500">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center text-gray-500">
             Loading contacts...
           </div>
         ) : error ? (
-          <div className="bg-white rounded-2xl shadow-sm p-8 text-center text-red-600">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center text-red-600">
             {error}
           </div>
         ) : (
           <div className="space-y-8">
-            <div className="bg-white rounded-2xl shadow-sm p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">Coaches</h2>
                 {canFilterMyCoaches && contacts && contacts.myCoachIds.length > 0 && (
@@ -146,7 +146,7 @@ export function ContactsPage() {
             </div>
 
             {contacts && contacts.admins.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-sm p-6">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">
                   Administration
                 </h2>

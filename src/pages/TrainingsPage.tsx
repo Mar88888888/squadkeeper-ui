@@ -178,7 +178,7 @@ export function TrainingsPage() {
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-900">Trainings</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Trainings</h1>
           <div className="flex gap-3">
             {canCreate && (
               <button
@@ -199,7 +199,7 @@ export function TrainingsPage() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-4 border-b border-gray-200 space-y-4">
             <div className="flex flex-wrap gap-2">
               {TIME_FILTER_OPTIONS.map((option) => (
@@ -414,7 +414,7 @@ export function TrainingsPage() {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Schedule Training</h2>
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">Schedule Training</h2>
 
             <div className="space-y-4">
               <div>
@@ -498,7 +498,7 @@ export function TrainingsPage() {
               </button>
               <button
                 onClick={handleCreate}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 transition-all"
               >
                 Schedule
               </button>

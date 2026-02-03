@@ -49,7 +49,7 @@ export function PlayerStatsPage() {
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-900">Player Statistics</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Player Statistics</h1>
           <button
             onClick={() => navigate(-1)}
             className="text-gray-600 hover:text-gray-900 flex items-center gap-2"

@@ -55,7 +55,7 @@ export function TeamStatsPage() {
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-900">Team Statistics</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Team Statistics</h1>
           <button
             onClick={() => navigate('/dashboard')}
             className="text-gray-600 hover:text-gray-900"
@@ -107,7 +107,7 @@ export function TeamStatsPage() {
             {error}
           </div>
         ) : teamStats.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
             <p className="text-gray-500">No teams found</p>
           </div>
         ) : currentTeam ? (
@@ -137,9 +137,9 @@ export function TeamStatsPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Player Statistics</h3>
+                <h3 className="text-lg font-semibold tracking-tight text-gray-900">Player Statistics</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -241,8 +241,8 @@ export function TeamStatsPage() {
 
             {currentTeam.players.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                  <h3 className="text-lg font-semibold tracking-tight text-gray-900 mb-4 flex items-center gap-2">
                     <span className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                       <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" />
@@ -272,8 +272,8 @@ export function TeamStatsPage() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                  <h3 className="text-lg font-semibold tracking-tight text-gray-900 mb-4 flex items-center gap-2">
                     <span className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
                       <svg className="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
@@ -303,8 +303,8 @@ export function TeamStatsPage() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                  <h3 className="text-lg font-semibold tracking-tight text-gray-900 mb-4 flex items-center gap-2">
                     <span className="w-8 h-8 bg-cyan-100 rounded-full flex items-center justify-center">
                       <svg className="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />

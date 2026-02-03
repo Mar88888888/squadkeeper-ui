@@ -340,7 +340,7 @@ export function GroupManagementPage() {
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-900">Group Management</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Group Management</h1>
           <div className="flex gap-3">
             <button
               onClick={openCreateModal}
@@ -359,7 +359,7 @@ export function GroupManagementPage() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-4 border-b border-gray-200">
             <div className="relative">
               <svg
@@ -505,7 +505,7 @@ export function GroupManagementPage() {
       {(modalType === 'create' || modalType === 'edit') && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">
               {modalType === 'create' ? 'Create Group' : 'Edit Group'}
             </h2>
 
@@ -553,7 +553,7 @@ export function GroupManagementPage() {
               </button>
               <button
                 onClick={modalType === 'create' ? handleCreateGroup : handleUpdateGroup}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 transition-all"
               >
                 {modalType === 'create' ? 'Create' : 'Save'}
               </button>
@@ -565,7 +565,7 @@ export function GroupManagementPage() {
       {modalType === 'staff' && selectedGroup && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6 max-h-[80vh] overflow-y-auto">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">
               Manage Coaches - {selectedGroup.name}
             </h2>
 
@@ -632,7 +632,7 @@ export function GroupManagementPage() {
               </button>
               <button
                 onClick={handleUpdateStaff}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 transition-all"
               >
                 Save
               </button>
@@ -644,7 +644,7 @@ export function GroupManagementPage() {
       {modalType === 'players' && selectedGroup && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 p-6 max-h-[80vh] overflow-hidden flex flex-col">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">
               Manage Players - {selectedGroup.name}
             </h2>
 
@@ -733,7 +733,7 @@ export function GroupManagementPage() {
               </button>
               <button
                 onClick={handleUpdatePlayers}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 transition-all"
               >
                 Save
               </button>
@@ -745,7 +745,7 @@ export function GroupManagementPage() {
       {modalType === 'schedule' && selectedGroup && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">
               Training Schedule - {selectedGroup.name}
             </h2>
 
@@ -845,7 +845,7 @@ export function GroupManagementPage() {
                     <h3 className="text-sm font-medium text-gray-700 mb-3">Generate Trainings</h3>
                     <div className="grid grid-cols-2 gap-3 mb-3">
                       <div>
-                        <label className="block text-xs text-gray-500 mb-1">From</label>
+                        <label className="block text-xs font-medium uppercase tracking-wide text-gray-400 mb-1">From</label>
                         <input
                           type="date"
                           value={generateDates.fromDate}
@@ -856,7 +856,7 @@ export function GroupManagementPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-500 mb-1">To</label>
+                        <label className="block text-xs font-medium uppercase tracking-wide text-gray-400 mb-1">To</label>
                         <input
                           type="date"
                           value={generateDates.toDate}
@@ -868,7 +868,7 @@ export function GroupManagementPage() {
                       </div>
                     </div>
                     <div className="mb-3">
-                      <label className="block text-xs text-gray-500 mb-1">Default Topic (optional)</label>
+                      <label className="block text-xs font-medium uppercase tracking-wide text-gray-400 mb-1">Default Topic (optional)</label>
                       <input
                         type="text"
                         value={generateDates.defaultTopic}
@@ -890,7 +890,7 @@ export function GroupManagementPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={handleGenerateTrainings}
-                        className="flex-1 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                        className="flex-1 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 transition-all"
                       >
                         Generate Trainings
                       </button>

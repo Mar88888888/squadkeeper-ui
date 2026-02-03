@@ -82,50 +82,50 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
       </div>
 
       <div className={`grid grid-cols-1 gap-6 ${isDefensive ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
-        <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center">
           <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
             <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </div>
           <p className="text-4xl font-bold text-gray-900">{stats.matchesPlayed}</p>
-          <p className="text-gray-500 mt-2">Matches Played</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-gray-400 mt-2">Matches Played</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center">
           <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
             <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
           <p className="text-4xl font-bold text-gray-900">{stats.goals}</p>
-          <p className="text-gray-500 mt-2">Goals Scored</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-gray-400 mt-2">Goals Scored</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center">
           <div className="w-16 h-16 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
             <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
             </svg>
           </div>
           <p className="text-4xl font-bold text-gray-900">{stats.assists}</p>
-          <p className="text-gray-500 mt-2">Assists</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-gray-400 mt-2">Assists</p>
         </div>
 
         {isDefensive && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center">
             <div className="w-16 h-16 mx-auto mb-4 bg-cyan-100 rounded-full flex items-center justify-center">
               <svg className="w-8 h-8 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
             </div>
             <p className="text-4xl font-bold text-gray-900">{stats.cleanSheets}</p>
-            <p className="text-gray-500 mt-2">Clean Sheets</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-400 mt-2">Clean Sheets</p>
           </div>
         )}
       </div>
 
-      <div className="bg-white rounded-2xl shadow-lg p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Goal Contributions</h3>
         <div className="flex items-center gap-4">
           <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
@@ -151,27 +151,27 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
       </div>
 
       {stats.matchesPlayed > 0 && (
-        <div className="bg-white rounded-2xl shadow-lg p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Per Match Averages</h3>
           <div className={`grid gap-4 ${isDefensive ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <div className="text-center p-4 bg-gray-50 rounded-xl">
               <p className="text-2xl font-bold text-green-600">
                 {(stats.goals / stats.matchesPlayed).toFixed(2)}
               </p>
-              <p className="text-sm text-gray-500">Goals per match</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Goals / Match</p>
             </div>
             <div className="text-center p-4 bg-gray-50 rounded-xl">
               <p className="text-2xl font-bold text-purple-600">
                 {(stats.assists / stats.matchesPlayed).toFixed(2)}
               </p>
-              <p className="text-sm text-gray-500">Assists per match</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Assists / Match</p>
             </div>
             {isDefensive && (
               <div className="text-center p-4 bg-gray-50 rounded-xl">
                 <p className="text-2xl font-bold text-cyan-600">
                   {((stats.cleanSheets / stats.matchesPlayed) * 100).toFixed(0)}%
                 </p>
-                <p className="text-sm text-gray-500">Clean sheet rate</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Clean Sheet Rate</p>
               </div>
             )}
           </div>
@@ -179,7 +179,7 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
       )}
 
       {stats.attendance.total > 0 && (
-        <div className="bg-white rounded-2xl shadow-lg p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Attendance</h3>
 
           <div className="mb-6">
@@ -206,23 +206,23 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <div className="text-center p-3 bg-green-50 rounded-lg">
               <p className="text-xl font-bold text-green-600">{stats.attendance.present}</p>
-              <p className="text-xs text-gray-500">Present</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Present</p>
             </div>
             <div className="text-center p-3 bg-orange-50 rounded-lg">
               <p className="text-xl font-bold text-orange-600">{stats.attendance.late}</p>
-              <p className="text-xs text-gray-500">Late</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Late</p>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
               <p className="text-xl font-bold text-gray-600">{stats.attendance.benched}</p>
-              <p className="text-xs text-gray-500">Benched</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Benched</p>
             </div>
             <div className="text-center p-3 bg-red-50 rounded-lg">
               <p className="text-xl font-bold text-red-600">{stats.attendance.absent}</p>
-              <p className="text-xs text-gray-500">Absent</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Absent</p>
             </div>
             <div className="text-center p-3 bg-yellow-50 rounded-lg">
               <p className="text-xl font-bold text-yellow-600">{stats.attendance.sick}</p>
-              <p className="text-xs text-gray-500">Sick</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Sick</p>
             </div>
           </div>
 
@@ -236,7 +236,7 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
 
       {ratingStats && ratingStats.totalEvents > 0 && (
         <>
-          <div className="bg-white rounded-2xl shadow-lg p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Average Ratings</h3>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div className="text-center p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl border-2 border-yellow-200">
@@ -249,25 +249,25 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
                 <p className="text-2xl font-bold text-blue-600">
                   {ratingStats.byCategory.technical?.toFixed(1) ?? '-'}
                 </p>
-                <p className="text-sm text-gray-500">Technical</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Technical</p>
               </div>
               <div className="text-center p-4 bg-green-50 rounded-xl">
                 <p className="text-2xl font-bold text-green-600">
                   {ratingStats.byCategory.tactical?.toFixed(1) ?? '-'}
                 </p>
-                <p className="text-sm text-gray-500">Tactical</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Tactical</p>
               </div>
               <div className="text-center p-4 bg-red-50 rounded-xl">
                 <p className="text-2xl font-bold text-red-600">
                   {ratingStats.byCategory.physical?.toFixed(1) ?? '-'}
                 </p>
-                <p className="text-sm text-gray-500">Physical</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Physical</p>
               </div>
               <div className="text-center p-4 bg-purple-50 rounded-xl">
                 <p className="text-2xl font-bold text-purple-600">
                   {ratingStats.byCategory.psychological?.toFixed(1) ?? '-'}
                 </p>
-                <p className="text-sm text-gray-500">Mental</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Mental</p>
               </div>
             </div>
             <p className="text-center text-sm text-gray-400 mt-4">
@@ -276,7 +276,7 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
           </div>
 
           {ratingStats.history.length > 1 && (
-            <div className="bg-white rounded-2xl shadow-lg p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">Rating Progress</h3>
                 <div className="flex flex-wrap gap-2">

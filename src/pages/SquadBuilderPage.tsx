@@ -311,14 +311,14 @@ export function SquadBuilderPage() {
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
             {isEditMode ? 'Edit Squad' : 'Create Squad'}
           </h1>
           <div className="flex gap-3">
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 disabled:opacity-50 transition-all"
             >
               {isSaving ? 'Saving...' : 'Save Squad'}
             </button>
@@ -573,7 +573,7 @@ export function SquadBuilderPage() {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6 max-h-[80vh] overflow-hidden flex flex-col">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold tracking-tight text-gray-900">
                   Select Player for {positions.find((p) => p.id === selectedPositionId)?.role}
                 </h2>
                 <button

@@ -144,7 +144,7 @@ export function MyGroupsPage() {
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-900">My Groups</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">My Groups</h1>
           <button
             onClick={() => navigate('/dashboard')}
             className="text-gray-600 hover:text-gray-900"
@@ -166,13 +166,13 @@ export function MyGroupsPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
           </div>
         ) : groups.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
             <p className="text-gray-500">You are not assigned to any groups</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {groups.map((group) => (
-              <div key={group.id} className="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div key={group.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="p-6">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
@@ -226,7 +226,7 @@ export function MyGroupsPage() {
       {selectedGroup && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">
               Training Schedule - {selectedGroup.name}
             </h2>
 
@@ -326,7 +326,7 @@ export function MyGroupsPage() {
                     <h3 className="text-sm font-medium text-gray-700 mb-3">Generate Trainings</h3>
                     <div className="grid grid-cols-2 gap-3 mb-3">
                       <div>
-                        <label className="block text-xs text-gray-500 mb-1">From</label>
+                        <label className="block text-xs font-medium uppercase tracking-wide text-gray-400 mb-1">From</label>
                         <input
                           type="date"
                           value={generateDates.fromDate}
@@ -337,7 +337,7 @@ export function MyGroupsPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-500 mb-1">To</label>
+                        <label className="block text-xs font-medium uppercase tracking-wide text-gray-400 mb-1">To</label>
                         <input
                           type="date"
                           value={generateDates.toDate}
@@ -349,7 +349,7 @@ export function MyGroupsPage() {
                       </div>
                     </div>
                     <div className="mb-3">
-                      <label className="block text-xs text-gray-500 mb-1">Default Topic (optional)</label>
+                      <label className="block text-xs font-medium uppercase tracking-wide text-gray-400 mb-1">Default Topic (optional)</label>
                       <input
                         type="text"
                         value={generateDates.defaultTopic}
@@ -371,7 +371,7 @@ export function MyGroupsPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={handleGenerateTrainings}
-                        className="flex-1 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                        className="flex-1 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 transition-all"
                       >
                         Generate Trainings
                       </button>

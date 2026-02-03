@@ -329,7 +329,7 @@ export function MatchDetailsPage() {
           <div className="flex justify-between items-start">
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold tracking-tight text-gray-900">
                   vs {match.opponent}
                 </h1>
                 <span
@@ -384,7 +384,7 @@ export function MatchDetailsPage() {
                     });
                     setIsScoreModalOpen(true);
                   }}
-                  className="text-sm px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="text-sm px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:scale-95 transition-all"
                 >
                   {score ? 'Edit Score' : 'Set Score'}
                 </button>
@@ -401,35 +401,35 @@ export function MatchDetailsPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="border-b border-gray-200">
             <nav className="flex">
               <button
                 onClick={() => setActiveTab('attendance')}
-                className={`px-6 py-4 text-sm font-medium ${
+                className={`px-6 py-4 text-sm font-medium transition-all duration-200 ${
                   activeTab === 'attendance'
                     ? 'text-green-600 border-b-2 border-green-600'
-                    : 'text-gray-500 hover:text-gray-700'
+                    : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent'
                 }`}
               >
                 Attendance
               </button>
               <button
                 onClick={() => setActiveTab('evaluations')}
-                className={`px-6 py-4 text-sm font-medium ${
+                className={`px-6 py-4 text-sm font-medium transition-all duration-200 ${
                   activeTab === 'evaluations'
                     ? 'text-green-600 border-b-2 border-green-600'
-                    : 'text-gray-500 hover:text-gray-700'
+                    : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent'
                 }`}
               >
                 Evaluations
               </button>
               <button
                 onClick={() => setActiveTab('goals')}
-                className={`px-6 py-4 text-sm font-medium ${
+                className={`px-6 py-4 text-sm font-medium transition-all duration-200 ${
                   activeTab === 'goals'
                     ? 'text-green-600 border-b-2 border-green-600'
-                    : 'text-gray-500 hover:text-gray-700'
+                    : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent'
                 }`}
               >
                 Goals ({goals.length})
@@ -440,14 +440,14 @@ export function MatchDetailsPage() {
           {activeTab === 'attendance' && (
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold tracking-tight text-gray-900">
                   {isReadOnly ? 'Attendance' : `Players (${match.group.players.length})`}
                 </h2>
                 {canEdit && (
                   <button
                     onClick={saveAttendance}
                     disabled={isSaving}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 disabled:opacity-50 transition-all"
                   >
                     {isSaving ? 'Saving...' : 'Save Attendance'}
                   </button>
@@ -505,7 +505,7 @@ export function MatchDetailsPage() {
           {activeTab === 'evaluations' && (
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold tracking-tight text-gray-900">
                   {isReadOnly ? 'Evaluations' : 'Player Evaluations'}
                 </h2>
                 {canEdit && (
@@ -534,7 +534,7 @@ export function MatchDetailsPage() {
                           </div>
                           {avgRating !== null && (
                             <div className="text-right">
-                              <p className="text-xs text-gray-500">Average</p>
+                              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Average</p>
                               <p className="text-xl font-bold text-green-600">{avgRating}</p>
                             </div>
                           )}
@@ -547,7 +547,7 @@ export function MatchDetailsPage() {
                                   key={category}
                                   className="text-center p-2 bg-white rounded-lg"
                                 >
-                                  <p className="text-xs text-gray-500">
+                                  <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
                                     {EvaluationCategoryLabels[category]}
                                   </p>
                                   <p className="text-lg font-bold text-gray-900">
@@ -615,7 +615,7 @@ export function MatchDetailsPage() {
                                 key={category}
                                 className="text-center p-2 bg-white rounded-lg"
                               >
-                                <p className="text-xs text-gray-500">
+                                <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
                                   {EvaluationCategoryLabels[category]}
                                 </p>
                                 <p className="text-lg font-bold text-gray-900">
@@ -641,11 +641,11 @@ export function MatchDetailsPage() {
           {activeTab === 'goals' && (
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">Goals</h2>
+                <h2 className="text-lg font-semibold tracking-tight text-gray-900">Goals</h2>
                 {canEdit && (
                   <button
                     onClick={() => setIsAddGoalModalOpen(true)}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 transition-all"
                   >
                     + Add Goal
                   </button>
@@ -711,7 +711,7 @@ export function MatchDetailsPage() {
       {selectedPlayer && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-2">
               Evaluate {selectedPlayer.firstName} {selectedPlayer.lastName}
             </h2>
             <p className="text-sm text-gray-500 mb-6">Rate from 1 to 10</p>
@@ -770,7 +770,7 @@ export function MatchDetailsPage() {
               <button
                 onClick={saveEvaluations}
                 disabled={isSaving}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 disabled:opacity-50 transition-all"
               >
                 {isSaving ? 'Saving...' : 'Save'}
               </button>
@@ -782,7 +782,7 @@ export function MatchDetailsPage() {
       {isAddGoalModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Add Goal</h2>
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">Add Goal</h2>
 
             <div className="space-y-4">
               <div>
@@ -882,7 +882,7 @@ export function MatchDetailsPage() {
               <button
                 onClick={handleAddGoal}
                 disabled={isSaving}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 disabled:opacity-50 transition-all"
               >
                 {isSaving ? 'Adding...' : 'Add Goal'}
               </button>
@@ -894,7 +894,7 @@ export function MatchDetailsPage() {
       {isScoreModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-sm w-full mx-4 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">
               {match.homeGoals !== null ? 'Edit Score' : 'Set Score'}
             </h2>
 
@@ -948,7 +948,7 @@ export function MatchDetailsPage() {
               <button
                 onClick={handleUpdateScore}
                 disabled={isSaving}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 disabled:opacity-50 transition-all"
               >
                 {isSaving ? 'Saving...' : 'Save'}
               </button>

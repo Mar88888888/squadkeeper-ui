@@ -214,7 +214,7 @@ export function TrainingDetailsPage() {
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-xl font-bold text-gray-900">{training.group.name}</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-gray-900">{training.group.name}</h1>
               <p className="text-sm text-gray-600 mt-1">{formatDateTime(training.startTime)}</p>
               <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                 <span className="flex items-center gap-1">
@@ -248,25 +248,25 @@ export function TrainingDetailsPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="border-b border-gray-200">
             <nav className="flex">
               <button
                 onClick={() => setActiveTab('attendance')}
-                className={`px-6 py-4 text-sm font-medium ${
+                className={`px-6 py-4 text-sm font-medium transition-all duration-200 ${
                   activeTab === 'attendance'
                     ? 'text-green-600 border-b-2 border-green-600'
-                    : 'text-gray-500 hover:text-gray-700'
+                    : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent'
                 }`}
               >
                 Attendance
               </button>
               <button
                 onClick={() => setActiveTab('evaluations')}
-                className={`px-6 py-4 text-sm font-medium ${
+                className={`px-6 py-4 text-sm font-medium transition-all duration-200 ${
                   activeTab === 'evaluations'
                     ? 'text-green-600 border-b-2 border-green-600'
-                    : 'text-gray-500 hover:text-gray-700'
+                    : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent'
                 }`}
               >
                 Evaluations
@@ -277,14 +277,14 @@ export function TrainingDetailsPage() {
           {activeTab === 'attendance' && (
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold tracking-tight text-gray-900">
                   {isReadOnly ? 'Attendance' : `Players (${training.group.players.length})`}
                 </h2>
                 {canEdit && (
                   <button
                     onClick={saveAttendance}
                     disabled={isSaving}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 disabled:opacity-50 transition-all"
                   >
                     {isSaving ? 'Saving...' : 'Save Attendance'}
                   </button>
@@ -342,7 +342,7 @@ export function TrainingDetailsPage() {
           {activeTab === 'evaluations' && (
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold tracking-tight text-gray-900">
                   {isReadOnly ? 'Evaluations' : 'Player Evaluations'}
                 </h2>
                 {canEdit && (
@@ -381,7 +381,7 @@ export function TrainingDetailsPage() {
                             <div className="grid grid-cols-4 gap-2">
                               {EVAL_CATEGORIES.map(({ key, label }) => (
                                 <div key={key} className="text-center p-2 bg-white rounded-lg">
-                                  <p className="text-xs text-gray-500">{label}</p>
+                                  <p className="text-xs font-medium uppercase tracking-wide text-gray-400">{label}</p>
                                   <p className="text-lg font-bold text-gray-900">
                                     {playerEval[key] ?? '-'}
                                   </p>
@@ -443,7 +443,7 @@ export function TrainingDetailsPage() {
                         <div className="mt-3 grid grid-cols-4 gap-2">
                           {EVAL_CATEGORIES.map(({ key, label }) => (
                             <div key={key} className="text-center p-2 bg-white rounded-lg">
-                              <p className="text-xs text-gray-500">{label}</p>
+                              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">{label}</p>
                               <p className="text-lg font-bold text-gray-900">
                                 {playerEval[key] ?? '-'}
                               </p>
@@ -463,7 +463,7 @@ export function TrainingDetailsPage() {
       {selectedPlayer && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-2">
               Evaluate {selectedPlayer.firstName} {selectedPlayer.lastName}
             </h2>
             <p className="text-sm text-gray-500 mb-6">Rate from 1 to 10</p>
@@ -519,7 +519,7 @@ export function TrainingDetailsPage() {
               <button
                 onClick={saveEvaluations}
                 disabled={isSaving}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 disabled:opacity-50 transition-all"
               >
                 {isSaving ? 'Saving...' : 'Save'}
               </button>

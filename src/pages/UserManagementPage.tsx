@@ -71,7 +71,7 @@ export function UserManagementPage() {
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-900">User Management</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">User Management</h1>
           <button
             onClick={() => navigate('/dashboard')}
             className="text-gray-600 hover:text-gray-900"
@@ -82,8 +82,8 @@ export function UserManagementPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-6">Create New User</h2>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-6">Create New User</h2>
 
           <UserTypeSelector
             currentType={form.userType}
@@ -409,7 +409,7 @@ function SubmitButton({ isLoading, label }: SubmitButtonProps) {
     <button
       type="submit"
       disabled={isLoading}
-      className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 focus:ring-4 focus:ring-green-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+      className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 focus:ring-4 focus:ring-green-200 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {isLoading ? (
         <span className="flex items-center justify-center">

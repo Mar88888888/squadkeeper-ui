@@ -65,7 +65,7 @@ function PositionExpectationRow({
     <div className="grid grid-cols-3 gap-4 items-center py-2 border-b border-gray-100 last:border-0">
       <div className="font-medium text-gray-900">{POSITION_LABELS[position]}</div>
       <div>
-        <label className="text-xs text-gray-500">Goals/Match</label>
+        <label className="text-xs font-medium uppercase tracking-wide text-gray-400">Goals/Match</label>
         <input
           type="number"
           step="0.05"
@@ -82,7 +82,7 @@ function PositionExpectationRow({
         />
       </div>
       <div>
-        <label className="text-xs text-gray-500">Assists/Match</label>
+        <label className="text-xs font-medium uppercase tracking-wide text-gray-400">Assists/Match</label>
         <input
           type="number"
           step="0.05"
@@ -246,7 +246,7 @@ export function PerformanceSettingsPage() {
       <header className="bg-white shadow">
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Performance Settings</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900">Performance Settings</h1>
             {settings && (
               <p className="text-sm text-gray-500">{settings.groupName}</p>
             )}
@@ -274,8 +274,8 @@ export function PerformanceSettingsPage() {
         )}
 
         {otherGroups.length > 0 && (
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">
               Copy from Another Group
             </h2>
             <p className="text-sm text-gray-500 mb-4">
@@ -309,8 +309,8 @@ export function PerformanceSettingsPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">
             Component Weights
           </h2>
           <p className="text-sm text-gray-500 mb-6">
@@ -368,8 +368,8 @@ export function PerformanceSettingsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">
             Position Expectations
           </h2>
           <p className="text-sm text-gray-500 mb-6">

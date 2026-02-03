@@ -99,7 +99,7 @@ describe('Calendar', () => {
 
     const trainingEvent = screen.getByText(/Training Session/);
     expect(trainingEvent).toBeInTheDocument();
-    expect(trainingEvent).toHaveClass('bg-emerald-500');
+    expect(trainingEvent).toHaveClass('bg-green-500');
   });
 
   it('should render match events with correct styling', () => {

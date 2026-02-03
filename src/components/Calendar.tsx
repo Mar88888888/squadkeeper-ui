@@ -98,7 +98,7 @@ export function Calendar({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+    <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
       <div className="bg-gradient-to-r from-green-600 to-green-500 px-5 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -117,7 +117,7 @@ export function Calendar({
           <div className="flex items-center gap-4">
             <div className="hidden sm:flex gap-4">
               <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-300"></span>
+                <span className="w-2 h-2 rounded-full bg-green-300"></span>
                 <span className="text-xs text-white/80">Training</span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -197,7 +197,7 @@ export function Calendar({
                     {hasEvents && (
                       <div className="flex gap-0.5">
                         {dayEvents.some(e => e.type === 'training') && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
                         )}
                         {dayEvents.some(e => e.type === 'match') && (
                           <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
@@ -212,7 +212,7 @@ export function Calendar({
                         onClick={() => onEventClick(event)}
                         className={`w-full text-left px-1.5 py-0.5 rounded text-[11px] font-medium truncate transition-all hover:opacity-90 ${
                           event.type === 'training'
-                            ? 'bg-emerald-500 text-white'
+                            ? 'bg-green-500 text-white'
                             : 'bg-blue-500 text-white'
                         }`}
                         title={`${event.title} - ${event.group} (${formatTime(event.startTime)})`}
