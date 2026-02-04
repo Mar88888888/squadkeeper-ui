@@ -6,6 +6,7 @@ import { GAME_FORMAT_LABELS } from '../constants/squad.constants';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useAuth } from '../contexts/AuthContext';
 import { UserRole } from '../types';
+import { EmptyState, emptyStateIcons } from '../components/EmptyState';
 
 export function SquadListPage() {
   const navigate = useNavigate();
@@ -103,10 +104,10 @@ export function SquadListPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950">
+      <header className="bg-white dark:bg-gray-900 shadow">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Squad Builder</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Squad Builder</h1>
           <div className="flex gap-3">
             <button
               onClick={() => navigate('/squads/new')}
@@ -116,7 +117,7 @@ export function SquadListPage() {
             </button>
             <button
               onClick={() => navigate('/dashboard')}
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             >
               Back to Dashboard
             </button>
@@ -125,14 +126,14 @@ export function SquadListPage() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 mb-6">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Select Group
           </label>
           <select
             value={selectedGroupId}
             onChange={(e) => setSelectedGroupId(e.target.value)}
-            className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            className="w-full md:w-64 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
           >
             <option value="">Select a group...</option>
             {groups.map((group) => (
@@ -144,7 +145,7 @@ export function SquadListPage() {
         </div>
 
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-400 rounded-lg text-sm">
             {error}
           </div>
         )}
@@ -154,33 +155,21 @@ export function SquadListPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
           </div>
         ) : !selectedGroupId ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
-            Select a group to view squads
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow">
+            <EmptyState
+              icon={emptyStateIcons.group}
+              title="Select a group"
+              description="Choose a group from the dropdown above to view and manage squads."
+            />
           </div>
         ) : squads.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <div className="text-gray-400 mb-4">
-              <svg
-                className="w-16 h-16 mx-auto"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-            </div>
-            <p className="text-gray-500 mb-4">No squads created yet for this group</p>
-            <button
-              onClick={() => navigate('/squads/new')}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 transition-all"
-            >
-              Create Your First Squad
-            </button>
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow">
+            <EmptyState
+              icon={emptyStateIcons.squad}
+              title="No squads created"
+              description="Create your first squad to start planning your team formations."
+              action={{ label: 'Create Squad', to: '/squads/new' }}
+            />
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -196,7 +185,7 @@ export function SquadListPage() {
               return (
                 <div
                   key={squad.id}
-                  className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden"
+                  className="bg-white dark:bg-gray-900 rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden"
                 >
                   <div className="bg-gradient-to-br from-green-500 to-green-600 p-4 text-white">
                     <h3 className="font-bold text-lg">{squad.name}</h3>
@@ -207,8 +196,8 @@ export function SquadListPage() {
 
                   <div className="p-4">
                     <div className="flex items-center justify-between text-sm mb-3">
-                      <span className="text-gray-500">Players</span>
-                      <span className="font-medium">
+                      <span className="text-gray-500 dark:text-gray-400">Players</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">
                         {filledCount}/{starterCount} starters
                         {benchCount > 0 && ` + ${benchCount} subs`}
                       </span>
@@ -221,19 +210,19 @@ export function SquadListPage() {
                         .map((pos) => (
                           <span
                             key={pos.id}
-                            className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded"
+                            className="px-2 py-0.5 bg-gray-100 dark:bg-gray-950 text-gray-600 dark:text-gray-400 text-xs rounded"
                           >
                             {pos.player!.lastName}
                           </span>
                         ))}
                       {squad.positions.filter((p) => p.player).length > 6 && (
-                        <span className="px-2 py-0.5 text-gray-400 text-xs">
+                        <span className="px-2 py-0.5 text-gray-400 dark:text-gray-500 text-xs">
                           +{squad.positions.filter((p) => p.player).length - 6} more
                         </span>
                       )}
                     </div>
 
-                    <div className="text-xs text-gray-400 mb-4">
+                    <div className="text-xs text-gray-400 dark:text-gray-500 mb-4">
                       {squad.createdBy && (
                         <span>
                           By {squad.createdBy.firstName} {squad.createdBy.lastName} •{' '}
@@ -257,7 +246,7 @@ export function SquadListPage() {
                             newName: `${squad.name} (Copy)`,
                           })
                         }
-                        className="px-3 py-2 border border-gray-300 text-gray-600 text-sm rounded-lg hover:bg-gray-50 transition-colors"
+                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 text-sm rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                         title="Duplicate"
                       >
                         <svg
@@ -282,7 +271,7 @@ export function SquadListPage() {
                             squadName: squad.name,
                           })
                         }
-                        className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className="px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                         title="Delete"
                       >
                         <svg
@@ -321,12 +310,12 @@ export function SquadListPage() {
 
       {duplicateDialog.isOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
-            <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100 mb-4">
               Duplicate Squad
             </h2>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 New Squad Name
               </label>
               <input
@@ -335,7 +324,7 @@ export function SquadListPage() {
                 onChange={(e) =>
                   setDuplicateDialog((prev) => ({ ...prev, newName: e.target.value }))
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
               />
             </div>
             <div className="mt-6 flex justify-end gap-3">
@@ -343,7 +332,7 @@ export function SquadListPage() {
                 onClick={() =>
                   setDuplicateDialog({ isOpen: false, squadId: '', newName: '' })
                 }
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
               >
                 Cancel
               </button>

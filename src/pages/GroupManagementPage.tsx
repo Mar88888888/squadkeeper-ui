@@ -4,6 +4,7 @@ import { groupsApi, type GroupInfo } from '../api/groups';
 import { usersApi, type CoachInfo, type PlayerInfo } from '../api/users';
 import { schedulesApi, type ScheduleItem } from '../api/schedules';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { EmptyState, emptyStateIcons } from '../components/EmptyState';
 
 type ModalType = 'create' | 'edit' | 'staff' | 'players' | 'schedule' | null;
 
@@ -337,20 +338,20 @@ export function GroupManagementPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950">
+      <header className="bg-white dark:bg-gray-900 shadow">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Group Management</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Group Management</h1>
           <div className="flex gap-3">
             <button
               onClick={openCreateModal}
-              className="text-green-600 hover:text-green-700 font-medium"
+              className="text-green-600 dark:text-green-400 hover:text-green-700 font-medium"
             >
               + Create Group
             </button>
             <button
               onClick={() => navigate('/dashboard')}
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             >
               Back to Dashboard
             </button>
@@ -359,11 +360,11 @@ export function GroupManagementPage() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-4 border-b border-gray-200">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <div className="relative">
               <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -380,13 +381,13 @@ export function GroupManagementPage() {
                 placeholder="Search by name or year..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
               />
             </div>
           </div>
 
           {error && (
-            <div className="m-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            <div className="m-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-gray-700 text-red-700 dark:text-red-400 rounded-lg text-sm">
               {error}
             </div>
           )}
@@ -396,53 +397,65 @@ export function GroupManagementPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
             </div>
           ) : filteredGroups.length === 0 ? (
-            <div className="py-12 text-center text-gray-500">
-              {groups.length === 0 ? 'No groups created yet' : 'No groups match your search'}
-            </div>
+            groups.length === 0 ? (
+              <EmptyState
+                icon={emptyStateIcons.group}
+                title="No groups created"
+                description="Create your first group to organize your players by age or skill level."
+                action={{ label: 'Create Group', onClick: openCreateModal }}
+              />
+            ) : (
+              <EmptyState
+                icon={emptyStateIcons.search}
+                title="No groups found"
+                description="No groups match your search. Try a different keyword."
+                compact
+              />
+            )
           ) : (
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-gray-200 dark:divide-gray-700">
               {filteredGroups.map((group) => (
-                <div key={group.id} className="p-4 hover:bg-gray-50">
+                <div key={group.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
-                          <span className="text-indigo-600 font-bold text-lg">
+                        <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
+                          <span className="text-indigo-600 dark:text-indigo-400 font-bold text-lg">
                             {group.yearOfBirth % 100}
                           </span>
                         </div>
                         <div>
-                          <h3 className="font-semibold text-gray-900">{group.name}</h3>
-                          <p className="text-sm text-gray-500">Year of birth: {group.yearOfBirth}</p>
+                          <h3 className="font-semibold text-gray-900 dark:text-gray-100">{group.name}</h3>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Year of birth: {group.yearOfBirth}</p>
                         </div>
                       </div>
 
                       <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        <div className="bg-gray-50 rounded-lg p-3">
-                          <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">Head Coach</p>
+                        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                          <p className="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wide mb-1">Head Coach</p>
                           {group.headCoach ? (
-                            <p className="font-medium text-gray-900">
+                            <p className="font-medium text-gray-900 dark:text-gray-100">
                               {group.headCoach.firstName} {group.headCoach.lastName}
                             </p>
                           ) : (
-                            <p className="text-gray-400 italic">Not assigned</p>
+                            <p className="text-gray-400 dark:text-gray-500 italic">Not assigned</p>
                           )}
                         </div>
 
-                        <div className="bg-gray-50 rounded-lg p-3">
-                          <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">Assistants</p>
+                        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                          <p className="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wide mb-1">Assistants</p>
                           {group.assistants.length > 0 ? (
-                            <p className="font-medium text-gray-900">
+                            <p className="font-medium text-gray-900 dark:text-gray-100">
                               {group.assistants.map((a) => a.firstName).join(', ')}
                             </p>
                           ) : (
-                            <p className="text-gray-400 italic">None</p>
+                            <p className="text-gray-400 dark:text-gray-500 italic">None</p>
                           )}
                         </div>
 
-                        <div className="bg-gray-50 rounded-lg p-3">
-                          <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">Players</p>
-                          <p className="font-medium text-gray-900">{group.players.length} players</p>
+                        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                          <p className="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wide mb-1">Players</p>
+                          <p className="font-medium text-gray-900 dark:text-gray-100">{group.players.length} players</p>
                         </div>
                       </div>
                     </div>
@@ -450,7 +463,7 @@ export function GroupManagementPage() {
                     <div className="flex items-center gap-2 ml-4">
                       <button
                         onClick={() => openEditModal(group)}
-                        className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                         title="Edit group"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -459,7 +472,7 @@ export function GroupManagementPage() {
                       </button>
                       <button
                         onClick={() => openStaffModal(group)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
                         title="Manage coaches"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -468,7 +481,7 @@ export function GroupManagementPage() {
                       </button>
                       <button
                         onClick={() => openPlayersModal(group)}
-                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                        className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition-colors"
                         title="Manage players"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -477,7 +490,7 @@ export function GroupManagementPage() {
                       </button>
                       <button
                         onClick={() => openScheduleModal(group)}
-                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                        className="p-2 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-lg transition-colors"
                         title="Training schedule"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -486,7 +499,7 @@ export function GroupManagementPage() {
                       </button>
                       <button
                         onClick={() => setDeleteDialog({ isOpen: true, groupId: group.id, groupName: group.name })}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                         title="Delete group"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -504,34 +517,34 @@ export function GroupManagementPage() {
 
       {(modalType === 'create' || modalType === 'edit') && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
-            <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100 mb-4">
               {modalType === 'create' ? 'Create Group' : 'Edit Group'}
             </h2>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Group Name *
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
                   placeholder="e.g., U-12 Main"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Year of Birth * <span className="text-gray-400 font-normal">({minYearOfBirth}-{maxYearOfBirth})</span>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Year of Birth * <span className="text-gray-400 dark:text-gray-500 font-normal">({minYearOfBirth}-{maxYearOfBirth})</span>
                 </label>
                 <input
                   type="number"
                   value={formData.yearOfBirth}
                   onChange={(e) => setFormData((prev) => ({ ...prev, yearOfBirth: parseInt(e.target.value) || 0 }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
                   min={minYearOfBirth}
                   max={maxYearOfBirth}
                 />
@@ -539,7 +552,7 @@ export function GroupManagementPage() {
             </div>
 
             {error && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+              <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-gray-700 text-red-700 dark:text-red-400 rounded-lg text-sm">
                 {error}
               </div>
             )}
@@ -547,7 +560,7 @@ export function GroupManagementPage() {
             <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={closeModal}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
               >
                 Cancel
               </button>
@@ -564,20 +577,20 @@ export function GroupManagementPage() {
 
       {modalType === 'staff' && selectedGroup && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6 max-h-[80vh] overflow-y-auto">
-            <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-lg w-full mx-4 p-6 max-h-[80vh] overflow-y-auto">
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100 mb-4">
               Manage Coaches - {selectedGroup.name}
             </h2>
 
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Head Coach
                 </label>
                 <select
                   value={staffData.headCoachId || ''}
                   onChange={(e) => setStaffData((prev) => ({ ...prev, headCoachId: e.target.value || null }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
                 >
                   <option value="">-- Not assigned --</option>
                   {coaches.map((coach) => (
@@ -589,14 +602,14 @@ export function GroupManagementPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Assistant Coaches
                 </label>
-                <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-2">
+                <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-2">
                   {coaches.filter((c) => c.id !== staffData.headCoachId).map((coach) => (
                     <label
                       key={coach.id}
-                      className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer"
+                      className="flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg cursor-pointer"
                     >
                       <input
                         type="checkbox"
@@ -604,21 +617,21 @@ export function GroupManagementPage() {
                         onChange={() => toggleAssistant(coach.id)}
                         className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
                       />
-                      <span className="text-gray-900">
+                      <span className="text-gray-900 dark:text-gray-100">
                         {coach.firstName} {coach.lastName}
                       </span>
-                      <span className="text-sm text-gray-500">({coach.licenseLevel})</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">({coach.licenseLevel})</span>
                     </label>
                   ))}
                   {coaches.filter((c) => c.id !== staffData.headCoachId).length === 0 && (
-                    <p className="text-gray-500 text-sm p-2">No coaches available</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm p-2">No coaches available</p>
                   )}
                 </div>
               </div>
             </div>
 
             {error && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+              <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-gray-700 text-red-700 dark:text-red-400 rounded-lg text-sm">
                 {error}
               </div>
             )}
@@ -626,7 +639,7 @@ export function GroupManagementPage() {
             <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={closeModal}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
               >
                 Cancel
               </button>
@@ -643,14 +656,14 @@ export function GroupManagementPage() {
 
       {modalType === 'players' && selectedGroup && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 p-6 max-h-[80vh] overflow-hidden flex flex-col">
-            <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-2xl w-full mx-4 p-6 max-h-[80vh] overflow-hidden flex flex-col">
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100 mb-4">
               Manage Players - {selectedGroup.name}
             </h2>
 
             <div className="relative mb-4">
               <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -667,19 +680,19 @@ export function GroupManagementPage() {
                 placeholder="Search players..."
                 value={playerSearchQuery}
                 onChange={(e) => setPlayerSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
               />
             </div>
 
-            <div className="text-sm text-gray-500 mb-2">
+            <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
               {selectedPlayerIds.length} players selected
             </div>
 
-            <div className="flex-1 overflow-y-auto border border-gray-200 rounded-lg">
+            <div className="flex-1 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg">
               {filteredPlayersForSelection.length === 0 ? (
-                <p className="text-gray-500 text-sm p-4 text-center">No players found</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm p-4 text-center">No players found</p>
               ) : (
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-gray-100 dark:divide-gray-800">
                   {filteredPlayersForSelection.map((player) => {
                     const isSelected = selectedPlayerIds.includes(player.id);
                     const inOtherGroup = player.group && player.group.id !== selectedGroup.id;
@@ -687,7 +700,7 @@ export function GroupManagementPage() {
                       <label
                         key={player.id}
                         className={`flex items-center gap-3 p-3 cursor-pointer transition-colors ${
-                          isSelected ? 'bg-green-50' : 'hover:bg-gray-50'
+                          isSelected ? 'bg-green-50 dark:bg-green-900/30' : 'hover:bg-gray-50 dark:hover:bg-gray-800'
                         }`}
                       >
                         <input
@@ -698,16 +711,16 @@ export function GroupManagementPage() {
                         />
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-900">
+                            <span className="font-medium text-gray-900 dark:text-gray-100">
                               {player.firstName} {player.lastName}
                             </span>
                             {inOtherGroup && (
-                              <span className="px-2 py-0.5 text-xs bg-yellow-100 text-yellow-800 rounded-full">
+                              <span className="px-2 py-0.5 text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 rounded-full">
                                 In: {player.group?.name}
                               </span>
                             )}
                           </div>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
                             {new Date(player.dateOfBirth).getFullYear()} | {player.position}
                           </p>
                         </div>
@@ -719,7 +732,7 @@ export function GroupManagementPage() {
             </div>
 
             {error && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+              <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-gray-700 text-red-700 dark:text-red-400 rounded-lg text-sm">
                 {error}
               </div>
             )}
@@ -727,7 +740,7 @@ export function GroupManagementPage() {
             <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={closeModal}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
               >
                 Cancel
               </button>
@@ -744,8 +757,8 @@ export function GroupManagementPage() {
 
       {modalType === 'schedule' && selectedGroup && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-2xl w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100 mb-4">
               Training Schedule - {selectedGroup.name}
             </h2>
 
@@ -757,18 +770,18 @@ export function GroupManagementPage() {
               <>
                 <div className="space-y-3 mb-6">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-gray-700">Weekly Schedule</h3>
+                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Weekly Schedule</h3>
                     <button
                       onClick={addScheduleItem}
                       disabled={scheduleItems.length >= 7}
-                      className="text-sm text-purple-600 hover:text-purple-700 disabled:text-gray-400"
+                      className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 disabled:text-gray-400 dark:disabled:text-gray-500"
                     >
                       + Add Day
                     </button>
                   </div>
 
                   {scheduleItems.length === 0 ? (
-                    <p className="text-gray-500 text-sm py-4 text-center bg-gray-50 rounded-lg">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm py-4 text-center bg-gray-50 dark:bg-gray-800 rounded-lg">
                       No schedule defined. Click "Add Day" to create one.
                     </p>
                   ) : (
@@ -778,14 +791,14 @@ export function GroupManagementPage() {
                         .map((item, index) => (
                           <div
                             key={index}
-                            className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                            className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
                           >
                             <select
                               value={item.dayOfWeek}
                               onChange={(e) =>
                                 updateScheduleItem(index, 'dayOfWeek', parseInt(e.target.value))
                               }
-                              className="px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                              className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:text-gray-100"
                             >
                               {[0, 1, 2, 3, 4, 5, 6].map((day) => (
                                 <option
@@ -803,25 +816,25 @@ export function GroupManagementPage() {
                               type="time"
                               value={item.startTime}
                               onChange={(e) => updateScheduleItem(index, 'startTime', e.target.value)}
-                              className="px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                              className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:text-gray-100"
                             />
-                            <span className="text-gray-400">-</span>
+                            <span className="text-gray-400 dark:text-gray-500">-</span>
                             <input
                               type="time"
                               value={item.endTime}
                               onChange={(e) => updateScheduleItem(index, 'endTime', e.target.value)}
-                              className="px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                              className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:text-gray-100"
                             />
                             <input
                               type="text"
                               value={item.location}
                               onChange={(e) => updateScheduleItem(index, 'location', e.target.value)}
                               placeholder="Location"
-                              className="flex-1 px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                              className="flex-1 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:text-gray-100"
                             />
                             <button
                               onClick={() => removeScheduleItem(index)}
-                              className="p-1 text-red-500 hover:bg-red-50 rounded"
+                              className="p-1 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -841,34 +854,34 @@ export function GroupManagementPage() {
                 </div>
 
                 {scheduleItems.length > 0 && (
-                  <div className="border-t border-gray-200 pt-6">
-                    <h3 className="text-sm font-medium text-gray-700 mb-3">Generate Trainings</h3>
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Generate Trainings</h3>
                     <div className="grid grid-cols-2 gap-3 mb-3">
                       <div>
-                        <label className="block text-xs font-medium uppercase tracking-wide text-gray-400 mb-1">From</label>
+                        <label className="block text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">From</label>
                         <input
                           type="date"
                           value={generateDates.fromDate}
                           onChange={(e) =>
                             setGenerateDates((prev) => ({ ...prev, fromDate: e.target.value }))
                           }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:text-gray-100"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium uppercase tracking-wide text-gray-400 mb-1">To</label>
+                        <label className="block text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">To</label>
                         <input
                           type="date"
                           value={generateDates.toDate}
                           onChange={(e) =>
                             setGenerateDates((prev) => ({ ...prev, toDate: e.target.value }))
                           }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:text-gray-100"
                         />
                       </div>
                     </div>
                     <div className="mb-3">
-                      <label className="block text-xs font-medium uppercase tracking-wide text-gray-400 mb-1">Default Topic (optional)</label>
+                      <label className="block text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">Default Topic (optional)</label>
                       <input
                         type="text"
                         value={generateDates.defaultTopic}
@@ -876,12 +889,12 @@ export function GroupManagementPage() {
                           setGenerateDates((prev) => ({ ...prev, defaultTopic: e.target.value }))
                         }
                         placeholder="e.g., Technical training"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:text-gray-100"
                       />
                     </div>
 
                     {generateResult && (
-                      <div className="mb-3 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm">
+                      <div className="mb-3 p-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-gray-700 text-green-700 dark:text-green-400 rounded-lg text-sm">
                         Created {generateResult.created} trainings
                         {generateResult.skipped > 0 && `, skipped ${generateResult.skipped} (already exist)`}
                       </div>
@@ -896,7 +909,7 @@ export function GroupManagementPage() {
                       </button>
                       <button
                         onClick={handleDeleteGeneratedTrainings}
-                        className="px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
+                        className="px-4 py-2 text-red-600 dark:text-red-400 border border-red-300 dark:border-red-700 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                         title="Delete future generated trainings without attendance"
                       >
                         Clear Future
@@ -908,7 +921,7 @@ export function GroupManagementPage() {
             )}
 
             {error && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+              <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-gray-700 text-red-700 dark:text-red-400 rounded-lg text-sm">
                 {error}
               </div>
             )}
@@ -916,7 +929,7 @@ export function GroupManagementPage() {
             <div className="mt-6 flex justify-end">
               <button
                 onClick={closeModal}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
               >
                 Close
               </button>

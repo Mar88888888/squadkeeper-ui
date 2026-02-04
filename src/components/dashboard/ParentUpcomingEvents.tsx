@@ -132,10 +132,15 @@ function EventCard({ event }: { event: EventWithChildren }) {
   const linkTo = isTraining ? `/trainings/${data.id}` : `/matches/${data.id}`;
   const childrenText = event.children.join(', ');
 
+  // Training: green (practice/growth), Match: blue (competition/game day)
+  const gradientClass = isTraining
+    ? 'from-green-600 to-green-500 hover:from-green-700 hover:to-green-600'
+    : 'from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600';
+
   return (
     <Link
       to={linkTo}
-      className="block bg-gradient-to-r from-green-600 to-green-500 rounded-xl p-5 text-white hover:from-green-700 hover:to-green-600 transition-all group"
+      className={`block bg-gradient-to-r ${gradientClass} rounded-xl p-5 text-white transition-all group`}
     >
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
@@ -209,15 +214,17 @@ function CompactEventCard({ event }: { event: EventWithChildren }) {
   const linkTo = isTraining ? `/trainings/${data.id}` : `/matches/${data.id}`;
   const childrenText = event.children.join(', ');
 
+  const hoverBorderClass = isTraining ? 'hover:border-green-200 dark:hover:border-green-800' : 'hover:border-blue-200 dark:hover:border-blue-800';
+
   return (
     <Link
       to={linkTo}
-      className="block bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:border-green-200 hover:shadow-md transition-all group"
+      className={`block bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-4 ${hoverBorderClass} hover:shadow-md transition-all group`}
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
           <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-            isTraining ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
+            isTraining ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
           }`}>
             {isTraining ? (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -230,23 +237,23 @@ function CompactEventCard({ event }: { event: EventWithChildren }) {
             )}
           </div>
           <div>
-            <p className="text-xs text-gray-500">{isTraining ? 'Training' : 'Match'}</p>
-            <p className="font-medium text-gray-900 text-sm">
+            <p className="text-xs text-gray-500 dark:text-gray-400">{isTraining ? 'Training' : 'Match'}</p>
+            <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">
               {isTraining ? data.group.name : `vs ${(data as Match).opponent}`}
             </p>
           </div>
         </div>
-        <span className="text-xs text-gray-500">{getTimeUntil(data.startTime)}</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400">{getTimeUntil(data.startTime)}</span>
       </div>
 
-      <div className="flex items-center gap-1 text-xs text-amber-600 mb-2">
+      <div className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 mb-2">
         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
         </svg>
         <span>{childrenText}</span>
       </div>
 
-      <div className="flex items-center gap-3 text-xs text-gray-500">
+      <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
         <span className="flex items-center gap-1">
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -308,7 +315,7 @@ export function ParentUpcomingEvents({ trainings, matches, children, loading }: 
 
       {restEvents.length > 0 && (
         <div>
-          <h3 className="text-sm font-medium text-gray-600 mb-3">More upcoming events</h3>
+          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">More upcoming events</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {restEvents.slice(0, maxRestEvents).map((event, index) => (
               <CompactEventCard key={`${event.type}-${event.data.id}-${index}`} event={event} />
@@ -317,7 +324,7 @@ export function ParentUpcomingEvents({ trainings, matches, children, loading }: 
           {restEvents.length > maxRestEvents && (
             <Link
               to="/calendar"
-              className="mt-3 inline-flex items-center gap-1 text-sm text-green-600 hover:text-green-700"
+              className="mt-3 inline-flex items-center gap-1 text-sm text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300"
             >
               View all events
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

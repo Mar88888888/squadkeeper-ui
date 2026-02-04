@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
@@ -102,4 +104,64 @@
 
 .react-datepicker__close-icon:hover::after {
   background-color: var(--color-gray-500) !important;
+}
+
+/* Theme transition for smooth dark/light mode switching */
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.15s ease !important;
+}
+
+/* Dark mode DatePicker overrides */
+.dark .react-datepicker {
+  background-color: var(--color-gray-900) !important;
+  border-color: var(--color-gray-700) !important;
+}
+
+.dark .react-datepicker__header {
+  background: var(--color-gray-800) !important;
+  border-bottom-color: var(--color-gray-700) !important;
+}
+
+.dark .react-datepicker__current-month {
+  color: var(--color-gray-100) !important;
+}
+
+.dark .react-datepicker__day-name {
+  color: var(--color-gray-400) !important;
+}
+
+.dark .react-datepicker__day {
+  color: var(--color-gray-300) !important;
+}
+
+.dark .react-datepicker__day:hover {
+  background: var(--color-green-900) !important;
+  color: var(--color-green-200) !important;
+}
+
+.dark .react-datepicker__day--selected,
+.dark .react-datepicker__day--in-selecting-range,
+.dark .react-datepicker__day--in-range {
+  background: var(--color-green-600) !important;
+  color: white !important;
+}
+
+.dark .react-datepicker__day--keyboard-selected {
+  background: var(--color-green-800) !important;
+  color: var(--color-green-200) !important;
+}
+
+.dark .react-datepicker__day--outside-month {
+  color: var(--color-gray-600) !important;
+}
+
+.dark .react-datepicker__navigation-icon::before {
+  border-color: var(--color-gray-400) !important;
+}
+
+.dark .react-datepicker__navigation:hover *::before {
+  border-color: var(--color-gray-200) !important;
 }

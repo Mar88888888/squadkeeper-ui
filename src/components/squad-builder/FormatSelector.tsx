@@ -31,23 +31,23 @@ export const FormatSelector: React.FC<FormatSelectorProps> = ({
               flex-1 p-3 rounded-lg border-2 transition-all text-left
               ${
                 isSelected
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
+                  : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600'
               }
               ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
             `}
           >
             <div
               className={`text-lg font-bold ${
-                isSelected ? 'text-blue-600' : 'text-gray-800'
+                isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-gray-800 dark:text-gray-200'
               }`}
             >
               {config.label}
             </div>
-            <div className="text-xs text-gray-500 mt-0.5">
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
               {config.totalPlayers} players
             </div>
-            <div className="text-xs text-gray-400">{config.recommendedAges}</div>
+            <div className="text-xs text-gray-400 dark:text-gray-500">{config.recommendedAges}</div>
           </button>
         );
       })}

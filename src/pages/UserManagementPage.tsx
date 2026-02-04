@@ -68,13 +68,13 @@ export function UserManagementPage() {
   }, [form, playerSelector, getCoachData, getPlayerData, getParentData, resetForm, setLoading, setError, setSuccess]);
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950">
+      <header className="bg-white dark:bg-gray-900 shadow">
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">User Management</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">User Management</h1>
           <button
             onClick={() => navigate('/dashboard')}
-            className="text-gray-600 hover:text-gray-900"
+            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
           >
             Back to Dashboard
           </button>
@@ -82,8 +82,8 @@ export function UserManagementPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-6">Create New User</h2>
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+          <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100 mb-6">Create New User</h2>
 
           <UserTypeSelector
             currentType={form.userType}
@@ -91,13 +91,13 @@ export function UserManagementPage() {
           />
 
           {ui.error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-gray-700 text-red-700 dark:text-red-400 rounded-lg text-sm">
               {ui.error}
             </div>
           )}
 
           {ui.success && (
-            <div className="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm">
+            <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-gray-700 text-green-700 dark:text-green-400 rounded-lg text-sm">
               {ui.success}
             </div>
           )}
@@ -114,8 +114,8 @@ export function UserManagementPage() {
             )}
 
             {form.userType === 'parent' && (
-              <div className="border-t pt-4">
-                <h3 className="text-md font-medium text-gray-900 mb-4">Link to Players (Children)</h3>
+              <div className="border-t dark:border-gray-700 pt-4">
+                <h3 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-4">Link to Players (Children)</h3>
                 <PlayerSelector
                   isLoading={playerSelector.isLoading}
                   players={playerSelector.players}
@@ -171,7 +171,7 @@ function UserTypeSelector({ currentType, onSelect }: UserTypeSelectorProps) {
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             currentType === type
               ? 'bg-green-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              : 'bg-gray-100 dark:bg-gray-950 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
           }`}
         >
           {USER_TYPE_LABELS[type]}
@@ -191,7 +191,7 @@ function CommonFields({ form, updateField }: FieldProps) {
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             First Name *
           </label>
           <input
@@ -199,11 +199,11 @@ function CommonFields({ form, updateField }: FieldProps) {
             value={form.firstName}
             onChange={(e) => updateField('firstName', e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none dark:bg-gray-800 dark:text-gray-100"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Last Name *
           </label>
           <input
@@ -211,14 +211,14 @@ function CommonFields({ form, updateField }: FieldProps) {
             value={form.lastName}
             onChange={(e) => updateField('lastName', e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none dark:bg-gray-800 dark:text-gray-100"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Email *
           </label>
           <input
@@ -226,11 +226,11 @@ function CommonFields({ form, updateField }: FieldProps) {
             value={form.email}
             onChange={(e) => updateField('email', e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none dark:bg-gray-800 dark:text-gray-100"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Password *
           </label>
           <input
@@ -239,20 +239,20 @@ function CommonFields({ form, updateField }: FieldProps) {
             onChange={(e) => updateField('password', e.target.value)}
             required
             minLength={6}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none dark:bg-gray-800 dark:text-gray-100"
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Phone Number
         </label>
         <input
           type="tel"
           value={form.phoneNumber}
           onChange={(e) => updateField('phoneNumber', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none dark:bg-gray-800 dark:text-gray-100"
         />
       </div>
     </>
@@ -261,11 +261,11 @@ function CommonFields({ form, updateField }: FieldProps) {
 
 function CoachFields({ form, updateField }: FieldProps) {
   return (
-    <div className="border-t pt-4">
-      <h3 className="text-md font-medium text-gray-900 mb-4">Coach Details</h3>
+    <div className="border-t dark:border-gray-700 pt-4">
+      <h3 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-4">Coach Details</h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Date of Birth *
           </label>
           <input
@@ -273,18 +273,18 @@ function CoachFields({ form, updateField }: FieldProps) {
             value={form.dateOfBirth}
             onChange={(e) => updateField('dateOfBirth', e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none dark:bg-gray-800 dark:text-gray-100"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             License Level *
           </label>
           <select
             value={form.licenseLevel}
             onChange={(e) => updateField('licenseLevel', e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none dark:bg-gray-800 dark:text-gray-100"
           >
             <option value="">Select level</option>
             <option value="D">D License</option>
@@ -295,7 +295,7 @@ function CoachFields({ form, updateField }: FieldProps) {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Experience (years) *
           </label>
           <input
@@ -304,7 +304,7 @@ function CoachFields({ form, updateField }: FieldProps) {
             onChange={(e) => updateField('experienceYears', parseInt(e.target.value) || 0)}
             required
             min={0}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none dark:bg-gray-800 dark:text-gray-100"
           />
         </div>
       </div>
@@ -314,11 +314,11 @@ function CoachFields({ form, updateField }: FieldProps) {
 
 function PlayerFields({ form, updateField }: FieldProps) {
   return (
-    <div className="border-t pt-4">
-      <h3 className="text-md font-medium text-gray-900 mb-4">Player Details</h3>
+    <div className="border-t dark:border-gray-700 pt-4">
+      <h3 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-4">Player Details</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Date of Birth *
           </label>
           <input
@@ -326,18 +326,18 @@ function PlayerFields({ form, updateField }: FieldProps) {
             value={form.dateOfBirth}
             onChange={(e) => updateField('dateOfBirth', e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none dark:bg-gray-800 dark:text-gray-100"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Position *
           </label>
           <select
             value={form.position}
             onChange={(e) => updateField('position', e.target.value as Position)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none dark:bg-gray-800 dark:text-gray-100"
           >
             <option value="">Select position</option>
             {POSITIONS.map((pos) => (
@@ -350,7 +350,7 @@ function PlayerFields({ form, updateField }: FieldProps) {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Height (cm) *
           </label>
           <input
@@ -360,11 +360,11 @@ function PlayerFields({ form, updateField }: FieldProps) {
             required
             min={100}
             max={250}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none dark:bg-gray-800 dark:text-gray-100"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Weight (kg) *
           </label>
           <input
@@ -374,18 +374,18 @@ function PlayerFields({ form, updateField }: FieldProps) {
             required
             min={30}
             max={150}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none dark:bg-gray-800 dark:text-gray-100"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Strong Foot *
           </label>
           <select
             value={form.strongFoot}
             onChange={(e) => updateField('strongFoot', e.target.value as StrongFoot)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none dark:bg-gray-800 dark:text-gray-100"
           >
             {STRONG_FEET.map((foot) => (
               <option key={foot} value={foot}>

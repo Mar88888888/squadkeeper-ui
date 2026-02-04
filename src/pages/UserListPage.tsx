@@ -12,6 +12,7 @@ import {
 } from '../api/users';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { EditUserModal } from '../components/EditUserModal';
+import { EmptyState, emptyStateIcons } from '../components/EmptyState';
 
 type TabType = 'coaches' | 'players' | 'parents';
 
@@ -250,20 +251,20 @@ export function UserListPage() {
   const filteredParents = filterByName(parents);
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950">
+      <header className="bg-white dark:bg-gray-900 shadow">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">User List</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">User List</h1>
           <div className="flex gap-3">
             <button
               onClick={() => navigate('/admin/users')}
-              className="text-green-600 hover:text-green-700 font-medium"
+              className="text-green-600 dark:text-green-400 hover:text-green-700 font-medium"
             >
               + Create User
             </button>
             <button
               onClick={() => navigate('/dashboard')}
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             >
               Back to Dashboard
             </button>
@@ -272,8 +273,8 @@ export function UserListPage() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="border-b border-gray-200">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+          <div className="border-b border-gray-200 dark:border-gray-700">
             <div className="flex">
               {(['coaches', 'players', 'parents'] as TabType[]).map((tab) => (
                 <button
@@ -281,12 +282,12 @@ export function UserListPage() {
                   onClick={() => setActiveTab(tab)}
                   className={`px-6 py-4 text-sm font-medium transition-all duration-200 ${
                     activeTab === tab
-                      ? 'border-b-2 border-green-600 text-green-600'
-                      : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent'
+                      ? 'border-b-2 border-green-600 text-green-600 dark:text-green-400'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-b-2 border-transparent'
                   }`}
                 >
                   {tabLabels[tab]}
-                  <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-gray-100">
+                  <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-gray-100 dark:bg-gray-950">
                     {tab === 'coaches'
                       ? filteredCoaches.length
                       : tab === 'players'
@@ -298,10 +299,10 @@ export function UserListPage() {
             </div>
           </div>
 
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <div className="relative">
               <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -318,12 +319,12 @@ export function UserListPage() {
                 placeholder="Search by name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -334,7 +335,7 @@ export function UserListPage() {
           </div>
 
           {error && (
-            <div className="m-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            <div className="m-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-gray-700 text-red-700 dark:text-red-400 rounded-lg text-sm">
               {error}
             </div>
           )}
@@ -344,38 +345,50 @@ export function UserListPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-gray-200 dark:divide-gray-700">
               {activeTab === 'coaches' &&
                 (filteredCoaches.length === 0 ? (
-                  <div className="py-12 text-center text-gray-500">
-                    {coaches.length === 0 ? 'No coaches found' : 'No coaches match your search'}
-                  </div>
+                  coaches.length === 0 ? (
+                    <EmptyState
+                      icon={emptyStateIcons.users}
+                      title="No coaches registered"
+                      description="Add your first coach to get started with team management."
+                      action={{ label: 'Create Coach', to: '/admin/users' }}
+                    />
+                  ) : (
+                    <EmptyState
+                      icon={emptyStateIcons.search}
+                      title="No coaches found"
+                      description="No coaches match your search. Try a different keyword."
+                      compact
+                    />
+                  )
                 ) : (
                   filteredCoaches.map((coach) => (
-                    <div key={coach.id} className="p-4 hover:bg-gray-50 flex items-center justify-between">
+                    <div key={coach.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center select-none">
-                            <span className="text-blue-600 font-medium">
+                          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center select-none">
+                            <span className="text-blue-600 dark:text-blue-400 font-medium">
                               {coach.firstName[0]}{coach.lastName[0]}
                             </span>
                           </div>
                           <div>
-                            <p className="font-medium text-gray-900">
+                            <p className="font-medium text-gray-900 dark:text-gray-100">
                               {coach.firstName} {coach.lastName}
                             </p>
-                            <p className="text-sm text-gray-500">{coach.user.email}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{coach.user.email}</p>
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="text-right text-sm">
-                          <p className="text-gray-600">License: {coach.licenseLevel}</p>
-                          <p className="text-gray-500">{coach.experienceYears} years exp.</p>
+                          <p className="text-gray-600 dark:text-gray-400">License: {coach.licenseLevel}</p>
+                          <p className="text-gray-500 dark:text-gray-400">{coach.experienceYears} years exp.</p>
                         </div>
                         <button
                           onClick={() => openEditModal('coaches', coach)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
                           title="Edit coach"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -384,7 +397,7 @@ export function UserListPage() {
                         </button>
                         <button
                           onClick={() => openDeleteDialog('coaches', coach.id, `${coach.firstName} ${coach.lastName}`)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                           title="Delete coach"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -398,38 +411,50 @@ export function UserListPage() {
 
               {activeTab === 'players' &&
                 (filteredPlayers.length === 0 ? (
-                  <div className="py-12 text-center text-gray-500">
-                    {players.length === 0 ? 'No players found' : 'No players match your search'}
-                  </div>
+                  players.length === 0 ? (
+                    <EmptyState
+                      icon={emptyStateIcons.users}
+                      title="No players registered"
+                      description="Add your first player to start building your roster."
+                      action={{ label: 'Create Player', to: '/admin/users' }}
+                    />
+                  ) : (
+                    <EmptyState
+                      icon={emptyStateIcons.search}
+                      title="No players found"
+                      description="No players match your search. Try a different keyword."
+                      compact
+                    />
+                  )
                 ) : (
                   filteredPlayers.map((player) => (
-                    <div key={player.id} className="p-4 hover:bg-gray-50 flex items-center justify-between">
+                    <div key={player.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center select-none">
-                            <span className="text-green-600 font-medium">
+                          <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center select-none">
+                            <span className="text-green-600 dark:text-green-400 font-medium">
                               {player.firstName[0]}{player.lastName[0]}
                             </span>
                           </div>
                           <div>
-                            <p className="font-medium text-gray-900">
+                            <p className="font-medium text-gray-900 dark:text-gray-100">
                               {player.firstName} {player.lastName}
                             </p>
-                            <p className="text-sm text-gray-500">{player.user.email}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{player.user.email}</p>
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="text-right text-sm">
-                          <p className="text-gray-600">{player.position}</p>
-                          <p className="text-gray-500">
+                          <p className="text-gray-600 dark:text-gray-400">{player.position}</p>
+                          <p className="text-gray-500 dark:text-gray-400">
                             {new Date(player.dateOfBirth).getFullYear()}
                             {player.group && ` | ${player.group.name}`}
                           </p>
                         </div>
                         <button
                           onClick={() => openEditModal('players', player)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
                           title="Edit player"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -438,7 +463,7 @@ export function UserListPage() {
                         </button>
                         <button
                           onClick={() => openDeleteDialog('players', player.id, `${player.firstName} ${player.lastName}`)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                           title="Delete player"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -452,32 +477,44 @@ export function UserListPage() {
 
               {activeTab === 'parents' &&
                 (filteredParents.length === 0 ? (
-                  <div className="py-12 text-center text-gray-500">
-                    {parents.length === 0 ? 'No parents found' : 'No parents match your search'}
-                  </div>
+                  parents.length === 0 ? (
+                    <EmptyState
+                      icon={emptyStateIcons.users}
+                      title="No parents registered"
+                      description="Add parent accounts to give them access to their children's activities."
+                      action={{ label: 'Create Parent', to: '/admin/users' }}
+                    />
+                  ) : (
+                    <EmptyState
+                      icon={emptyStateIcons.search}
+                      title="No parents found"
+                      description="No parents match your search. Try a different keyword."
+                      compact
+                    />
+                  )
                 ) : (
                   filteredParents.map((parent) => (
-                    <div key={parent.id} className="p-4 hover:bg-gray-50">
+                    <div key={parent.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center select-none">
-                              <span className="text-orange-600 font-medium">
+                            <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center select-none">
+                              <span className="text-orange-600 dark:text-orange-400 font-medium">
                                 {parent.firstName[0]}{parent.lastName[0]}
                               </span>
                             </div>
                             <div>
-                              <p className="font-medium text-gray-900">
+                              <p className="font-medium text-gray-900 dark:text-gray-100">
                                 {parent.firstName} {parent.lastName}
                               </p>
-                              <p className="text-sm text-gray-500">{parent.user.email}</p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">{parent.user.email}</p>
                             </div>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => openLinkChildModal(parent)}
-                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition-colors"
                             title="Link child"
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -486,7 +523,7 @@ export function UserListPage() {
                           </button>
                           <button
                             onClick={() => openEditModal('parents', parent)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
                             title="Edit parent"
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -495,7 +532,7 @@ export function UserListPage() {
                           </button>
                           <button
                             onClick={() => openDeleteDialog('parents', parent.id, `${parent.firstName} ${parent.lastName}`)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                             title="Delete parent"
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -505,18 +542,18 @@ export function UserListPage() {
                         </div>
                       </div>
                       {parent.children.length > 0 && (
-                        <div className="mt-3 ml-13 pl-10 border-l-2 border-gray-100">
-                          <p className="text-xs text-gray-500 mb-2">Linked children:</p>
+                        <div className="mt-3 ml-13 pl-10 border-l-2 border-gray-100 dark:border-gray-800">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Linked children:</p>
                           <div className="flex flex-wrap gap-2">
                             {parent.children.map((child) => (
                               <span
                                 key={child.id}
-                                className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 text-sm rounded-full"
+                                className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm rounded-full"
                               >
                                 {child.firstName} {child.lastName}
                                 <button
                                   onClick={() => handleUnlinkChild(parent.id, child.id)}
-                                  className="ml-1 p-0.5 hover:bg-green-100 rounded-full"
+                                  className="ml-1 p-0.5 hover:bg-green-100 dark:hover:bg-green-900/50 rounded-full"
                                   title="Unlink child"
                                 >
                                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -549,29 +586,29 @@ export function UserListPage() {
 
       {linkChildModal.isOpen && linkChildModal.parent && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[85vh] flex flex-col">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold tracking-tight text-gray-900">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[85vh] flex flex-col">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100">
                 Link Child to {linkChildModal.parent.firstName} {linkChildModal.parent.lastName}
               </h2>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Select a player to link as a child
               </p>
             </div>
 
-            <div className="p-4 border-b border-gray-200 space-y-3">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 space-y-3">
               <div className="grid grid-cols-3 gap-2">
                 <input
                   type="text"
                   placeholder="Search by name..."
                   value={modalFilterName}
                   onChange={(e) => setModalFilterName(e.target.value)}
-                  className="col-span-3 sm:col-span-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+                  className="col-span-3 sm:col-span-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm dark:bg-gray-800 dark:text-gray-100"
                 />
                 <select
                   value={modalFilterYear}
                   onChange={(e) => setModalFilterYear(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm dark:bg-gray-800 dark:text-gray-100"
                 >
                   <option value="">All years</option>
                   {birthYears.map((year) => (
@@ -583,7 +620,7 @@ export function UserListPage() {
                 <select
                   value={modalFilterGroupId}
                   onChange={(e) => setModalFilterGroupId(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm dark:bg-gray-800 dark:text-gray-100"
                 >
                   <option value="">All groups</option>
                   {groups.map((group) => (
@@ -598,9 +635,9 @@ export function UserListPage() {
                   type="checkbox"
                   checked={modalFilterNoParent}
                   onChange={(e) => setModalFilterNoParent(e.target.checked)}
-                  className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                  className="w-4 h-4 text-green-600 border-gray-300 dark:border-gray-600 rounded focus:ring-green-500"
                 />
-                <span className="text-sm text-gray-700">
+                <span className="text-sm text-gray-700 dark:text-gray-300">
                   Only players without a parent
                 </span>
               </label>
@@ -608,7 +645,7 @@ export function UserListPage() {
 
             <div className="flex-1 overflow-y-auto p-4">
               {modalFilteredPlayers.length === 0 ? (
-                <div className="py-8 text-center text-gray-500">
+                <div className="py-8 text-center text-gray-500 dark:text-gray-400">
                   No available players to link
                 </div>
               ) : (
@@ -619,32 +656,32 @@ export function UserListPage() {
                       onClick={() => handlePlayerClick(player)}
                       className={`w-full p-3 flex items-center gap-3 rounded-lg transition-colors text-left ${
                         player.parent
-                          ? 'bg-amber-50 hover:bg-amber-100 border border-amber-200'
-                          : 'bg-gray-50 hover:bg-gray-100'
+                          ? 'bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200 dark:border-amber-700'
+                          : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'
                       }`}
                     >
-                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center select-none">
-                        <span className="text-green-600 font-medium">
+                      <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center select-none">
+                        <span className="text-green-600 dark:text-green-400 font-medium">
                           {player.firstName[0]}{player.lastName[0]}
                         </span>
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <p className="font-medium text-gray-900">
+                          <p className="font-medium text-gray-900 dark:text-gray-100">
                             {player.firstName} {player.lastName}
                           </p>
                           {player.parent && (
-                            <span className="px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded">
+                            <span className="px-2 py-0.5 text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded">
                               Has parent
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
                           {player.position} | {new Date(player.dateOfBirth).getFullYear()}
                           {player.group && ` | ${player.group.name}`}
                         </p>
                         {player.parent && (
-                          <p className="text-xs text-amber-600 mt-0.5">
+                          <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
                             Current: {player.parent.firstName} {player.parent.lastName}
                           </p>
                         )}
@@ -655,10 +692,10 @@ export function UserListPage() {
               )}
             </div>
 
-            <div className="p-4 border-t border-gray-200">
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700">
               <button
                 onClick={closeLinkChildModal}
-                className="w-full px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                className="w-full px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
               >
                 Cancel
               </button>

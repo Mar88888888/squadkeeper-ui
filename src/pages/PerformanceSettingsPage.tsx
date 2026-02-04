@@ -34,8 +34,8 @@ function WeightSlider({
   return (
     <div className="space-y-2">
       <div className="flex justify-between items-center">
-        <label className="text-sm font-medium text-gray-700">{label}</label>
-        <span className="text-sm font-bold text-gray-900">{value}%</span>
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
+        <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{value}%</span>
       </div>
       <div className="flex items-center gap-3">
         <div className={`w-4 h-4 rounded-full ${color}`}></div>
@@ -45,7 +45,7 @@ function WeightSlider({
           max="100"
           value={value}
           onChange={(e) => onChange(parseInt(e.target.value))}
-          className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
         />
       </div>
     </div>
@@ -62,10 +62,10 @@ function PositionExpectationRow({
   onChange: (expectation: PositionExpectation) => void;
 }) {
   return (
-    <div className="grid grid-cols-3 gap-4 items-center py-2 border-b border-gray-100 last:border-0">
-      <div className="font-medium text-gray-900">{POSITION_LABELS[position]}</div>
+    <div className="grid grid-cols-3 gap-4 items-center py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+      <div className="font-medium text-gray-900 dark:text-gray-100">{POSITION_LABELS[position]}</div>
       <div>
-        <label className="text-xs font-medium uppercase tracking-wide text-gray-400">Goals/Match</label>
+        <label className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">Goals/Match</label>
         <input
           type="number"
           step="0.05"
@@ -78,11 +78,11 @@ function PositionExpectationRow({
               expectedGoalsPerMatch: parseFloat(e.target.value) || 0,
             })
           }
-          className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+          className="w-full mt-1 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
         />
       </div>
       <div>
-        <label className="text-xs font-medium uppercase tracking-wide text-gray-400">Assists/Match</label>
+        <label className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">Assists/Match</label>
         <input
           type="number"
           step="0.05"
@@ -95,7 +95,7 @@ function PositionExpectationRow({
               expectedAssistsPerMatch: parseFloat(e.target.value) || 0,
             })
           }
-          className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+          className="w-full mt-1 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
         />
       </div>
     </div>
@@ -235,25 +235,25 @@ export function PerformanceSettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+      <header className="bg-white dark:bg-gray-800 shadow">
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">Performance Settings</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Performance Settings</h1>
             {settings && (
-              <p className="text-sm text-gray-500">{settings.groupName}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{settings.groupName}</p>
             )}
           </div>
           <button
             onClick={() => navigate(-1)}
-            className="text-gray-600 hover:text-gray-900"
+            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
           >
             Back
           </button>
@@ -274,18 +274,18 @@ export function PerformanceSettingsPage() {
         )}
 
         {otherGroups.length > 0 && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100 mb-4">
               Copy from Another Group
             </h2>
-            <p className="text-sm text-gray-500 mb-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
               Copy settings from one of your other groups to use as a starting point.
             </p>
             <div className="flex gap-3">
               <select
                 value={selectedSourceGroup}
                 onChange={(e) => setSelectedSourceGroup(e.target.value)}
-                className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-gray-100"
               >
                 <option value="">Select a group...</option>
                 {otherGroups.map((group) => (
@@ -309,11 +309,11 @@ export function PerformanceSettingsPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+          <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100 mb-4">
             Component Weights
           </h2>
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
             Adjust how much each component contributes to the overall performance
             score. Weights must sum to 100%.
           </p>
@@ -368,11 +368,11 @@ export function PerformanceSettingsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+          <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100 mb-4">
             Position Expectations
           </h2>
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
             Set expected goals and assists per match for each position. Players
             are scored based on how well they meet these expectations.
           </p>
@@ -409,14 +409,14 @@ export function PerformanceSettingsPage() {
           <button
             onClick={handleReset}
             disabled={isSaving}
-            className="py-3 px-6 rounded-lg font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
+            className="py-3 px-6 rounded-lg font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             Reset to Defaults
           </button>
         </div>
 
         {settings?.isCustom && (
-          <p className="text-sm text-gray-500 text-center">
+          <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
             This group has custom settings.
           </p>
         )}

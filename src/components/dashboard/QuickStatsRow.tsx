@@ -12,24 +12,24 @@ interface QuickStatsRowProps {
 
 const colorClasses = {
   green: {
-    bg: 'bg-green-100',
-    text: 'text-green-600',
-    value: 'text-green-700',
+    bg: 'bg-green-100 dark:bg-green-900/30',
+    text: 'text-green-600 dark:text-green-400',
+    value: 'text-green-700 dark:text-green-400',
   },
   amber: {
-    bg: 'bg-amber-100',
-    text: 'text-amber-600',
-    value: 'text-amber-700',
+    bg: 'bg-amber-100 dark:bg-amber-900/30',
+    text: 'text-amber-600 dark:text-amber-400',
+    value: 'text-amber-700 dark:text-amber-400',
   },
   blue: {
-    bg: 'bg-blue-100',
-    text: 'text-blue-600',
-    value: 'text-blue-700',
+    bg: 'bg-blue-100 dark:bg-blue-900/30',
+    text: 'text-blue-600 dark:text-blue-400',
+    value: 'text-blue-700 dark:text-blue-400',
   },
   purple: {
-    bg: 'bg-purple-100',
-    text: 'text-purple-600',
-    value: 'text-purple-700',
+    bg: 'bg-purple-100 dark:bg-purple-900/30',
+    text: 'text-purple-600 dark:text-purple-400',
+    value: 'text-purple-700 dark:text-purple-400',
   },
 };
 
@@ -38,12 +38,12 @@ function StatCard({ stat, loading }: { stat: StatItem; loading?: boolean }) {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-4">
         <div className="animate-pulse flex items-center gap-3">
-          <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
+          <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
           <div>
-            <div className="h-6 bg-gray-200 rounded w-12 mb-1"></div>
-            <div className="h-3 bg-gray-200 rounded w-16"></div>
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-12 mb-1"></div>
+            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
           </div>
         </div>
       </div>
@@ -51,14 +51,14 @@ function StatCard({ stat, loading }: { stat: StatItem; loading?: boolean }) {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-4">
       <div className="flex items-center gap-3">
         <div className={`w-10 h-10 ${colors.bg} rounded-lg flex items-center justify-center ${colors.text}`}>
           {stat.icon}
         </div>
         <div>
           <p className={`text-2xl font-bold ${colors.value}`}>{stat.value}</p>
-          <p className="text-xs text-gray-500 uppercase tracking-wide">{stat.label}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">{stat.label}</p>
         </div>
       </div>
     </div>

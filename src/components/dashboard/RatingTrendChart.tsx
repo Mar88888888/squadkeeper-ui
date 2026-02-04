@@ -1,4 +1,5 @@
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { useChartColors } from '../../hooks/useChartColors';
 
 interface RatingDataPoint {
   date: string;
@@ -18,9 +19,9 @@ function formatDate(dateStr: string): string {
 function CustomTooltip({ active, payload, label }: any) {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white shadow-lg rounded-lg px-3 py-2 border border-gray-100">
-        <p className="text-xs text-gray-500">{formatDate(label)}</p>
-        <p className="text-sm font-semibold text-green-600">
+      <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg px-3 py-2 border border-gray-100 dark:border-gray-700">
+        <p className="text-xs text-gray-500 dark:text-gray-400">{formatDate(label)}</p>
+        <p className="text-sm font-semibold text-green-600 dark:text-green-400">
           Rating: {payload[0].value.toFixed(1)}
         </p>
       </div>
@@ -30,12 +31,14 @@ function CustomTooltip({ active, payload, label }: any) {
 }
 
 export function RatingTrendChart({ data, loading }: RatingTrendChartProps) {
+  const chartColors = useChartColors();
+
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-5">
         <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-24 mb-4"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-4"></div>
+          <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
         </div>
       </div>
     );
@@ -47,17 +50,17 @@ export function RatingTrendChart({ data, loading }: RatingTrendChartProps) {
   const trend = currentRating - previousRating;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium text-gray-700">Rating Trend</h3>
+        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Rating Trend</h3>
         {hasData && (
           <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-gray-900">
+            <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
               {currentRating.toFixed(1)}
             </span>
             {trend !== 0 && (
               <span className={`flex items-center text-xs font-medium ${
-                trend > 0 ? 'text-green-600' : 'text-red-600'
+                trend > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
               }`}>
                 {trend > 0 ? (
                   <svg className="w-3 h-3 mr-0.5" fill="currentColor" viewBox="0 0 20 20">
@@ -82,30 +85,30 @@ export function RatingTrendChart({ data, loading }: RatingTrendChartProps) {
               <XAxis
                 dataKey="date"
                 tickFormatter={formatDate}
-                tick={{ fontSize: 10, fill: '#9ca3af' }}
+                tick={{ fontSize: 10, fill: chartColors.axis }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
                 domain={['dataMin - 0.5', 'dataMax + 0.5']}
-                tick={{ fontSize: 10, fill: '#9ca3af' }}
+                tick={{ fontSize: 10, fill: chartColors.axis }}
                 axisLine={false}
                 tickLine={false}
               />
               <Tooltip content={<CustomTooltip />} />
               <Line
-                type="monotone"
+                type="linear"
                 dataKey="rating"
-                stroke="#16a34a"
+                stroke={chartColors.lineStroke}
                 strokeWidth={2}
-                dot={{ fill: '#16a34a', r: 3 }}
-                activeDot={{ fill: '#16a34a', r: 5 }}
+                dot={{ fill: chartColors.lineStroke, r: 3 }}
+                activeDot={{ fill: chartColors.lineStroke, r: 5 }}
               />
             </LineChart>
           </ResponsiveContainer>
         </div>
       ) : (
-        <div className="h-32 flex items-center justify-center text-gray-400 text-sm">
+        <div className="h-32 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm">
           No rating data available
         </div>
       )}

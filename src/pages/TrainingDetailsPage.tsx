@@ -194,7 +194,7 @@ export function TrainingDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-950 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
       </div>
     );
@@ -202,21 +202,21 @@ export function TrainingDetailsPage() {
 
   if (!training) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-gray-500">Training not found</div>
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-950 flex items-center justify-center">
+        <div className="text-gray-500 dark:text-gray-400">Training not found</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950">
+      <header className="bg-white dark:bg-gray-900 shadow border-t-4 border-green-500">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900">{training.group.name}</h1>
-              <p className="text-sm text-gray-600 mt-1">{formatDateTime(training.startTime)}</p>
-              <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+              <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">{training.group.name}</h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{formatDateTime(training.startTime)}</p>
+              <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
                 <span className="flex items-center gap-1">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -233,7 +233,7 @@ export function TrainingDetailsPage() {
             </div>
             <button
               onClick={() => navigate('/trainings')}
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             >
               Back to Trainings
             </button>
@@ -243,20 +243,20 @@ export function TrainingDetailsPage() {
 
       <main className="max-w-6xl mx-auto px-4 py-8">
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-gray-700 text-red-700 dark:text-red-400 rounded-lg text-sm">
             {error}
           </div>
         )}
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="border-b border-gray-200">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+          <div className="border-b border-gray-200 dark:border-gray-700">
             <nav className="flex">
               <button
                 onClick={() => setActiveTab('attendance')}
                 className={`px-6 py-4 text-sm font-medium transition-all duration-200 ${
                   activeTab === 'attendance'
                     ? 'text-green-600 border-b-2 border-green-600'
-                    : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-b-2 border-transparent'
                 }`}
               >
                 Attendance
@@ -266,7 +266,7 @@ export function TrainingDetailsPage() {
                 className={`px-6 py-4 text-sm font-medium transition-all duration-200 ${
                   activeTab === 'evaluations'
                     ? 'text-green-600 border-b-2 border-green-600'
-                    : 'text-gray-500 hover:text-gray-700 border-b-2 border-transparent'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-b-2 border-transparent'
                 }`}
               >
                 Evaluations
@@ -277,7 +277,7 @@ export function TrainingDetailsPage() {
           {activeTab === 'attendance' && (
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold tracking-tight text-gray-900">
+                <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100">
                   {isReadOnly ? 'Attendance' : `Players (${training.group.players.length})`}
                 </h2>
                 {canEdit && (
@@ -297,18 +297,18 @@ export function TrainingDetailsPage() {
                   return (
                     <div
                       key={player.id}
-                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                      className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
                     >
                       <div>
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
                           {player.firstName} {player.lastName}
                         </p>
-                        <p className="text-sm text-gray-500">{player.position}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{player.position}</p>
                       </div>
                       {isReadOnly ? (
                         <span
                           className={`px-3 py-2 rounded-lg font-medium ${
-                            playerStatus ? AttendanceStatusColors[playerStatus] : 'bg-gray-100 text-gray-600'
+                            playerStatus ? AttendanceStatusColors[playerStatus] : 'bg-gray-100 dark:bg-gray-950 text-gray-600 dark:text-gray-400'
                           }`}
                         >
                           {playerStatus ? AttendanceStatusLabels[playerStatus] : 'Not marked'}
@@ -342,11 +342,11 @@ export function TrainingDetailsPage() {
           {activeTab === 'evaluations' && (
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold tracking-tight text-gray-900">
+                <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100">
                   {isReadOnly ? 'Evaluations' : 'Player Evaluations'}
                 </h2>
                 {canEdit && (
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Only present players can be evaluated
                   </p>
                 )}
@@ -361,18 +361,18 @@ export function TrainingDetailsPage() {
 
                   if (isReadOnly) {
                     return (
-                      <div key={player.id} className="p-4 rounded-lg bg-gray-50">
+                      <div key={player.id} className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800">
                         <div className="flex items-center gap-3 mb-3">
                           <div className="flex-1">
-                            <p className="font-medium text-gray-900">
+                            <p className="font-medium text-gray-900 dark:text-gray-100">
                               {player.firstName} {player.lastName}
                             </p>
-                            <p className="text-sm text-gray-500">{player.position}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{player.position}</p>
                           </div>
                           {avgRating !== null && (
-                            <div className="text-center px-3 py-1 bg-yellow-100 rounded-lg">
-                              <p className="text-lg font-bold text-yellow-700">{avgRating}</p>
-                              <p className="text-xs text-yellow-600">Avg</p>
+                            <div className="text-center px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                              <p className="text-lg font-bold text-yellow-700 dark:text-yellow-400">{avgRating}</p>
+                              <p className="text-xs text-yellow-600 dark:text-yellow-400">Avg</p>
                             </div>
                           )}
                         </div>
@@ -380,22 +380,22 @@ export function TrainingDetailsPage() {
                           <>
                             <div className="grid grid-cols-4 gap-2">
                               {EVAL_CATEGORIES.map(({ key, label }) => (
-                                <div key={key} className="text-center p-2 bg-white rounded-lg">
-                                  <p className="text-xs font-medium uppercase tracking-wide text-gray-400">{label}</p>
-                                  <p className="text-lg font-bold text-gray-900">
+                                <div key={key} className="text-center p-2 bg-white dark:bg-gray-900 rounded-lg">
+                                  <p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">{label}</p>
+                                  <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
                                     {playerEval[key] ?? '-'}
                                   </p>
                                 </div>
                               ))}
                             </div>
                             {playerEval.comment && (
-                              <p className="mt-2 text-sm text-gray-600 italic">
+                              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 italic">
                                 "{playerEval.comment}"
                               </p>
                             )}
                           </>
                         ) : (
-                          <p className="text-sm text-gray-400">No evaluation yet</p>
+                          <p className="text-sm text-gray-400 dark:text-gray-500">No evaluation yet</p>
                         )}
                       </div>
                     );
@@ -404,15 +404,15 @@ export function TrainingDetailsPage() {
                   return (
                     <div
                       key={player.id}
-                      className={`p-4 rounded-lg ${playerCanEvaluate ? 'bg-gray-50' : 'bg-gray-100 opacity-60'}`}
+                      className={`p-4 rounded-lg ${playerCanEvaluate ? 'bg-gray-50 dark:bg-gray-800' : 'bg-gray-100 dark:bg-gray-950 opacity-60'}`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div>
-                            <p className="font-medium text-gray-900">
+                            <p className="font-medium text-gray-900 dark:text-gray-100">
                               {player.firstName} {player.lastName}
                             </p>
-                            <p className="text-sm text-gray-500">{player.position}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{player.position}</p>
                           </div>
                           {playerStatus && !playerCanEvaluate && (
                             <span className={`px-2 py-1 text-xs font-medium rounded-full ${AttendanceStatusColors[playerStatus]}`}>
@@ -420,7 +420,7 @@ export function TrainingDetailsPage() {
                             </span>
                           )}
                           {avgRating !== null && (
-                            <span className="px-2 py-1 text-sm font-bold text-yellow-700 bg-yellow-100 rounded-lg">
+                            <span className="px-2 py-1 text-sm font-bold text-yellow-700 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
                               Avg: {avgRating}
                             </span>
                           )}
@@ -428,12 +428,12 @@ export function TrainingDetailsPage() {
                         {playerCanEvaluate ? (
                           <button
                             onClick={() => openEvaluationModal(player)}
-                            className="px-3 py-1 text-sm text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            className="px-3 py-1 text-sm text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition-colors"
                           >
                             {playerEval ? 'Edit' : 'Add'} Evaluation
                           </button>
                         ) : (
-                          <span className="text-sm text-gray-400">
+                          <span className="text-sm text-gray-400 dark:text-gray-500">
                             {playerStatus ? 'Not present' : 'Mark attendance first'}
                           </span>
                         )}
@@ -442,9 +442,9 @@ export function TrainingDetailsPage() {
                       {playerEval && playerCanEvaluate && (
                         <div className="mt-3 grid grid-cols-4 gap-2">
                           {EVAL_CATEGORIES.map(({ key, label }) => (
-                            <div key={key} className="text-center p-2 bg-white rounded-lg">
-                              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">{label}</p>
-                              <p className="text-lg font-bold text-gray-900">
+                            <div key={key} className="text-center p-2 bg-white dark:bg-gray-900 rounded-lg">
+                              <p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">{label}</p>
+                              <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
                                 {playerEval[key] ?? '-'}
                               </p>
                             </div>
@@ -462,16 +462,16 @@ export function TrainingDetailsPage() {
 
       {selectedPlayer && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
-            <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-2">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100 mb-2">
               Evaluate {selectedPlayer.firstName} {selectedPlayer.lastName}
             </h2>
-            <p className="text-sm text-gray-500 mb-6">Rate from 1 to 10</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Rate from 1 to 10</p>
 
             <div className="space-y-4">
               {EVAL_CATEGORIES.map(({ key, label }) => (
                 <div key={key}>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     {label}
                   </label>
                   <div className="flex items-center gap-2">
@@ -486,9 +486,9 @@ export function TrainingDetailsPage() {
                           [key]: parseInt(e.target.value),
                         }))
                       }
-                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600"
+                      className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-600"
                     />
-                    <span className="w-8 text-center font-bold text-gray-900">
+                    <span className="w-8 text-center font-bold text-gray-900 dark:text-gray-100">
                       {evalRatings[key]}
                     </span>
                   </div>
@@ -496,14 +496,14 @@ export function TrainingDetailsPage() {
               ))}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Comment (optional)
                 </label>
                 <textarea
                   value={evalComment}
                   onChange={(e) => setEvalComment(e.target.value)}
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
                   placeholder="Add a comment..."
                 />
               </div>
@@ -512,7 +512,7 @@ export function TrainingDetailsPage() {
             <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={() => setSelectedPlayer(null)}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
               >
                 Cancel
               </button>

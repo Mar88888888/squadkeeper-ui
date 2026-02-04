@@ -110,17 +110,17 @@ export function CalendarPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950">
+      <header className="bg-white dark:bg-gray-900 shadow">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">Calendar</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Calendar</h1>
             <div className="flex items-center gap-2">
               <select
                 id="groupFilter"
                 value={filterGroupId}
                 onChange={(e) => setFilterGroupId(e.target.value)}
-                className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
               >
                 <option value="">All Groups</option>
                 {groups.map((group) => (
@@ -133,7 +133,7 @@ export function CalendarPage() {
           </div>
           <button
             onClick={() => navigate('/dashboard')}
-            className="text-gray-600 hover:text-gray-900"
+            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
           >
             Back to Dashboard
           </button>
@@ -146,7 +146,7 @@ export function CalendarPage() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-gray-700 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
             {error}
           </div>
         ) : (
@@ -161,7 +161,7 @@ export function CalendarPage() {
               onToday={handleToday}
             />
 
-            <div className="flex justify-center gap-6 text-sm text-gray-500">
+            <div className="flex justify-center gap-6 text-sm text-gray-500 dark:text-gray-400">
               <span className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-green-500"></span>
                 {events.filter((e) => e.type === 'training').length} trainings

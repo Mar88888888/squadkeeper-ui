@@ -12,6 +12,7 @@ import {
 import { groupsApi, type GroupInfo } from '../api/groups';
 import { useAuth } from '../contexts/AuthContext';
 import { UserRole } from '../types';
+import { EmptyState, emptyStateIcons } from '../components/EmptyState';
 
 const TIME_FILTER_OPTIONS: { value: TrainingTimeFilter; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -175,22 +176,22 @@ export function TrainingsPage() {
   const isUpcoming = (dateStr: string) => new Date(dateStr) > new Date();
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950">
+      <header className="bg-white dark:bg-gray-900 shadow">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Trainings</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Trainings</h1>
           <div className="flex gap-3">
             {canCreate && (
               <button
                 onClick={openCreateModal}
-                className="text-green-600 hover:text-green-700 font-medium"
+                className="text-green-600 dark:text-green-400 hover:text-green-700 font-medium"
               >
                 + Schedule Training
               </button>
             )}
             <button
               onClick={() => navigate('/dashboard')}
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             >
               Back to Dashboard
             </button>
@@ -199,8 +200,8 @@ export function TrainingsPage() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-4 border-b border-gray-200 space-y-4">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 space-y-4">
             <div className="flex flex-wrap gap-2">
               {TIME_FILTER_OPTIONS.map((option) => (
                 <button
@@ -213,7 +214,7 @@ export function TrainingsPage() {
                   className={`px-3 py-1.5 text-sm font-medium rounded-full transition-colors ${
                     timeFilter === option.value && !dateFrom && !dateTo
                       ? 'bg-green-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-gray-100 dark:bg-gray-950 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}
                 >
                   {option.label}
@@ -223,7 +224,7 @@ export function TrainingsPage() {
 
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700">From:</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">From:</label>
                 <DatePicker
                   selected={dateFrom}
                   onChange={(date: Date | null) => {
@@ -236,14 +237,14 @@ export function TrainingsPage() {
                   maxDate={dateTo || undefined}
                   dateFormat="MMM d, yyyy"
                   placeholderText="Select date"
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 w-36"
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 w-36 dark:bg-gray-800 dark:text-gray-100"
                   calendarClassName="!font-sans"
                   showPopperArrow={false}
                   isClearable
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700">To:</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">To:</label>
                 <DatePicker
                   selected={dateTo}
                   onChange={(date: Date | null) => {
@@ -256,7 +257,7 @@ export function TrainingsPage() {
                   minDate={dateFrom || undefined}
                   dateFormat="MMM d, yyyy"
                   placeholderText="Select date"
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 w-36"
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 w-36 dark:bg-gray-800 dark:text-gray-100"
                   calendarClassName="!font-sans"
                   showPopperArrow={false}
                   isClearable
@@ -268,17 +269,17 @@ export function TrainingsPage() {
                     setDateFrom(null);
                     setDateTo(null);
                   }}
-                  className="text-sm text-gray-500 hover:text-gray-700"
+                  className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                 >
                   Clear dates
                 </button>
               )}
               <div className="flex items-center gap-2 ml-auto">
-                <label className="text-sm font-medium text-gray-700">Group:</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Group:</label>
                 <select
                   value={filterGroupId}
                   onChange={(e) => setFilterGroupId(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
                 >
                   <option value="">All groups</option>
                   {groups.map((group) => (
@@ -292,7 +293,7 @@ export function TrainingsPage() {
           </div>
 
           {error && !isModalOpen && (
-            <div className="m-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            <div className="m-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-gray-700 text-red-700 dark:text-red-400 rounded-lg text-sm">
               {error}
             </div>
           )}
@@ -302,59 +303,69 @@ export function TrainingsPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
             </div>
           ) : sortedTrainings.length === 0 ? (
-            <div className="py-12 text-center text-gray-500">
-              {trainings.length === 0
-                ? 'No trainings scheduled yet'
-                : 'No trainings for selected group'}
-            </div>
+            trainings.length === 0 ? (
+              <EmptyState
+                icon={emptyStateIcons.training}
+                title="No trainings scheduled"
+                description="Start by scheduling your first training session for your team."
+                action={canCreate ? { label: 'Schedule Training', onClick: openCreateModal } : undefined}
+              />
+            ) : (
+              <EmptyState
+                icon={emptyStateIcons.search}
+                title="No trainings found"
+                description="No trainings match your current filters. Try adjusting your search criteria."
+                compact
+              />
+            )
           ) : (
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-gray-200 dark:divide-gray-700">
               {sortedTrainings.map((training) => (
                   <button
                     key={training.id}
                     onClick={() => navigate(`/trainings/${training.id}`)}
-                    className={`w-full text-left p-4 hover:bg-gray-50 cursor-pointer ${
+                    className={`w-full text-left p-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer ${
                       !isUpcoming(training.startTime) ? 'opacity-60' : ''
                     }`}
                   >
                     <div className="flex items-start gap-4">
-                      <div className="w-16 h-16 bg-green-100 rounded-lg flex flex-col items-center justify-center">
-                        <span className="text-xs text-green-600 uppercase">
+                      <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-lg flex flex-col items-center justify-center">
+                        <span className="text-xs text-green-600 dark:text-green-400 uppercase">
                           {new Date(training.startTime).toLocaleDateString('en-US', {
                             weekday: 'short',
                           })}
                         </span>
-                        <span className="text-xl font-bold text-green-700">
+                        <span className="text-xl font-bold text-green-700 dark:text-green-400">
                           {new Date(training.startTime).getDate()}
                         </span>
                       </div>
 
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-700 rounded-full">
+                          <span className="px-2 py-1 text-xs font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-full">
                             {training.group.name}
                           </span>
                           {isUpcoming(training.startTime) ? (
-                            <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-700 rounded-full">
+                            <span className="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
                               Upcoming
                             </span>
                           ) : (
-                            <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+                            <span className="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-950 text-gray-600 dark:text-gray-400 rounded-full">
                               Past
                             </span>
                           )}
                         </div>
 
-                        <p className="mt-1 text-sm text-gray-900">
+                        <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">
                           <span className="font-medium">
                             {formatTime(training.startTime)} - {formatTime(training.endTime)}
                           </span>
-                          <span className="text-gray-500 ml-2">
+                          <span className="text-gray-500 dark:text-gray-400 ml-2">
                             {formatDateTime(training.startTime).split(',')[0]}
                           </span>
                         </p>
 
-                        <div className="mt-2 flex items-center gap-4 text-sm text-gray-600">
+                        <div className="mt-2 flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                           <div className="flex items-center gap-1">
                             <svg
                               className="w-4 h-4"
@@ -398,7 +409,7 @@ export function TrainingsPage() {
                         </div>
                       </div>
 
-                      <div className="text-gray-400">
+                      <div className="text-gray-400 dark:text-gray-500">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
@@ -413,16 +424,16 @@ export function TrainingsPage() {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
-            <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">Schedule Training</h2>
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100 mb-4">Schedule Training</h2>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Group *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Group *</label>
                 <select
                   value={formData.groupId}
                   onChange={(e) => setFormData((prev) => ({ ...prev, groupId: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
                 >
                   <option value="">Select group</option>
                   {groups.map((group) => (
@@ -435,7 +446,7 @@ export function TrainingsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Start Time *
                   </label>
                   <input
@@ -444,47 +455,47 @@ export function TrainingsPage() {
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, startTime: e.target.value }))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">End Time *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Time *</label>
                   <input
                     type="datetime-local"
                     value={formData.endTime}
                     onChange={(e) => setFormData((prev) => ({ ...prev, endTime: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Location *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location *</label>
                 <input
                   type="text"
                   value={formData.location}
                   onChange={(e) => setFormData((prev) => ({ ...prev, location: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
                   placeholder="e.g., Main Field"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Topic <span className="text-gray-400 font-normal">(optional)</span>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Topic <span className="text-gray-400 dark:text-gray-500 font-normal">(optional)</span>
                 </label>
                 <input
                   type="text"
                   value={formData.topic}
                   onChange={(e) => setFormData((prev) => ({ ...prev, topic: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
                   placeholder="e.g., Passing drills"
                 />
               </div>
             </div>
 
             {error && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+              <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-gray-700 text-red-700 dark:text-red-400 rounded-lg text-sm">
                 {error}
               </div>
             )}
@@ -492,7 +503,7 @@ export function TrainingsPage() {
             <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={closeModal}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
               >
                 Cancel
               </button>

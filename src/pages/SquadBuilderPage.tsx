@@ -298,7 +298,7 @@ export function SquadBuilderPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-950 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
       </div>
     );
@@ -308,10 +308,10 @@ export function SquadBuilderPage() {
   const totalPositions = positions.length;
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950">
+      <header className="bg-white dark:bg-gray-900 shadow">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
             {isEditMode ? 'Edit Squad' : 'Create Squad'}
           </h1>
           <div className="flex gap-3">
@@ -324,7 +324,7 @@ export function SquadBuilderPage() {
             </button>
             <button
               onClick={() => navigate('/squads')}
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             >
               Cancel
             </button>
@@ -334,24 +334,24 @@ export function SquadBuilderPage() {
 
       <main className="max-w-7xl mx-auto px-4 py-6">
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-400 rounded-lg text-sm">
             {error}
           </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow p-4 max-h-[calc(100vh-200px)] overflow-y-auto">
-              <h3 className="font-semibold text-gray-900 mb-3">Available Players</h3>
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Available Players</h3>
 
               {availablePlayers.length === 0 ? (
-                <p className="text-gray-500 text-sm">All players assigned</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">All players assigned</p>
               ) : (
                 <div className="space-y-2">
                   {availablePlayers.map((player) => (
                     <div
                       key={player.id}
-                      className="flex items-center gap-3 p-2 rounded-lg border border-gray-200 hover:bg-gray-50"
+                      className="flex items-center gap-3 p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
                     >
                       <div
                         className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${getPositionColor(player.position)}`}
@@ -359,14 +359,14 @@ export function SquadBuilderPage() {
                         {player.firstName[0]}{player.lastName[0]}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                           {player.firstName} {player.lastName}
                         </p>
-                        <p className="text-xs text-gray-500">{POSITION_LABELS[player.position]}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{POSITION_LABELS[player.position]}</p>
                       </div>
                       <button
                         onClick={() => handleAddToBench(player)}
-                        className="text-xs text-blue-600 hover:text-blue-700"
+                        className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                       >
                         + Bench
                       </button>
@@ -378,10 +378,10 @@ export function SquadBuilderPage() {
           </div>
 
           <div className="lg:col-span-2 space-y-4">
-            <div className="bg-white rounded-lg shadow p-4 space-y-4">
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Squad Name *
                   </label>
                   <input
@@ -389,18 +389,18 @@ export function SquadBuilderPage() {
                     value={squadName}
                     onChange={(e) => setSquadName(e.target.value)}
                     placeholder="e.g., Main XI, Cup Squad"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Group
                   </label>
                   <select
                     value={selectedGroupId}
                     onChange={(e) => handleGroupChange(e.target.value)}
                     disabled={isEditMode}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-100"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-100 dark:disabled:bg-gray-700 dark:bg-gray-800 dark:text-gray-100"
                   >
                     <option value="">Select group...</option>
                     {groups.map((group) => (
@@ -413,19 +413,19 @@ export function SquadBuilderPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Game Format
                 </label>
                 <FormatSelector value={gameFormat} onChange={handleFormatChange} />
               </div>
 
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">
+                <span className="text-gray-500 dark:text-gray-400">
                   Starters: {filledPositions} / {totalPositions}
                 </span>
                 <button
                   onClick={() => initializeFormation(gameFormat)}
-                  className="text-blue-600 hover:text-blue-700"
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                 >
                   Reset Formation
                 </button>
@@ -474,30 +474,30 @@ export function SquadBuilderPage() {
               })}
             </FootballPitch>
 
-            <div className="bg-white rounded-lg shadow p-4">
-              <h4 className="font-medium text-gray-700 mb-3">
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4">
+              <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-3">
                 Substitutes ({benchPlayers.length})
               </h4>
               {benchPlayers.length === 0 ? (
-                <p className="text-gray-400 text-sm">No substitutes added</p>
+                <p className="text-gray-400 dark:text-gray-500 text-sm">No substitutes added</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {benchPlayers.map((player) => (
                     <div
                       key={player.id}
-                      className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg"
+                      className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-950 rounded-lg"
                     >
                       <div
                         className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold ${getPositionColor(player.position)}`}
                       >
                         {player.firstName[0]}{player.lastName[0]}
                       </div>
-                      <span className="text-sm text-gray-700">
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
                         {player.firstName} {player.lastName}
                       </span>
                       <button
                         onClick={() => handleRemoveFromBench(player.id)}
-                        className="text-gray-400 hover:text-red-500"
+                        className="text-gray-400 dark:text-gray-500 hover:text-red-500"
                       >
                         ×
                       </button>
@@ -509,30 +509,30 @@ export function SquadBuilderPage() {
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow p-4">
-              <h3 className="font-semibold text-gray-900 mb-4">Squad Summary</h3>
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Squad Summary</h3>
 
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Format</span>
-                  <span className="font-medium">{gameFormat}</span>
+                  <span className="text-gray-500 dark:text-gray-400">Format</span>
+                  <span className="font-medium text-gray-900 dark:text-gray-100">{gameFormat}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Starters</span>
-                  <span className="font-medium">{filledPositions}</span>
+                  <span className="text-gray-500 dark:text-gray-400">Starters</span>
+                  <span className="font-medium text-gray-900 dark:text-gray-100">{filledPositions}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Substitutes</span>
-                  <span className="font-medium">{benchPlayers.length}</span>
+                  <span className="text-gray-500 dark:text-gray-400">Substitutes</span>
+                  <span className="font-medium text-gray-900 dark:text-gray-100">{benchPlayers.length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Empty Slots</span>
-                  <span className="font-medium">{totalPositions - filledPositions}</span>
+                  <span className="text-gray-500 dark:text-gray-400">Empty Slots</span>
+                  <span className="font-medium text-gray-900 dark:text-gray-100">{totalPositions - filledPositions}</span>
                 </div>
               </div>
 
               <div className="mt-6">
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Starting Lineup</h4>
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Starting Lineup</h4>
                 <div className="space-y-1">
                   {positions
                     .filter((p) => p.player)
@@ -541,24 +541,24 @@ export function SquadBuilderPage() {
                         key={pos.id}
                         className="flex items-center justify-between text-sm py-1"
                       >
-                        <span className="text-gray-900">
+                        <span className="text-gray-900 dark:text-gray-100">
                           {pos.player?.firstName[0]}. {pos.player?.lastName}
                         </span>
-                        <span className="text-gray-500 text-xs">{pos.role}</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-xs">{pos.role}</span>
                       </div>
                     ))}
                   {filledPositions === 0 && (
-                    <p className="text-gray-400 text-sm">Click positions to assign players</p>
+                    <p className="text-gray-400 dark:text-gray-500 text-sm">Click positions to assign players</p>
                   )}
                 </div>
               </div>
 
               {benchPlayers.length > 0 && (
                 <div className="mt-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Substitutes</h4>
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Substitutes</h4>
                   <div className="space-y-1">
                     {benchPlayers.map((player) => (
-                      <div key={player.id} className="text-sm py-1 text-gray-600">
+                      <div key={player.id} className="text-sm py-1 text-gray-600 dark:text-gray-400">
                         {player.firstName[0]}. {player.lastName}
                       </div>
                     ))}
@@ -571,14 +571,14 @@ export function SquadBuilderPage() {
 
         {selectedPositionId && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6 max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-md w-full mx-4 p-6 max-h-[80vh] overflow-hidden flex flex-col">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold tracking-tight text-gray-900">
+                <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100">
                   Select Player for {positions.find((p) => p.id === selectedPositionId)?.role}
                 </h2>
                 <button
                   onClick={() => setSelectedPositionId(null)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   ×
                 </button>
@@ -586,7 +586,7 @@ export function SquadBuilderPage() {
 
               <div className="flex-1 overflow-y-auto">
                 {availablePlayers.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">
+                  <p className="text-gray-500 dark:text-gray-400 text-center py-8">
                     No available players. Remove a player from another position first.
                   </p>
                 ) : (
@@ -595,7 +595,7 @@ export function SquadBuilderPage() {
                       <button
                         key={player.id}
                         onClick={() => handleAssignPlayer(player)}
-                        className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-green-50 hover:border-green-300 transition-colors text-left"
+                        className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-300 dark:hover:border-green-700 transition-colors text-left"
                       >
                         <div
                           className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${getPositionColor(player.position)}`}
@@ -603,10 +603,10 @@ export function SquadBuilderPage() {
                           {player.firstName[0]}{player.lastName[0]}
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">
+                          <p className="font-medium text-gray-900 dark:text-gray-100">
                             {player.firstName} {player.lastName}
                           </p>
-                          <p className="text-sm text-gray-500">{POSITION_LABELS[player.position]}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">{POSITION_LABELS[player.position]}</p>
                         </div>
                       </button>
                     ))}

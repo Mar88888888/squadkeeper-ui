@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { statsApi, type ChildrenStats, type StatsPeriod } from '../api/stats';
 import { evaluationsApi, type RatingStats } from '../api/evaluations';
 import { PlayerStatsView } from '../components/PlayerStatsView';
+import { EmptyState, emptyStateIcons } from '../components/EmptyState';
 
 const PERIOD_OPTIONS: { value: StatsPeriod; label: string }[] = [
   { value: 'all_time', label: 'All Time' },
@@ -57,13 +58,13 @@ export function ChildStatsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950">
+      <header className="bg-white dark:bg-gray-900 shadow">
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Child Statistics</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Child Statistics</h1>
           <button
             onClick={() => navigate('/dashboard')}
-            className="text-gray-600 hover:text-gray-900"
+            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
           >
             Back to Dashboard
           </button>
@@ -76,7 +77,7 @@ export function ChildStatsPage() {
             <select
               value={selectedChildId}
               onChange={(e) => setSelectedChildId(e.target.value)}
-              className="border border-gray-300 rounded-lg px-4 py-2 bg-white shadow focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              className="border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-800 dark:text-gray-100 shadow focus:ring-2 focus:ring-green-500 focus:border-green-500"
             >
               {children.map((child) => (
                 <option key={child.id} value={child.id}>
@@ -86,7 +87,7 @@ export function ChildStatsPage() {
             </select>
           )}
 
-          <div className="inline-flex rounded-lg bg-white shadow p-1">
+          <div className="inline-flex rounded-lg bg-white dark:bg-gray-900 shadow p-1">
             {PERIOD_OPTIONS.map((option) => (
               <button
                 key={option.value}
@@ -94,7 +95,7 @@ export function ChildStatsPage() {
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                   period === option.value
                     ? 'bg-green-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                 }`}
               >
                 {option.label}
@@ -108,12 +109,17 @@ export function ChildStatsPage() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-gray-700 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
             {error}
           </div>
         ) : children.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-            <p className="text-gray-500">No children linked to your account</p>
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
+            <EmptyState
+              icon={emptyStateIcons.child}
+              title="No children linked"
+              description="No children are linked to your account yet. Contact an administrator to link your children."
+              action={{ label: 'Contact Admin', to: '/contacts' }}
+            />
           </div>
         ) : stats ? (
           <PlayerStatsView

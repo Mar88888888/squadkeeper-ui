@@ -13,21 +13,21 @@ interface CompactNavigationProps {
 
 export function CompactNavigation({ items }: CompactNavigationProps) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-      <h3 className="text-sm font-medium text-gray-700 mb-3">Quick Access</h3>
+    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-4">
+      <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Quick Access</h3>
       <div className="flex flex-wrap gap-2">
         {items.map((item) => (
           <Link
             key={item.to}
             to={item.to}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-50 hover:bg-green-50 text-gray-700 hover:text-green-700 rounded-lg transition-all group"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-50 dark:bg-gray-800 hover:bg-green-50 dark:hover:bg-green-900/20 text-gray-700 dark:text-gray-300 hover:text-green-700 dark:hover:text-green-400 rounded-lg transition-all group"
           >
-            <span className="text-gray-400 group-hover:text-green-600 transition-colors">
+            <span className="text-gray-400 dark:text-gray-500 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
               {item.icon}
             </span>
             <span className="text-sm font-medium">{item.label}</span>
             {item.badge !== undefined && item.badge > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-full">
+              <span className="ml-1 px-1.5 py-0.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
                 {item.badge}
               </span>
             )}

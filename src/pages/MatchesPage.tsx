@@ -12,6 +12,7 @@ import {
 import { groupsApi, type GroupInfo } from '../api/groups';
 import { useAuth } from '../contexts/AuthContext';
 import { UserRole } from '../types';
+import { EmptyState, emptyStateIcons } from '../components/EmptyState';
 
 const TIME_FILTER_OPTIONS: { value: MatchTimeFilter; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -199,28 +200,28 @@ export function MatchesPage() {
   };
 
   const resultColors = {
-    win: 'bg-green-100 text-green-700',
-    draw: 'bg-yellow-100 text-yellow-700',
-    loss: 'bg-red-100 text-red-700',
+    win: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+    draw: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
+    loss: 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400',
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950">
+      <header className="bg-white dark:bg-gray-900 shadow">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Matches</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Matches</h1>
           <div className="flex gap-3">
             {canCreate && (
               <button
                 onClick={openCreateModal}
-                className="text-green-600 hover:text-green-700 font-medium"
+                className="text-green-600 dark:text-green-400 hover:text-green-700 font-medium"
               >
                 + Schedule Match
               </button>
             )}
             <button
               onClick={() => navigate('/dashboard')}
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             >
               Back to Dashboard
             </button>
@@ -229,8 +230,8 @@ export function MatchesPage() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-4 border-b border-gray-200 space-y-4">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 space-y-4">
             <div className="flex flex-wrap gap-2">
               {TIME_FILTER_OPTIONS.map((option) => (
                 <button
@@ -243,7 +244,7 @@ export function MatchesPage() {
                   className={`px-3 py-1.5 text-sm font-medium rounded-full transition-colors ${
                     timeFilter === option.value && !dateFrom && !dateTo
                       ? 'bg-green-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-gray-100 dark:bg-gray-950 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}
                 >
                   {option.label}
@@ -253,7 +254,7 @@ export function MatchesPage() {
 
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700">From:</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">From:</label>
                 <DatePicker
                   selected={dateFrom}
                   onChange={(date: Date | null) => {
@@ -266,14 +267,14 @@ export function MatchesPage() {
                   maxDate={dateTo || undefined}
                   dateFormat="MMM d, yyyy"
                   placeholderText="Select date"
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 w-36"
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 w-36 dark:bg-gray-800 dark:text-gray-100"
                   calendarClassName="!font-sans"
                   showPopperArrow={false}
                   isClearable
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700">To:</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">To:</label>
                 <DatePicker
                   selected={dateTo}
                   onChange={(date: Date | null) => {
@@ -286,7 +287,7 @@ export function MatchesPage() {
                   minDate={dateFrom || undefined}
                   dateFormat="MMM d, yyyy"
                   placeholderText="Select date"
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 w-36"
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 w-36 dark:bg-gray-800 dark:text-gray-100"
                   calendarClassName="!font-sans"
                   showPopperArrow={false}
                   isClearable
@@ -298,17 +299,17 @@ export function MatchesPage() {
                     setDateFrom(null);
                     setDateTo(null);
                   }}
-                  className="text-sm text-gray-500 hover:text-gray-700"
+                  className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                 >
                   Clear dates
                 </button>
               )}
               <div className="flex items-center gap-2 ml-auto">
-                <label className="text-sm font-medium text-gray-700">Group:</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Group:</label>
                 <select
                   value={filterGroupId}
                   onChange={(e) => setFilterGroupId(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
                 >
                   <option value="">All groups</option>
                   {groups.map((group) => (
@@ -322,7 +323,7 @@ export function MatchesPage() {
           </div>
 
           {error && !isModalOpen && (
-            <div className="m-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            <div className="m-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-gray-700 text-red-700 dark:text-red-400 rounded-lg text-sm">
               {error}
             </div>
           )}
@@ -332,13 +333,23 @@ export function MatchesPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
             </div>
           ) : sortedMatches.length === 0 ? (
-            <div className="py-12 text-center text-gray-500">
-              {matches.length === 0
-                ? 'No matches scheduled yet'
-                : 'No matches for selected group'}
-            </div>
+            matches.length === 0 ? (
+              <EmptyState
+                icon={emptyStateIcons.match}
+                title="No matches scheduled"
+                description="Start by scheduling your first match for your team."
+                action={canCreate ? { label: 'Schedule Match', onClick: openCreateModal } : undefined}
+              />
+            ) : (
+              <EmptyState
+                icon={emptyStateIcons.search}
+                title="No matches found"
+                description="No matches match your current filters. Try adjusting your search criteria."
+                compact
+              />
+            )
           ) : (
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-gray-200 dark:divide-gray-700">
               {sortedMatches.map((match) => {
                 const score = formatScore(match);
                 const result = getMatchResult(match);
@@ -346,32 +357,32 @@ export function MatchesPage() {
                   <button
                     key={match.id}
                     onClick={() => navigate(`/matches/${match.id}`)}
-                    className={`w-full text-left p-4 hover:bg-gray-50 cursor-pointer ${
+                    className={`w-full text-left p-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer ${
                       !isUpcoming(match.startTime) && !score ? 'opacity-60' : ''
                     }`}
                   >
                     <div className="flex items-start gap-4">
-                      <div className="w-16 h-16 bg-blue-100 rounded-lg flex flex-col items-center justify-center">
-                        <span className="text-xs text-blue-600 uppercase">
+                      <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex flex-col items-center justify-center">
+                        <span className="text-xs text-blue-600 dark:text-blue-400 uppercase">
                           {new Date(match.startTime).toLocaleDateString('en-US', {
                             weekday: 'short',
                           })}
                         </span>
-                        <span className="text-xl font-bold text-blue-700">
+                        <span className="text-xl font-bold text-blue-700 dark:text-blue-400">
                           {new Date(match.startTime).getDate()}
                         </span>
                       </div>
 
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-700 rounded-full">
+                          <span className="px-2 py-1 text-xs font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-full">
                             {match.group.name}
                           </span>
                           <span
                             className={`px-2 py-1 text-xs font-medium rounded-full ${
                               match.isHome
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-orange-100 text-orange-700'
+                                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                                : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
                             }`}
                           >
                             {match.isHome ? 'Home' : 'Away'}
@@ -384,31 +395,31 @@ export function MatchesPage() {
                             </span>
                           )}
                           {isUpcoming(match.startTime) && !score && (
-                            <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
+                            <span className="px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full">
                               Upcoming
                             </span>
                           )}
                         </div>
 
                         <div className="mt-1 flex items-center gap-3">
-                          <span className="font-semibold text-gray-900">
+                          <span className="font-semibold text-gray-900 dark:text-gray-100">
                             vs {match.opponent}
                           </span>
                           {score && (
-                            <span className="text-lg font-bold text-gray-800">{score}</span>
+                            <span className="text-lg font-bold text-gray-800 dark:text-gray-200">{score}</span>
                           )}
                         </div>
 
-                        <p className="mt-1 text-sm text-gray-600">
+                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                           <span className="font-medium">
                             {formatTime(match.startTime)} - {formatTime(match.endTime)}
                           </span>
-                          <span className="text-gray-500 ml-2">
+                          <span className="text-gray-500 dark:text-gray-400 ml-2">
                             {formatDateTime(match.startTime).split(',')[0]}
                           </span>
                         </p>
 
-                        <div className="mt-2 flex items-center gap-4 text-sm text-gray-600">
+                        <div className="mt-2 flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                           <div className="flex items-center gap-1">
                             <svg
                               className="w-4 h-4"
@@ -434,7 +445,7 @@ export function MatchesPage() {
                         </div>
                       </div>
 
-                      <div className="text-gray-400">
+                      <div className="text-gray-400 dark:text-gray-500">
                         <svg
                           className="w-5 h-5"
                           fill="none"
@@ -460,16 +471,16 @@ export function MatchesPage() {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
-            <h2 className="text-lg font-semibold tracking-tight text-gray-900 mb-4">Schedule Match</h2>
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100 mb-4">Schedule Match</h2>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Group *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Group *</label>
                 <select
                   value={formData.groupId}
                   onChange={(e) => setFormData((prev) => ({ ...prev, groupId: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
                 >
                   <option value="">Select group</option>
                   {groups.map((group) => (
@@ -481,7 +492,7 @@ export function MatchesPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Opponent *
                 </label>
                 <input
@@ -490,13 +501,13 @@ export function MatchesPage() {
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, opponent: e.target.value }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
                   placeholder="e.g., FC Dynamo U12"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Home/Away *
                 </label>
                 <div className="flex gap-4">
@@ -508,7 +519,7 @@ export function MatchesPage() {
                       onChange={() => setFormData((prev) => ({ ...prev, isHome: true }))}
                       className="w-4 h-4 text-green-600 focus:ring-green-500"
                     />
-                    <span className="text-sm text-gray-700">Home</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">Home</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -518,14 +529,14 @@ export function MatchesPage() {
                       onChange={() => setFormData((prev) => ({ ...prev, isHome: false }))}
                       className="w-4 h-4 text-green-600 focus:ring-green-500"
                     />
-                    <span className="text-sm text-gray-700">Away</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">Away</span>
                   </label>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Start Time *
                   </label>
                   <input
@@ -534,36 +545,36 @@ export function MatchesPage() {
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, startTime: e.target.value }))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     End Time *
                   </label>
                   <input
                     type="datetime-local"
                     value={formData.endTime}
                     onChange={(e) => setFormData((prev) => ({ ...prev, endTime: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Location *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location *</label>
                 <input
                   type="text"
                   value={formData.location}
                   onChange={(e) => setFormData((prev) => ({ ...prev, location: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
                   placeholder="e.g., Stadium A"
                 />
               </div>
             </div>
 
             {error && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+              <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-gray-700 text-red-700 dark:text-red-400 rounded-lg text-sm">
                 {error}
               </div>
             )}
@@ -571,7 +582,7 @@ export function MatchesPage() {
             <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={closeModal}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
               >
                 Cancel
               </button>

@@ -56,9 +56,9 @@ export const PlayerRoster: React.FC<PlayerRosterProps> = ({
   ];
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 rounded-lg border border-gray-200">
-      <div className="p-4 border-b border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">Players</h3>
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Players</h3>
 
         <div className="relative mb-3">
           <input
@@ -66,7 +66,7 @@ export const PlayerRoster: React.FC<PlayerRosterProps> = ({
             placeholder="Search players..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
           />
           <svg
             className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400"
@@ -93,7 +93,7 @@ export const PlayerRoster: React.FC<PlayerRosterProps> = ({
                 ${
                   filter === btn.key
                     ? 'bg-blue-500 text-white'
-                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                    : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
                 }
               `}
             >
@@ -105,7 +105,7 @@ export const PlayerRoster: React.FC<PlayerRosterProps> = ({
 
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {availablePlayers.length === 0 && usedPlayers.length === 0 ? (
-          <div className="text-center text-gray-500 py-8">
+          <div className="text-center text-gray-500 dark:text-gray-400 py-8">
             <p className="text-sm">No players found</p>
           </div>
         ) : (
@@ -116,7 +116,7 @@ export const PlayerRoster: React.FC<PlayerRosterProps> = ({
 
             {usedPlayers.length > 0 && (
               <>
-                <div className="text-xs font-medium text-gray-400 uppercase tracking-wider pt-4 pb-2">
+                <div className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider pt-4 pb-2">
                   Already in squad
                 </div>
                 {usedPlayers.map((player) => (
@@ -133,8 +133,8 @@ export const PlayerRoster: React.FC<PlayerRosterProps> = ({
         )}
       </div>
 
-      <div className="p-3 border-t border-gray-200 bg-white">
-        <div className="flex justify-between text-xs text-gray-500">
+      <div className="p-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
           <span>Available: {availablePlayers.length}</span>
           <span>In squad: {assignedPlayerIds.size}</span>
         </div>

@@ -92,7 +92,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
           {player.lastName}
         </div>
         {role && (
-          <div className="px-1 py-0.5 bg-white/90 rounded text-gray-700 text-[9px] font-medium">
+          <div className="px-1 py-0.5 bg-white/90 dark:bg-gray-800/90 rounded text-gray-700 dark:text-gray-300 text-[9px] font-medium">
             {role}
           </div>
         )}
@@ -119,7 +119,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         {...listeners}
         {...attributes}
         className={`
-          flex items-center gap-2 p-2 bg-white rounded-lg shadow-sm border border-gray-200
+          flex items-center gap-2 p-2 bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700
           cursor-grab active:cursor-grabbing
           ${isDragging ? 'opacity-50' : ''}
           ${disabled ? 'cursor-not-allowed opacity-50' : ''}
@@ -135,10 +135,10 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
           {getInitials()}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium text-gray-900 truncate">
+          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
             {player.firstName} {player.lastName}
           </div>
-          <div className="text-xs text-gray-500">{POSITION_LABELS[player.position]}</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">{POSITION_LABELS[player.position]}</div>
         </div>
         {onRemove && !disabled && (
           <button
@@ -146,7 +146,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
               e.stopPropagation();
               onRemove();
             }}
-            className="p-1 text-gray-400 hover:text-red-500"
+            className="p-1 text-gray-400 dark:text-gray-500 hover:text-red-500"
           >
             <svg
               className="w-4 h-4"
@@ -174,10 +174,10 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
       {...listeners}
       {...attributes}
       className={`
-        flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm border border-gray-200
+        flex items-center gap-3 p-3 bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700
         cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow
         ${isDragging ? 'opacity-50 shadow-lg' : ''}
-        ${disabled ? 'cursor-not-allowed opacity-50 bg-gray-50' : ''}
+        ${disabled ? 'cursor-not-allowed opacity-50 bg-gray-50 dark:bg-gray-800' : ''}
       `}
     >
       <div
@@ -190,12 +190,12 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         {getInitials()}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium text-gray-900 truncate">
+        <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
           {player.firstName} {player.lastName}
         </div>
-        <div className="text-xs text-gray-500">{POSITION_LABELS[player.position]}</div>
+        <div className="text-xs text-gray-500 dark:text-gray-400">{POSITION_LABELS[player.position]}</div>
       </div>
-      <div className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded">
+      <div className="text-xs font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-950 px-2 py-1 rounded">
         {player.position}
       </div>
     </div>

@@ -87,10 +87,15 @@ export function UpcomingEventCard({ event, loading }: UpcomingEventCardProps) {
   const data = event.data;
   const linkTo = isTraining ? `/trainings/${data.id}` : `/matches/${data.id}`;
 
+  // Training: green (practice/growth), Match: blue (competition/game day)
+  const gradientClass = isTraining
+    ? 'from-green-600 to-green-500 hover:from-green-700 hover:to-green-600'
+    : 'from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600';
+
   return (
     <Link
       to={linkTo}
-      className="block bg-gradient-to-r from-green-600 to-green-500 rounded-xl p-5 text-white hover:from-green-700 hover:to-green-600 transition-all group"
+      className={`block bg-gradient-to-r ${gradientClass} rounded-xl p-5 text-white transition-all group`}
     >
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">

@@ -44,13 +44,13 @@ export function MyStatsPage() {
   }, [period]);
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950">
+      <header className="bg-white dark:bg-gray-900 shadow">
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">My Statistics</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">My Statistics</h1>
           <button
             onClick={() => navigate('/dashboard')}
-            className="text-gray-600 hover:text-gray-900"
+            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
           >
             Back to Dashboard
           </button>
@@ -59,7 +59,7 @@ export function MyStatsPage() {
 
       <main className="max-w-4xl mx-auto px-4 py-6">
         <div className="mb-6 flex justify-center">
-          <div className="inline-flex rounded-lg bg-white shadow p-1">
+          <div className="inline-flex rounded-lg bg-white dark:bg-gray-900 shadow p-1">
             {PERIOD_OPTIONS.map((option) => (
               <button
                 key={option.value}
@@ -67,7 +67,7 @@ export function MyStatsPage() {
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                   period === option.value
                     ? 'bg-green-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                 }`}
               >
                 {option.label}
@@ -81,7 +81,7 @@ export function MyStatsPage() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-gray-700 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
             {error}
           </div>
         ) : stats ? (

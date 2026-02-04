@@ -98,7 +98,7 @@ export function Calendar({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm overflow-hidden border border-gray-100 dark:border-gray-800">
       <div className="bg-gradient-to-r from-green-600 to-green-500 px-5 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -149,12 +149,12 @@ export function Calendar({
         </div>
       </div>
 
-      <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-100">
+      <div className="grid grid-cols-7 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-800">
         {WEEKDAYS.map((day, index) => (
           <div
             key={day}
             className={`py-2 text-center text-xs font-semibold uppercase tracking-wider ${
-              index >= 5 ? 'text-gray-400' : 'text-gray-500'
+              index >= 5 ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-400'
             }`}
           >
             {day}
@@ -172,12 +172,12 @@ export function Calendar({
           return (
             <div
               key={index}
-              className={`min-h-[90px] border-b border-r border-gray-100 p-1.5 transition-colors ${
+              className={`min-h-[90px] border-b border-r border-gray-100 dark:border-gray-800 p-1.5 transition-colors ${
                 day === null
-                  ? 'bg-gray-50/50'
+                  ? 'bg-gray-50/50 dark:bg-gray-800/50'
                   : isWeekend(index)
-                    ? 'bg-gray-50/30'
-                    : 'bg-white hover:bg-gray-50/50'
+                    ? 'bg-gray-50/30 dark:bg-gray-800/30'
+                    : 'bg-white dark:bg-gray-900 hover:bg-gray-50/50 dark:hover:bg-gray-800/50'
               } ${index % 7 === 6 ? 'border-r-0' : ''}`}
             >
               {day !== null && (
@@ -188,8 +188,8 @@ export function Calendar({
                         isToday(day)
                           ? 'bg-green-600 text-white shadow-md shadow-green-200'
                           : hasEvents
-                            ? 'text-gray-900'
-                            : 'text-gray-400'
+                            ? 'text-gray-900 dark:text-gray-100'
+                            : 'text-gray-400 dark:text-gray-500'
                       }`}
                     >
                       {day}
@@ -221,7 +221,7 @@ export function Calendar({
                       </button>
                     ))}
                     {hasMore && (
-                      <div className="text-[10px] font-medium text-gray-400 px-1.5">
+                      <div className="text-[10px] font-medium text-gray-400 dark:text-gray-500 px-1.5">
                         +{dayEvents.length - 2} more
                       </div>
                     )}
