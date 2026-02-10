@@ -1,7 +1,19 @@
 import '@testing-library/jest-dom';
 
-import { TextEncoder, TextDecoder } from 'util';
-Object.assign(global, { TextEncoder, TextDecoder });
+// Mock window.matchMedia for ThemeContext
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
+});
 
 const localStorageMock = {
   getItem: jest.fn(),
@@ -18,3 +30,10 @@ const sessionStorageMock = {
   clear: jest.fn(),
 };
 Object.defineProperty(window, 'sessionStorage', { value: sessionStorageMock });
+
+// Mock config module for all tests
+jest.mock('./config', () => ({
+  config: {
+    apiBaseUrl: '/api',
+  },
+}));

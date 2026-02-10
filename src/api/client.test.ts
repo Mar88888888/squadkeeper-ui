@@ -1,3 +1,9 @@
+jest.mock('../config', () => ({
+  config: {
+    apiBaseUrl: '/api',
+  },
+}));
+
 import { apiClient, setAuthToken } from './client';
 
 jest.mock('axios', () => {
