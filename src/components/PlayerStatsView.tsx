@@ -116,7 +116,7 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
   const chartColors = useChartColors();
 
   const [visibleCategories, setVisibleCategories] = useState<Set<string>>(
-    new Set(CHART_CATEGORIES.map(c => c.key))
+    new Set(['average'])
   );
 
   const toggleCategory = (key: string) => {

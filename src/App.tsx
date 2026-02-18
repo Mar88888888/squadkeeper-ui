@@ -15,7 +15,6 @@ import { MyStatsPage, TeamStatsPage, ChildStatsPage, PlayerStatsPage } from './p
 import { MyGroupsPage } from './pages/groups';
 import { ContactsPage } from './pages/contacts';
 import { SquadListPage, SquadBuilderPage } from './pages/squads';
-import { PerformanceScorePage, PerformanceSettingsPage } from './pages/analytics';
 import { UserRole } from './types';
 
 function LayoutWrapper({ children }: { children: React.ReactNode }) {
@@ -162,22 +161,6 @@ function App() {
             element={
               <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH]}>
                 <LayoutWrapper><SquadBuilderPage /></LayoutWrapper>
-              </RoleRoute>
-            }
-          />
-          <Route
-            path="/analytics/performance"
-            element={
-              <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH]}>
-                <LayoutWrapper><PerformanceScorePage /></LayoutWrapper>
-              </RoleRoute>
-            }
-          />
-          <Route
-            path="/performance-settings/:groupId"
-            element={
-              <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH]}>
-                <LayoutWrapper><PerformanceSettingsPage /></LayoutWrapper>
               </RoleRoute>
             }
           />
