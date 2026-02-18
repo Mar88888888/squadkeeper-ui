@@ -12,7 +12,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { UserRole } from '../../types';
 import {
   attendanceApi,
-  AttendanceStatus,
   type Attendance,
   type AttendanceRecord,
 } from '../../api/attendance';
@@ -22,7 +21,6 @@ import {
   type Evaluation,
   type EvaluationRecord,
 } from '../../api/evaluations';
-import { AttendanceStatusLabels } from '../../constants/attendance.constants';
 import { PageHeader, PageContent } from '../../components/layout';
 import { Card, CardContent, Modal, Button, Avatar } from '../../components/ui';
 
@@ -67,6 +65,18 @@ const BallIcon = () => (
   </svg>
 );
 
+const CheckIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+  </svg>
+);
+
+const XIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
+
 // Avatar gradient colors
 const avatarColors = [
   'from-amber-400 to-orange-500',
@@ -86,32 +96,6 @@ function getTeamInitials(name: string): string {
   return name.split(' ').map(word => word[0]).join('').slice(0, 2).toUpperCase();
 }
 
-function getAttendanceRowStyle(status: AttendanceStatus): string {
-  switch (status) {
-    case AttendanceStatus.ABSENT:
-      return 'bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/50';
-    case AttendanceStatus.LATE:
-      return 'bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/50';
-    case AttendanceStatus.EXCUSED:
-      return 'bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/50';
-    default:
-      return 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700';
-  }
-}
-
-function getSelectStyle(status: AttendanceStatus): string {
-  switch (status) {
-    case AttendanceStatus.ABSENT:
-      return 'border-red-200 dark:border-red-800 text-red-600 dark:text-red-400';
-    case AttendanceStatus.LATE:
-      return 'border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400';
-    case AttendanceStatus.EXCUSED:
-      return 'border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400';
-    default:
-      return 'border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white';
-  }
-}
-
 export function MatchDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
@@ -126,7 +110,8 @@ export function MatchDetailsPage() {
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
-  const [attendanceRecords, setAttendanceRecords] = useState<Record<string, AttendanceStatus>>({});
+  // Attendance records: playerId -> isPresent
+  const [attendanceRecords, setAttendanceRecords] = useState<Record<string, boolean>>({});
 
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerBrief | null>(null);
   const [selectedPlayerIndex, setSelectedPlayerIndex] = useState(0);
@@ -167,10 +152,10 @@ export function MatchDetailsPage() {
       setEvaluations(evaluationsData);
       setGoals(matchData.goals || []);
 
-      const records: Record<string, AttendanceStatus> = {};
+      const records: Record<string, boolean> = {};
       matchData.group.players.forEach((player) => {
         const existing = attendanceData.find((a) => a.player.id === player.id);
-        records[player.id] = existing?.status || AttendanceStatus.PRESENT;
+        records[player.id] = existing?.isPresent ?? true;
       });
       setAttendanceRecords(records);
 
@@ -191,15 +176,18 @@ export function MatchDetailsPage() {
     loadData();
   }, [id]);
 
-  const handleAttendanceChange = (playerId: string, status: AttendanceStatus) => {
-    setAttendanceRecords((prev) => ({ ...prev, [playerId]: status }));
+  const handleAttendanceToggle = (playerId: string) => {
+    setAttendanceRecords((prev) => ({
+      ...prev,
+      [playerId]: !prev[playerId],
+    }));
   };
 
   const markAllPresent = () => {
     if (!match) return;
-    const records: Record<string, AttendanceStatus> = {};
+    const records: Record<string, boolean> = {};
     match.group.players.forEach((player) => {
-      records[player.id] = AttendanceStatus.PRESENT;
+      records[player.id] = true;
     });
     setAttendanceRecords(records);
   };
@@ -211,7 +199,7 @@ export function MatchDetailsPage() {
     try {
       const records: AttendanceRecord[] = match.group.players.map((player) => ({
         playerId: player.id,
-        status: attendanceRecords[player.id] || AttendanceStatus.PRESENT,
+        isPresent: attendanceRecords[player.id] ?? true,
       }));
 
       const result = await attendanceApi.markBatch({
@@ -220,6 +208,10 @@ export function MatchDetailsPage() {
         records,
       });
       setAttendance(result);
+
+      // Refresh evaluations (absent players' evaluations are deleted by backend)
+      const evaluationsData = await evaluationsApi.getByMatch(id);
+      setEvaluations(evaluationsData);
     } catch {
       setError('Failed to save attendance');
     } finally {
@@ -232,6 +224,14 @@ export function MatchDetailsPage() {
     setIsSaving(true);
     setError('');
     try {
+      // First, ensure player's attendance is saved as present
+      // (required by backend before evaluation can be saved)
+      await attendanceApi.markBatch({
+        eventId: id,
+        eventType: 'MATCH',
+        records: [{ playerId: selectedPlayer.id, isPresent: true }],
+      });
+
       const record: EvaluationRecord = {
         playerId: selectedPlayer.id,
         technical: evalRatings.technical,
@@ -251,7 +251,7 @@ export function MatchDetailsPage() {
       setSelectedPlayer(null);
       setEvalComment('');
     } catch {
-      setError('Failed to save evaluations');
+      setError('Failed to save evaluation');
     } finally {
       setIsSaving(false);
     }
@@ -279,14 +279,8 @@ export function MatchDetailsPage() {
     return evaluations.find((e) => e.player.id === playerId);
   };
 
-  const getPlayerAttendance = (playerId: string): AttendanceStatus | null => {
-    const record = attendance.find((a) => a.player.id === playerId);
-    return record?.status || null;
-  };
-
   const isPlayerPresent = (playerId: string): boolean => {
-    const status = attendanceRecords[playerId] || getPlayerAttendance(playerId);
-    return status === AttendanceStatus.PRESENT || status === AttendanceStatus.LATE;
+    return attendanceRecords[playerId] ?? true;
   };
 
   const canEvaluate = (playerId: string): boolean => {
@@ -374,16 +368,16 @@ export function MatchDetailsPage() {
   };
 
   const getAttendanceStats = () => {
-    const stats = { present: 0, absent: 0, late: 0, excused: 0 };
-    Object.values(attendanceRecords).forEach((status) => {
-      switch (status) {
-        case AttendanceStatus.PRESENT: stats.present++; break;
-        case AttendanceStatus.ABSENT: stats.absent++; break;
-        case AttendanceStatus.LATE: stats.late++; break;
-        case AttendanceStatus.EXCUSED: stats.excused++; break;
+    let present = 0;
+    let absent = 0;
+    Object.values(attendanceRecords).forEach((isPresent) => {
+      if (isPresent) {
+        present++;
+      } else {
+        absent++;
       }
     });
-    return stats;
+    return { present, absent };
   };
 
   if (isLoading) {
@@ -407,7 +401,7 @@ export function MatchDetailsPage() {
   const theirGoals = match.isHome ? match.awayGoals : match.homeGoals;
   const stats = getAttendanceStats();
   const totalPlayers = match.group.players.length;
-  const attendancePercent = totalPlayers > 0 ? Math.round(((stats.present + stats.late) / totalPlayers) * 100) : 0;
+  const attendancePercent = totalPlayers > 0 ? Math.round((stats.present / totalPlayers) * 100) : 0;
 
   const resultColors = {
     win: 'from-green-500 to-emerald-600',
@@ -623,7 +617,7 @@ export function MatchDetailsPage() {
                 <div className="flex items-center gap-3">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Squad</h3>
                   <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-semibold rounded-full">
-                    {stats.present + stats.late}/{totalPlayers} present
+                    {stats.present}/{totalPlayers} present
                   </span>
                 </div>
                 {canEdit && (
@@ -631,14 +625,14 @@ export function MatchDetailsPage() {
                     onClick={markAllPresent}
                     className="text-sm text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium"
                   >
-                    Mark all
+                    Mark all present
                   </button>
                 )}
               </div>
               <CardContent>
                 <div className="space-y-3">
                   {match.group.players.map((player, index) => {
-                    const currentStatus = attendanceRecords[player.id] || AttendanceStatus.PRESENT;
+                    const isPresent = attendanceRecords[player.id] ?? true;
                     const playerEval = getPlayerEvaluation(player.id);
                     const avgRating = playerEval ? getEvaluationAverage(playerEval) : null;
                     const playerCanEvaluate = canEvaluate(player.id);
@@ -646,12 +640,16 @@ export function MatchDetailsPage() {
                     return (
                       <div
                         key={player.id}
-                        className={`flex items-center justify-between p-4 rounded-xl transition-colors ${getAttendanceRowStyle(currentStatus)}`}
+                        className={`flex items-center justify-between p-4 rounded-xl transition-colors ${
+                          isPresent
+                            ? 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            : 'bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/50'
+                        }`}
                       >
                         <div className="flex items-center gap-4">
                           <Avatar
                             name={`${player.firstName} ${player.lastName}`}
-                            className={`bg-gradient-to-br ${currentStatus === AttendanceStatus.ABSENT ? 'from-gray-300 to-gray-400' : getPlayerColor(index)}`}
+                            className={`bg-gradient-to-br ${!isPresent ? 'from-gray-300 to-gray-400' : getPlayerColor(index)}`}
                           />
                           <div>
                             <p className="font-semibold text-gray-900 dark:text-white">
@@ -667,20 +665,27 @@ export function MatchDetailsPage() {
                         </div>
                         <div className="flex items-center gap-3">
                           {canEdit ? (
-                            <select
-                              value={currentStatus}
-                              onChange={(e) => handleAttendanceChange(player.id, e.target.value as AttendanceStatus)}
-                              className={`px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white dark:bg-gray-800 ${getSelectStyle(currentStatus)}`}
+                            <button
+                              onClick={() => handleAttendanceToggle(player.id)}
+                              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                                isPresent
+                                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50'
+                                  : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50'
+                              }`}
                             >
-                              {Object.values(AttendanceStatus).map((status) => (
-                                <option key={status} value={status}>
-                                  {AttendanceStatusLabels[status]}
-                                </option>
-                              ))}
-                            </select>
+                              {isPresent ? <CheckIcon /> : <XIcon />}
+                              {isPresent ? 'Present' : 'Absent'}
+                            </button>
                           ) : (
-                            <span className={`px-3 py-2 rounded-lg font-medium text-sm ${getSelectStyle(currentStatus)} bg-white dark:bg-gray-800`}>
-                              {AttendanceStatusLabels[currentStatus]}
+                            <span
+                              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm ${
+                                isPresent
+                                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                                  : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                              }`}
+                            >
+                              {isPresent ? <CheckIcon /> : <XIcon />}
+                              {isPresent ? 'Present' : 'Absent'}
                             </span>
                           )}
                           {canEdit && (
@@ -749,14 +754,6 @@ export function MatchDetailsPage() {
                   <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
                     <p className="text-xl font-bold text-red-600 dark:text-red-400">{stats.absent}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Absent</p>
-                  </div>
-                  <div className="text-center p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
-                    <p className="text-xl font-bold text-amber-600 dark:text-amber-400">{stats.late}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Late</p>
-                  </div>
-                  <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                    <p className="text-xl font-bold text-blue-600 dark:text-blue-400">{stats.excused}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Excused</p>
                   </div>
                 </div>
               </div>

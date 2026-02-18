@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { groupsApi, type GroupInfo } from '../../api/groups';
 import { usersApi, type CoachInfo, type PlayerInfo } from '../../api/users';
-import { schedulesApi, type ScheduleItem } from '../../api/schedules';
+import { schedulesApi, type ScheduleItem, type PreviewResponse } from '../../api/schedules';
 import { PageHeader, PageContent } from '../../components/layout';
 import { Card, Modal, Button, Avatar, EmptyState } from '../../components/ui';
 
@@ -105,12 +105,16 @@ export function GroupManagementPage() {
 
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
   const [scheduleLoading, setScheduleLoading] = useState(false);
-  const [generateDates, setGenerateDates] = useState({
+  const [applyDates, setApplyDates] = useState({
     fromDate: '',
     toDate: '',
     defaultTopic: '',
   });
-  const [generateResult, setGenerateResult] = useState<{ created: number; skipped: number } | null>(null);
+  const [preview, setPreview] = useState<PreviewResponse | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [applyResult, setApplyResult] = useState<{ deleted: number; created: number } | null>(null);
+  const [applying, setApplying] = useState(false);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -134,6 +138,36 @@ export function GroupManagementPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Load preview when dates change
+  useEffect(() => {
+    const loadPreview = async () => {
+      if (!selectedGroup || !applyDates.fromDate || !applyDates.toDate) {
+        setPreview(null);
+        return;
+      }
+      if (applyDates.toDate < applyDates.fromDate) {
+        setPreview(null);
+        return;
+      }
+      setPreviewLoading(true);
+      try {
+        const data = await schedulesApi.previewChanges(
+          selectedGroup.id,
+          applyDates.fromDate,
+          applyDates.toDate
+        );
+        setPreview(data);
+      } catch {
+        setPreview(null);
+      } finally {
+        setPreviewLoading(false);
+      }
+    };
+    if (modalType === 'schedule') {
+      loadPreview();
+    }
+  }, [selectedGroup, applyDates.fromDate, applyDates.toDate, modalType]);
 
   const filteredGroups = groups.filter((g) => {
     if (!searchQuery.trim()) return true;
@@ -191,15 +225,17 @@ export function GroupManagementPage() {
     setModalType(null);
     setSelectedGroup(null);
     setError('');
-    setGenerateResult(null);
+    setApplyResult(null);
+    setShowConfirmModal(false);
   };
 
   const openScheduleModal = async (group: GroupInfo) => {
     setSelectedGroup(group);
     setScheduleLoading(true);
     setError('');
-    setGenerateResult(null);
-    setGenerateDates({ fromDate: '', toDate: '', defaultTopic: '' });
+    setApplyResult(null);
+    setApplyDates({ fromDate: '', toDate: '', defaultTopic: '' });
+    setPreview(null);
     setModalType('schedule');
     try {
       const schedule = await schedulesApi.getSchedule(group.id);
@@ -221,7 +257,7 @@ export function GroupManagementPage() {
 
     setScheduleItems((prev) => [
       ...prev,
-      { dayOfWeek: newDay, startTime: '16:00', endTime: '17:30', location: '' },
+      { dayOfWeek: newDay, startTime: '16:00', durationMinutes: 90, location: '' },
     ]);
   };
 
@@ -235,60 +271,74 @@ export function GroupManagementPage() {
     );
   };
 
-  const handleSaveSchedule = async () => {
-    if (!selectedGroup) return;
+  const validateAndShowConfirm = () => {
+    setError('');
+
+    if (scheduleItems.length === 0) {
+      setError('At least one schedule day is required');
+      return;
+    }
+
     for (const item of scheduleItems) {
       if (!item.location.trim()) {
         setError('Location is required for all schedule items');
         return;
       }
-      if (item.endTime <= item.startTime) {
-        setError('End time must be after start time');
-        return;
-      }
     }
-    try {
-      const saved = await schedulesApi.updateSchedule(selectedGroup.id, scheduleItems);
-      setScheduleItems(saved);
-      setError('');
-    } catch {
-      setError('Failed to save schedule');
-    }
-  };
 
-  const handleGenerateTrainings = async () => {
-    if (!selectedGroup) return;
-    if (!generateDates.fromDate || !generateDates.toDate) {
+    if (!applyDates.fromDate || !applyDates.toDate) {
       setError('Please select date range');
       return;
     }
-    if (generateDates.toDate < generateDates.fromDate) {
+
+    if (applyDates.toDate < applyDates.fromDate) {
       setError('End date must be after start date');
       return;
     }
+
+    setShowConfirmModal(true);
+  };
+
+  const handleApplySchedule = async () => {
+    if (!selectedGroup) return;
+
+    setApplying(true);
+    setShowConfirmModal(false);
+
     try {
-      const result = await schedulesApi.generateTrainings(selectedGroup.id, {
-        fromDate: generateDates.fromDate,
-        toDate: generateDates.toDate,
-        defaultTopic: generateDates.defaultTopic || undefined,
+      // Strip any extra properties from schedule items
+      const cleanItems = scheduleItems.map(({ dayOfWeek, startTime, durationMinutes, location }) => ({
+        dayOfWeek,
+        startTime,
+        durationMinutes,
+        location,
+      }));
+
+      const result = await schedulesApi.applySchedule(selectedGroup.id, {
+        items: cleanItems,
+        fromDate: applyDates.fromDate,
+        toDate: applyDates.toDate,
+        defaultTopic: applyDates.defaultTopic || undefined,
       });
-      setGenerateResult(result);
+      setApplyResult(result);
       setError('');
-    } catch {
-      setError('Failed to generate trainings');
+      setPreview(null);
+    } catch (err) {
+      console.error('Failed to apply schedule:', err);
+      setError('Failed to apply schedule');
+    } finally {
+      setApplying(false);
     }
   };
 
-  const handleDeleteGeneratedTrainings = async () => {
-    if (!selectedGroup) return;
-    try {
-      const result = await schedulesApi.deleteFutureGenerated(selectedGroup.id);
-      setGenerateResult({ created: 0, skipped: result.kept });
-      setError('');
-    } catch {
-      setError('Failed to delete generated trainings');
-    }
+  const getMaxDate = (fromDate: string): string => {
+    if (!fromDate) return '';
+    const date = new Date(fromDate);
+    date.setFullYear(date.getFullYear() + 1);
+    return date.toISOString().split('T')[0];
   };
+
+  const todayStr = new Date().toISOString().split('T')[0];
 
   const handleCreateGroup = async () => {
     if (!formData.name.trim()) {
@@ -870,13 +920,17 @@ export function GroupManagementPage() {
                           onChange={(e) => updateScheduleItem(index, 'startTime', e.target.value)}
                           className="px-2 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                         />
-                        <span className="text-gray-400 dark:text-gray-500">-</span>
-                        <input
-                          type="time"
-                          value={item.endTime}
-                          onChange={(e) => updateScheduleItem(index, 'endTime', e.target.value)}
+                        <select
+                          value={item.durationMinutes}
+                          onChange={(e) => updateScheduleItem(index, 'durationMinutes', Number(e.target.value))}
                           className="px-2 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                        />
+                        >
+                          <option value={60}>1h</option>
+                          <option value={75}>1h 15m</option>
+                          <option value={90}>1h 30m</option>
+                          <option value={105}>1h 45m</option>
+                          <option value={120}>2h</option>
+                        </select>
                         <input
                           type="text"
                           value={item.location}
@@ -897,86 +951,118 @@ export function GroupManagementPage() {
                 </div>
               )}
 
-              <button
-                onClick={handleSaveSchedule}
-                className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-xl transition-colors mt-3"
-              >
-                Save Schedule
-              </button>
             </div>
 
-            {scheduleItems.length > 0 && (
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Generate Trainings</h3>
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  <div>
-                    <label className="block text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">From</label>
-                    <input
-                      type="date"
-                      value={generateDates.fromDate}
-                      onChange={(e) => setGenerateDates((prev) => ({ ...prev, fromDate: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">To</label>
-                    <input
-                      type="date"
-                      value={generateDates.toDate}
-                      onChange={(e) => setGenerateDates((prev) => ({ ...prev, toDate: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                </div>
-                <div className="mb-3">
-                  <label className="block text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">Default Topic (optional)</label>
+            {/* Date Range Section */}
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-4">Apply to Period</h3>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">From</label>
                   <input
-                    type="text"
-                    value={generateDates.defaultTopic}
-                    onChange={(e) => setGenerateDates((prev) => ({ ...prev, defaultTopic: e.target.value }))}
-                    placeholder="e.g., Technical training"
-                    className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    type="date"
+                    value={applyDates.fromDate}
+                    min={todayStr}
+                    onChange={(e) => setApplyDates((prev) => ({ ...prev, fromDate: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                   />
                 </div>
-
-                {generateResult && (
-                  <div className="mb-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 rounded-lg text-sm">
-                    Created {generateResult.created} trainings
-                    {generateResult.skipped > 0 && `, skipped ${generateResult.skipped} (already exist)`}
-                  </div>
-                )}
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleGenerateTrainings}
-                    className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl transition-colors"
-                  >
-                    Generate Trainings
-                  </button>
-                  <button
-                    onClick={handleDeleteGeneratedTrainings}
-                    className="px-4 py-2.5 text-red-600 dark:text-red-400 border border-red-300 dark:border-red-700 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                    title="Delete future generated trainings"
-                  >
-                    Clear Future
-                  </button>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">To</label>
+                  <input
+                    type="date"
+                    value={applyDates.toDate}
+                    min={applyDates.fromDate || todayStr}
+                    max={getMaxDate(applyDates.fromDate)}
+                    onChange={(e) => setApplyDates((prev) => ({ ...prev, toDate: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  />
                 </div>
               </div>
-            )}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Default Topic (optional)</label>
+                <input
+                  type="text"
+                  value={applyDates.defaultTopic}
+                  onChange={(e) => setApplyDates((prev) => ({ ...prev, defaultTopic: e.target.value }))}
+                  placeholder="e.g., Technical training"
+                  className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                />
+              </div>
 
-            {error && (
-              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-sm">
+              {/* Preview info */}
+              {previewLoading && (
+                <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl text-sm text-gray-500 dark:text-gray-400">
+                  Loading preview...
+                </div>
+              )}
+              {preview && !previewLoading && (
+                <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-400 rounded-xl text-sm">
+                  {preview.total > 0 ? (
+                    <>
+                      This will delete <strong>{preview.total}</strong> existing training{preview.total !== 1 ? 's' : ''}
+                      {preview.withAttendance > 0 && (
+                        <> (<strong>{preview.withAttendance}</strong> with attendance data)</>
+                      )}
+                    </>
+                  ) : (
+                    'No existing trainings in this period'
+                  )}
+                </div>
+              )}
+
+              {applyResult && (
+                <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 text-green-700 dark:text-green-400 rounded-xl text-sm">
+                  Deleted {applyResult.deleted} trainings, created {applyResult.created} trainings
+                </div>
+              )}
+
+              <Button
+                onClick={validateAndShowConfirm}
+                className="w-full"
+                disabled={applying || scheduleItems.length === 0}
+              >
+                {applying ? 'Applying...' : 'Apply Schedule'}
+              </Button>
+            </div>
+
+            {error && modalType === 'schedule' && (
+              <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-xl text-sm">
                 {error}
               </div>
             )}
-
-            <div className="flex justify-end">
-              <Button variant="secondary" onClick={closeModal}>
-                Close
-              </Button>
-            </div>
           </div>
         )}
+      </Modal>
+
+      {/* Schedule Confirmation Modal */}
+      <Modal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        title="Confirm Schedule Application"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-gray-700 dark:text-gray-300">
+            All trainings from <strong>{applyDates.fromDate}</strong> to <strong>{applyDates.toDate}</strong> will be deleted and replaced with the new schedule.
+          </p>
+          {preview && preview.total > 0 && (
+            <p className="text-amber-600 dark:text-amber-400">
+              This will remove {preview.total} training{preview.total !== 1 ? 's' : ''}
+              {preview.withAttendance > 0 && (
+                <> ({preview.withAttendance} with attendance data)</>
+              )}.
+            </p>
+          )}
+          <div className="flex gap-3 pt-2">
+            <Button variant="secondary" onClick={() => setShowConfirmModal(false)} className="flex-1">
+              Cancel
+            </Button>
+            <Button onClick={handleApplySchedule} className="flex-1">
+              Confirm
+            </Button>
+          </div>
+        </div>
       </Modal>
 
       {/* Delete Confirmation Modal */}

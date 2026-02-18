@@ -4,24 +4,25 @@ export interface ScheduleItem {
   id?: string;
   dayOfWeek: number;
   startTime: string;
-  endTime: string;
+  durationMinutes: number;
   location: string;
 }
 
-export interface GenerateTrainingsRequest {
+export interface ApplyScheduleRequest {
+  items: ScheduleItem[];
   fromDate: string;
   toDate: string;
   defaultTopic?: string;
 }
 
-export interface GenerateTrainingsResponse {
+export interface ApplyScheduleResponse {
+  deleted: number;
   created: number;
-  skipped: number;
 }
 
-export interface DeleteGeneratedResponse {
-  deleted: number;
-  kept: number;
+export interface PreviewResponse {
+  total: number;
+  withAttendance: number;
 }
 
 export const schedulesApi = {
@@ -32,33 +33,25 @@ export const schedulesApi = {
     return response.data;
   },
 
-  updateSchedule: async (
+  previewChanges: async (
     groupId: string,
-    items: ScheduleItem[]
-  ): Promise<ScheduleItem[]> => {
-    const response = await apiClient.put<ScheduleItem[]>(
+    fromDate: string,
+    toDate: string
+  ): Promise<PreviewResponse> => {
+    const response = await apiClient.get<PreviewResponse>(
+      `/groups/${groupId}/schedule/preview`,
+      { params: { fromDate, toDate } }
+    );
+    return response.data;
+  },
+
+  applySchedule: async (
+    groupId: string,
+    data: ApplyScheduleRequest
+  ): Promise<ApplyScheduleResponse> => {
+    const response = await apiClient.put<ApplyScheduleResponse>(
       `/groups/${groupId}/schedule`,
-      { items }
-    );
-    return response.data;
-  },
-
-  generateTrainings: async (
-    groupId: string,
-    data: GenerateTrainingsRequest
-  ): Promise<GenerateTrainingsResponse> => {
-    const response = await apiClient.post<GenerateTrainingsResponse>(
-      `/groups/${groupId}/schedule/generate`,
       data
-    );
-    return response.data;
-  },
-
-  deleteFutureGenerated: async (
-    groupId: string
-  ): Promise<DeleteGeneratedResponse> => {
-    const response = await apiClient.delete<DeleteGeneratedResponse>(
-      `/groups/${groupId}/schedule/trainings`
     );
     return response.data;
   },

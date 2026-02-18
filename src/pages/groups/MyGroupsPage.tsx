@@ -1,11 +1,18 @@
 import { useState, useEffect } from 'react';
 import { groupsApi, type GroupInfo } from '../../api/groups';
-import { schedulesApi, type ScheduleItem } from '../../api/schedules';
+import { schedulesApi, type ScheduleItem, type PreviewResponse } from '../../api/schedules';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { PageContent } from '../../components/layout/PageContent';
 import { Card, Modal, Button, EmptyState } from '../../components/ui';
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+function getMaxDate(fromDate: string): string {
+  if (!fromDate) return '';
+  const date = new Date(fromDate);
+  date.setFullYear(date.getFullYear() + 1);
+  return date.toISOString().split('T')[0];
+}
 
 export function MyGroupsPage() {
   const [groups, setGroups] = useState<GroupInfo[]>([]);
@@ -16,12 +23,16 @@ export function MyGroupsPage() {
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
   const [scheduleLoading, setScheduleLoading] = useState(false);
   const [scheduleError, setScheduleError] = useState('');
-  const [generateDates, setGenerateDates] = useState({
+  const [applyDates, setApplyDates] = useState({
     fromDate: '',
     toDate: '',
     defaultTopic: '',
   });
-  const [generateResult, setGenerateResult] = useState<{ created: number; skipped: number } | null>(null);
+  const [preview, setPreview] = useState<PreviewResponse | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [applyResult, setApplyResult] = useState<{ deleted: number; created: number } | null>(null);
+  const [applying, setApplying] = useState(false);
 
   useEffect(() => {
     const loadGroups = async () => {
@@ -39,12 +50,41 @@ export function MyGroupsPage() {
     loadGroups();
   }, []);
 
+  // Load preview when dates change
+  useEffect(() => {
+    const loadPreview = async () => {
+      if (!selectedGroup || !applyDates.fromDate || !applyDates.toDate) {
+        setPreview(null);
+        return;
+      }
+      if (applyDates.toDate < applyDates.fromDate) {
+        setPreview(null);
+        return;
+      }
+      setPreviewLoading(true);
+      try {
+        const data = await schedulesApi.previewChanges(
+          selectedGroup.id,
+          applyDates.fromDate,
+          applyDates.toDate
+        );
+        setPreview(data);
+      } catch {
+        setPreview(null);
+      } finally {
+        setPreviewLoading(false);
+      }
+    };
+    loadPreview();
+  }, [selectedGroup, applyDates.fromDate, applyDates.toDate]);
+
   const openScheduleModal = async (group: GroupInfo) => {
     setSelectedGroup(group);
     setScheduleLoading(true);
     setScheduleError('');
-    setGenerateResult(null);
-    setGenerateDates({ fromDate: '', toDate: '', defaultTopic: '' });
+    setApplyResult(null);
+    setApplyDates({ fromDate: '', toDate: '', defaultTopic: '' });
+    setPreview(null);
     try {
       const schedule = await schedulesApi.getSchedule(group.id);
       setScheduleItems(schedule);
@@ -59,7 +99,7 @@ export function MyGroupsPage() {
   const closeModal = () => {
     setSelectedGroup(null);
     setScheduleError('');
-    setGenerateResult(null);
+    setApplyResult(null);
   };
 
   const addScheduleItem = () => {
@@ -71,7 +111,7 @@ export function MyGroupsPage() {
 
     setScheduleItems((prev) => [
       ...prev,
-      { dayOfWeek: newDay, startTime: '16:00', endTime: '17:30', location: '' },
+      { dayOfWeek: newDay, startTime: '16:00', durationMinutes: 90, location: '' },
     ]);
   };
 
@@ -85,59 +125,63 @@ export function MyGroupsPage() {
     );
   };
 
-  const handleSaveSchedule = async () => {
-    if (!selectedGroup) return;
+  const validateAndShowConfirm = () => {
+    setScheduleError('');
+
+    if (scheduleItems.length === 0) {
+      setScheduleError('At least one schedule day is required');
+      return;
+    }
+
     for (const item of scheduleItems) {
       if (!item.location.trim()) {
         setScheduleError('Location is required for all schedule items');
         return;
       }
-      if (item.endTime <= item.startTime) {
-        setScheduleError('End time must be after start time');
-        return;
-      }
     }
-    try {
-      const saved = await schedulesApi.updateSchedule(selectedGroup.id, scheduleItems);
-      setScheduleItems(saved);
-      setScheduleError('');
-    } catch {
-      setScheduleError('Failed to save schedule');
-    }
-  };
 
-  const handleGenerateTrainings = async () => {
-    if (!selectedGroup) return;
-    if (!generateDates.fromDate || !generateDates.toDate) {
+    if (!applyDates.fromDate || !applyDates.toDate) {
       setScheduleError('Please select date range');
       return;
     }
-    if (generateDates.toDate < generateDates.fromDate) {
+
+    if (applyDates.toDate < applyDates.fromDate) {
       setScheduleError('End date must be after start date');
       return;
     }
-    try {
-      const result = await schedulesApi.generateTrainings(selectedGroup.id, {
-        fromDate: generateDates.fromDate,
-        toDate: generateDates.toDate,
-        defaultTopic: generateDates.defaultTopic || undefined,
-      });
-      setGenerateResult(result);
-      setScheduleError('');
-    } catch {
-      setScheduleError('Failed to generate trainings');
-    }
+
+    setShowConfirmModal(true);
   };
 
-  const handleDeleteGeneratedTrainings = async () => {
+  const handleApplySchedule = async () => {
     if (!selectedGroup) return;
+
+    setApplying(true);
+    setShowConfirmModal(false);
+
     try {
-      const result = await schedulesApi.deleteFutureGenerated(selectedGroup.id);
-      setGenerateResult({ created: 0, skipped: result.kept });
+      // Strip any extra properties from schedule items
+      const cleanItems = scheduleItems.map(({ dayOfWeek, startTime, durationMinutes, location }) => ({
+        dayOfWeek,
+        startTime,
+        durationMinutes,
+        location,
+      }));
+
+      const result = await schedulesApi.applySchedule(selectedGroup.id, {
+        items: cleanItems,
+        fromDate: applyDates.fromDate,
+        toDate: applyDates.toDate,
+        defaultTopic: applyDates.defaultTopic || undefined,
+      });
+      setApplyResult(result);
       setScheduleError('');
-      alert(`Deleted ${result.deleted} trainings. ${result.kept} trainings with attendance were kept.`);
-    } catch {
-      setScheduleError('Failed to delete generated trainings');
+      setPreview(null);
+    } catch (err) {
+      console.error('Failed to apply schedule:', err);
+      setScheduleError('Failed to apply schedule');
+    } finally {
+      setApplying(false);
     }
   };
 
@@ -146,6 +190,8 @@ export function MyGroupsPage() {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
     </svg>
   );
+
+  const todayStr = new Date().toISOString().split('T')[0];
 
   return (
     <>
@@ -291,13 +337,17 @@ export function MyGroupsPage() {
                           onChange={(e) => updateScheduleItem(index, 'startTime', e.target.value)}
                           className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-700 dark:text-white"
                         />
-                        <span className="text-gray-400 dark:text-gray-500">-</span>
-                        <input
-                          type="time"
-                          value={item.endTime}
-                          onChange={(e) => updateScheduleItem(index, 'endTime', e.target.value)}
+                        <select
+                          value={item.durationMinutes}
+                          onChange={(e) => updateScheduleItem(index, 'durationMinutes', Number(e.target.value))}
                           className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-700 dark:text-white"
-                        />
+                        >
+                          <option value={60}>1h</option>
+                          <option value={75}>1h 15m</option>
+                          <option value={90}>1h 30m</option>
+                          <option value={105}>1h 45m</option>
+                          <option value={120}>2h</option>
+                        </select>
                         <input
                           type="text"
                           value={item.location}
@@ -317,74 +367,86 @@ export function MyGroupsPage() {
                     ))}
                 </div>
               )}
-
-              <Button onClick={handleSaveSchedule} className="w-full mt-4">
-                Save Schedule
-              </Button>
             </div>
 
-            {/* Generate Trainings */}
-            {scheduleItems.length > 0 && (
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-4">Generate Trainings</h3>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">From</label>
-                    <input
-                      type="date"
-                      value={generateDates.fromDate}
-                      onChange={(e) =>
-                        setGenerateDates((prev) => ({ ...prev, fromDate: e.target.value }))
-                      }
-                      className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">To</label>
-                    <input
-                      type="date"
-                      value={generateDates.toDate}
-                      onChange={(e) =>
-                        setGenerateDates((prev) => ({ ...prev, toDate: e.target.value }))
-                      }
-                      className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
-                    />
-                  </div>
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Default Topic (optional)</label>
+            {/* Date Range */}
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-4">Apply to Period</h3>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">From</label>
                   <input
-                    type="text"
-                    value={generateDates.defaultTopic}
+                    type="date"
+                    value={applyDates.fromDate}
+                    min={todayStr}
                     onChange={(e) =>
-                      setGenerateDates((prev) => ({ ...prev, defaultTopic: e.target.value }))
+                      setApplyDates((prev) => ({ ...prev, fromDate: e.target.value }))
                     }
-                    placeholder="e.g., Technical training"
                     className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
-
-                {generateResult && (
-                  <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 text-green-700 dark:text-green-400 rounded-xl text-sm">
-                    Created {generateResult.created} trainings
-                    {generateResult.skipped > 0 && `, skipped ${generateResult.skipped} (already exist)`}
-                  </div>
-                )}
-
-                <div className="flex gap-3">
-                  <Button onClick={handleGenerateTrainings} className="flex-1">
-                    Generate Trainings
-                  </Button>
-                  <button
-                    onClick={handleDeleteGeneratedTrainings}
-                    className="px-4 py-2.5 text-red-600 dark:text-red-400 border border-red-300 dark:border-red-600 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 font-medium transition-colors"
-                    title="Delete future generated trainings without attendance"
-                  >
-                    Clear Future
-                  </button>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">To</label>
+                  <input
+                    type="date"
+                    value={applyDates.toDate}
+                    min={applyDates.fromDate || todayStr}
+                    max={getMaxDate(applyDates.fromDate)}
+                    onChange={(e) =>
+                      setApplyDates((prev) => ({ ...prev, toDate: e.target.value }))
+                    }
+                    className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
+                  />
                 </div>
               </div>
-            )}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Default Topic (optional)</label>
+                <input
+                  type="text"
+                  value={applyDates.defaultTopic}
+                  onChange={(e) =>
+                    setApplyDates((prev) => ({ ...prev, defaultTopic: e.target.value }))
+                  }
+                  placeholder="e.g., Technical training"
+                  className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
+                />
+              </div>
+
+              {/* Preview info */}
+              {previewLoading && (
+                <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl text-sm text-gray-500 dark:text-gray-400">
+                  Loading preview...
+                </div>
+              )}
+              {preview && !previewLoading && (
+                <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-400 rounded-xl text-sm">
+                  {preview.total > 0 ? (
+                    <>
+                      This will delete <strong>{preview.total}</strong> existing training{preview.total !== 1 ? 's' : ''}
+                      {preview.withAttendance > 0 && (
+                        <> (<strong>{preview.withAttendance}</strong> with attendance data)</>
+                      )}
+                    </>
+                  ) : (
+                    'No existing trainings in this period'
+                  )}
+                </div>
+              )}
+
+              {applyResult && (
+                <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 text-green-700 dark:text-green-400 rounded-xl text-sm">
+                  Deleted {applyResult.deleted} trainings, created {applyResult.created} trainings
+                </div>
+              )}
+
+              <Button
+                onClick={validateAndShowConfirm}
+                className="w-full"
+                disabled={applying || scheduleItems.length === 0}
+              >
+                {applying ? 'Applying...' : 'Apply Schedule'}
+              </Button>
+            </div>
 
             {scheduleError && (
               <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-xl text-sm">
@@ -393,6 +455,39 @@ export function MyGroupsPage() {
             )}
           </div>
         )}
+      </Modal>
+
+      {/* Confirmation Modal */}
+      <Modal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        title="Confirm Schedule Application"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-gray-700 dark:text-gray-300">
+            All trainings from <strong>{applyDates.fromDate}</strong> to <strong>{applyDates.toDate}</strong> will be deleted and replaced with the new schedule.
+          </p>
+          {preview && preview.total > 0 && (
+            <p className="text-amber-600 dark:text-amber-400">
+              This will remove {preview.total} training{preview.total !== 1 ? 's' : ''}
+              {preview.withAttendance > 0 && (
+                <> ({preview.withAttendance} with attendance data)</>
+              )}.
+            </p>
+          )}
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={() => setShowConfirmModal(false)}
+              className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 font-medium transition-colors"
+            >
+              Cancel
+            </button>
+            <Button onClick={handleApplySchedule} className="flex-1">
+              Confirm
+            </Button>
+          </div>
+        </div>
       </Modal>
     </>
   );

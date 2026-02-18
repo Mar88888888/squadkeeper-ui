@@ -1,25 +1,14 @@
 import { apiClient } from './client';
 
-export const AttendanceStatus = {
-  PRESENT: 'PRESENT',
-  ABSENT: 'ABSENT',
-  SICK: 'SICK',
-  LATE: 'LATE',
-  BENCHED: 'BENCHED',
-} as const;
-
-export type AttendanceStatus =
-  (typeof AttendanceStatus)[keyof typeof AttendanceStatus];
-
 export interface AttendanceRecord {
   playerId: string;
-  status: AttendanceStatus;
+  isPresent: boolean;
   notes?: string;
 }
 
 export interface Attendance {
   id: string;
-  status: AttendanceStatus;
+  isPresent: boolean;
   notes: string | null;
   player: {
     id: string;
@@ -37,10 +26,7 @@ export interface MarkAttendanceBatchRequest {
 export interface AttendanceStats {
   total: number;
   present: number;
-  late: number;
-  benched: number;
   absent: number;
-  sick: number;
   rate: number;
   totalTrainings: number;
   totalMatches: number;

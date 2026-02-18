@@ -10,7 +10,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { UserRole } from '../../types';
 import {
   attendanceApi,
-  AttendanceStatus,
   type Attendance,
   type AttendanceRecord,
 } from '../../api/attendance';
@@ -20,7 +19,6 @@ import {
   type Evaluation,
   type EvaluationRecord,
 } from '../../api/evaluations';
-import { AttendanceStatusLabels } from '../../constants/attendance.constants';
 import { PageHeader, PageContent } from '../../components/layout';
 import { Card, CardContent, Modal, Button, Avatar } from '../../components/ui';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -34,7 +32,7 @@ const EVAL_CATEGORIES = [
 
 type EvalCategory = (typeof EVAL_CATEGORIES)[number]['key'];
 
-//Icons
+// Icons
 const CalendarIcon = () => (
   <svg
     className="w-5 h-5"
@@ -105,6 +103,18 @@ const StarIcon = ({ filled = false }: { filled?: boolean }) => (
   </svg>
 );
 
+const CheckIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+  </svg>
+);
+
+const XIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
+
 // Avatar gradient colors
 const avatarColors = [
   'from-amber-400 to-orange-500',
@@ -118,32 +128,6 @@ const avatarColors = [
 
 function getPlayerColor(index: number): string {
   return avatarColors[index % avatarColors.length];
-}
-
-function getAttendanceRowStyle(status: AttendanceStatus): string {
-  switch (status) {
-    case AttendanceStatus.ABSENT:
-      return 'bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/50';
-    case AttendanceStatus.LATE:
-      return 'bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/50';
-    case AttendanceStatus.SICK:
-      return 'bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/50';
-    default:
-      return 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700';
-  }
-}
-
-function getSelectStyle(status: AttendanceStatus): string {
-  switch (status) {
-    case AttendanceStatus.ABSENT:
-      return 'border-red-200 dark:border-red-800 text-red-600 dark:text-red-400';
-    case AttendanceStatus.LATE:
-      return 'border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400';
-    case AttendanceStatus.SICK:
-      return 'border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400';
-    default:
-      return 'border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white';
-  }
 }
 
 const EditIcon = () => (
@@ -211,8 +195,9 @@ export function TrainingDetailsPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Attendance records: playerId -> isPresent
   const [attendanceRecords, setAttendanceRecords] = useState<
-    Record<string, AttendanceStatus>
+    Record<string, boolean>
   >({});
 
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerBrief | null>(
@@ -243,10 +228,10 @@ export function TrainingDetailsPage() {
       setAttendance(attendanceData);
       setEvaluations(evaluationsData);
 
-      const records: Record<string, AttendanceStatus> = {};
+      const records: Record<string, boolean> = {};
       trainingData.group.players.forEach((player) => {
         const existing = attendanceData.find((a) => a.player.id === player.id);
-        records[player.id] = existing?.status || AttendanceStatus.PRESENT;
+        records[player.id] = existing?.isPresent ?? true;
       });
       setAttendanceRecords(records);
     } catch {
@@ -260,18 +245,18 @@ export function TrainingDetailsPage() {
     loadData();
   }, [id]);
 
-  const handleAttendanceChange = (
-    playerId: string,
-    status: AttendanceStatus,
-  ) => {
-    setAttendanceRecords((prev) => ({ ...prev, [playerId]: status }));
+  const handleAttendanceToggle = (playerId: string) => {
+    setAttendanceRecords((prev) => ({
+      ...prev,
+      [playerId]: !prev[playerId],
+    }));
   };
 
   const markAllPresent = () => {
     if (!training) return;
-    const records: Record<string, AttendanceStatus> = {};
+    const records: Record<string, boolean> = {};
     training.group.players.forEach((player) => {
-      records[player.id] = AttendanceStatus.PRESENT;
+      records[player.id] = true;
     });
     setAttendanceRecords(records);
   };
@@ -284,7 +269,7 @@ export function TrainingDetailsPage() {
       const records: AttendanceRecord[] = training.group.players.map(
         (player) => ({
           playerId: player.id,
-          status: attendanceRecords[player.id] || AttendanceStatus.PRESENT,
+          isPresent: attendanceRecords[player.id] ?? true,
         }),
       );
 
@@ -294,6 +279,10 @@ export function TrainingDetailsPage() {
         records,
       });
       setAttendance(result);
+
+      // Refresh evaluations (absent players' evaluations are deleted by backend)
+      const evaluationsData = await evaluationsApi.getByTraining(id);
+      setEvaluations(evaluationsData);
     } catch {
       setError('Failed to save attendance');
     } finally {
@@ -306,6 +295,14 @@ export function TrainingDetailsPage() {
     setIsSaving(true);
     setError('');
     try {
+      // First, ensure player's attendance is saved as present
+      // (required by backend before evaluation can be saved)
+      await attendanceApi.markBatch({
+        eventId: id,
+        eventType: 'TRAINING',
+        records: [{ playerId: selectedPlayer.id, isPresent: true }],
+      });
+
       const record: EvaluationRecord = {
         playerId: selectedPlayer.id,
         technical: evalRatings.technical,
@@ -325,7 +322,7 @@ export function TrainingDetailsPage() {
       setSelectedPlayer(null);
       setEvalComment('');
     } catch {
-      setError('Failed to save evaluations');
+      setError('Failed to save evaluation');
     } finally {
       setIsSaving(false);
     }
@@ -358,16 +355,8 @@ export function TrainingDetailsPage() {
     return evaluations.find((e) => e.player.id === playerId);
   };
 
-  const getPlayerAttendance = (playerId: string): AttendanceStatus | null => {
-    const record = attendance.find((a) => a.player.id === playerId);
-    return record?.status || null;
-  };
-
   const isPlayerPresent = (playerId: string): boolean => {
-    const status = attendanceRecords[playerId] || getPlayerAttendance(playerId);
-    return (
-      status === AttendanceStatus.PRESENT || status === AttendanceStatus.LATE
-    );
+    return attendanceRecords[playerId] ?? true;
   };
 
   const canEvaluate = (playerId: string): boolean => {
@@ -450,24 +439,16 @@ export function TrainingDetailsPage() {
 
   // Calculate attendance stats
   const getAttendanceStats = () => {
-    const stats = { present: 0, absent: 0, late: 0, excused: 0 };
-    Object.values(attendanceRecords).forEach((status) => {
-      switch (status) {
-        case AttendanceStatus.PRESENT:
-          stats.present++;
-          break;
-        case AttendanceStatus.ABSENT:
-          stats.absent++;
-          break;
-        case AttendanceStatus.LATE:
-          stats.late++;
-          break;
-        case AttendanceStatus.SICK:
-          stats.excused++;
-          break;
+    let present = 0;
+    let absent = 0;
+    Object.values(attendanceRecords).forEach((isPresent) => {
+      if (isPresent) {
+        present++;
+      } else {
+        absent++;
       }
     });
-    return stats;
+    return { present, absent };
   };
 
   if (isLoading) {
@@ -491,9 +472,7 @@ export function TrainingDetailsPage() {
   const stats = getAttendanceStats();
   const totalPlayers = training.group.players.length;
   const attendancePercent =
-    totalPlayers > 0
-      ? Math.round(((stats.present + stats.late) / totalPlayers) * 100)
-      : 0;
+    totalPlayers > 0 ? Math.round((stats.present / totalPlayers) * 100) : 0;
 
   return (
     <>
@@ -586,7 +565,7 @@ export function TrainingDetailsPage() {
                     Attendance
                   </h3>
                   <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-semibold rounded-full">
-                    {stats.present + stats.late}/{totalPlayers} present
+                    {stats.present}/{totalPlayers} present
                   </span>
                 </div>
                 {canEdit && (
@@ -594,15 +573,14 @@ export function TrainingDetailsPage() {
                     onClick={markAllPresent}
                     className="text-sm text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium"
                   >
-                    Mark all
+                    Mark all present
                   </button>
                 )}
               </div>
               <CardContent>
                 <div className="space-y-3">
                   {training.group.players.map((player, index) => {
-                    const currentStatus =
-                      attendanceRecords[player.id] || AttendanceStatus.PRESENT;
+                    const isPresent = attendanceRecords[player.id] ?? true;
                     const playerEval = getPlayerEvaluation(player.id);
                     const avgRating = playerEval
                       ? getEvaluationAverage(playerEval)
@@ -612,11 +590,15 @@ export function TrainingDetailsPage() {
                     return (
                       <div
                         key={player.id}
-                        className={`flex items-center justify-between p-4 rounded-xl transition-colors ${getAttendanceRowStyle(currentStatus)}`}
+                        className={`flex items-center justify-between p-4 rounded-xl transition-colors ${
+                          isPresent
+                            ? 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            : 'bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/50'
+                        }`}
                       >
                         <div className="flex items-center gap-4">
                           <Avatar
-                            className={`bg-gradient-to-br ${currentStatus === AttendanceStatus.ABSENT ? 'from-gray-300 to-gray-400' : getPlayerColor(index)}`}
+                            className={`bg-gradient-to-br ${!isPresent ? 'from-gray-300 to-gray-400' : getPlayerColor(index)}`}
                           />
                           <div>
                             <p className="font-semibold text-gray-900 dark:text-white">
@@ -634,27 +616,27 @@ export function TrainingDetailsPage() {
                         </div>
                         <div className="flex items-center gap-3">
                           {canEdit ? (
-                            <select
-                              value={currentStatus}
-                              onChange={(e) =>
-                                handleAttendanceChange(
-                                  player.id,
-                                  e.target.value as AttendanceStatus,
-                                )
-                              }
-                              className={`px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white dark:bg-gray-800 ${getSelectStyle(currentStatus)}`}
+                            <button
+                              onClick={() => handleAttendanceToggle(player.id)}
+                              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                                isPresent
+                                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50'
+                                  : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50'
+                              }`}
                             >
-                              {Object.values(AttendanceStatus).map((status) => (
-                                <option key={status} value={status}>
-                                  {AttendanceStatusLabels[status]}
-                                </option>
-                              ))}
-                            </select>
+                              {isPresent ? <CheckIcon /> : <XIcon />}
+                              {isPresent ? 'Present' : 'Absent'}
+                            </button>
                           ) : (
                             <span
-                              className={`px-3 py-2 rounded-lg font-medium text-sm ${getSelectStyle(currentStatus)} bg-white dark:bg-gray-800`}
+                              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm ${
+                                isPresent
+                                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                                  : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                              }`}
                             >
-                              {AttendanceStatusLabels[currentStatus]}
+                              {isPresent ? <CheckIcon /> : <XIcon />}
+                              {isPresent ? 'Present' : 'Absent'}
                             </span>
                           )}
                           {canEdit && (
@@ -794,22 +776,6 @@ export function TrainingDetailsPage() {
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         Absent
-                      </p>
-                    </div>
-                    <div className="text-center p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
-                      <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-                        {stats.late}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Late
-                      </p>
-                    </div>
-                    <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                      <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                        {stats.excused}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Excused
                       </p>
                     </div>
                   </div>

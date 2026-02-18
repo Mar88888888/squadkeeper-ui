@@ -280,26 +280,14 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <div className="text-center p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
               <p className="text-xl font-bold text-green-600 dark:text-green-400">{stats.attendance.present}</p>
               <p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">Present</p>
             </div>
-            <div className="text-center p-3 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
-              <p className="text-xl font-bold text-orange-600 dark:text-orange-400">{stats.attendance.late}</p>
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">Late</p>
-            </div>
-            <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <p className="text-xl font-bold text-gray-600 dark:text-gray-400">{stats.attendance.benched}</p>
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">Benched</p>
-            </div>
             <div className="text-center p-3 bg-red-50 dark:bg-red-900/30 rounded-lg">
               <p className="text-xl font-bold text-red-600 dark:text-red-400">{stats.attendance.absent}</p>
               <p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">Absent</p>
-            </div>
-            <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg">
-              <p className="text-xl font-bold text-yellow-600 dark:text-yellow-400">{stats.attendance.sick}</p>
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">Sick</p>
             </div>
           </div>
 
