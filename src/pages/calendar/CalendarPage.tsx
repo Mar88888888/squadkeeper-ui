@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, type CalendarEvent } from '../../components/Calendar';
-import { trainingsApi, type Training } from '../../api/trainings';
+import { trainingsApi, getTrainingEndTime, type Training } from '../../api/trainings';
 import { matchesApi, type Match } from '../../api/matches';
 import { groupsApi, type GroupInfo } from '../../api/groups';
 import { useAuth } from '../../contexts/AuthContext';
@@ -113,7 +113,7 @@ export function CalendarPage() {
       type: 'training' as const,
       title: t.topic || 'Training',
       startTime: t.startTime,
-      endTime: t.endTime,
+      endTime: getTrainingEndTime(t).toISOString(),
       group: t.group.name,
     }));
 
@@ -355,24 +355,6 @@ export function CalendarPage() {
                 </div>
               </Card>
 
-              {/* Stats */}
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">This Month</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
-                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                      {events.filter(e => e.type === 'training').length}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Trainings</p>
-                  </div>
-                  <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                      {events.filter(e => e.type === 'match').length}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Matches</p>
-                  </div>
-                </div>
-              </Card>
             </div>
           </div>
         )}

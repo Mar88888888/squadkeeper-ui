@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import {
   trainingsApi,
+  getTrainingEndTime,
   type TrainingDetails,
   type PlayerBrief,
+  type UpdateTrainingRequest,
 } from '../../api/trainings';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserRole } from '../../types';
@@ -21,7 +23,7 @@ import {
 import { AttendanceStatusLabels } from '../../constants/attendance.constants';
 import { PageHeader, PageContent } from '../../components/layout';
 import { Card, CardContent, Modal, Button, Avatar } from '../../components/ui';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 const EVAL_CATEGORIES = [
   { key: 'technical', label: 'Technical' },
@@ -144,8 +146,46 @@ function getSelectStyle(status: AttendanceStatus): string {
   }
 }
 
+const EditIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+    />
+  </svg>
+);
+
+const TrashIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+    />
+  </svg>
+);
+
+function formatDateTimeLocal(date: Date): string {
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 export function TrainingDetailsPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   const canEdit =
@@ -157,6 +197,19 @@ export function TrainingDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+
+  // Edit modal state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    startTime: '',
+    durationMinutes: 90,
+    location: '',
+    topic: '',
+  });
+
+  // Delete confirmation state
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [attendanceRecords, setAttendanceRecords] = useState<
     Record<string, AttendanceStatus>
@@ -332,18 +385,67 @@ export function TrainingDetailsPage() {
     });
   };
 
-  const formatTime = (startStr: string, endStr: string) => {
-    const start = new Date(startStr).toLocaleTimeString('en-US', {
+  const formatTimeRange = (training: {
+    startTime: string;
+    durationMinutes: number;
+  }) => {
+    const start = new Date(training.startTime).toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
     });
-    const end = new Date(endStr).toLocaleTimeString('en-US', {
+    const end = getTrainingEndTime(training).toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
     });
     return `${start} - ${end}`;
+  };
+
+  const openEditModal = () => {
+    if (!training) return;
+    setEditForm({
+      startTime: formatDateTimeLocal(new Date(training.startTime)),
+      durationMinutes: training.durationMinutes,
+      location: training.location,
+      topic: training.topic || '',
+    });
+    setIsEditModalOpen(true);
+    setError('');
+  };
+
+  const handleUpdate = async () => {
+    if (!id || !training) return;
+    setIsSaving(true);
+    setError('');
+    try {
+      const updateData: UpdateTrainingRequest = {
+        startTime: new Date(editForm.startTime).toISOString(),
+        durationMinutes: editForm.durationMinutes,
+        location: editForm.location,
+        topic: editForm.topic || undefined,
+      };
+      await trainingsApi.update(id, updateData);
+      setIsEditModalOpen(false);
+      loadData();
+    } catch {
+      setError('Failed to update training');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!id) return;
+    setIsDeleting(true);
+    setError('');
+    try {
+      await trainingsApi.delete(id);
+      navigate('/trainings');
+    } catch {
+      setError('Failed to delete training');
+      setIsDeleting(false);
+    }
   };
 
   // Calculate attendance stats
@@ -400,9 +502,20 @@ export function TrainingDetailsPage() {
         subtitle={training.group.name}
         actions={
           canEdit && (
-            <Button onClick={saveAttendance} disabled={isSaving}>
-              {isSaving ? 'Saving...' : 'Save'}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" onClick={openEditModal}>
+                <EditIcon />
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => setIsDeleteModalOpen(true)}
+              >
+                <TrashIcon />
+              </Button>
+              <Button onClick={saveAttendance} disabled={isSaving}>
+                {isSaving ? 'Saving...' : 'Save'}
+              </Button>
+            </div>
           )
         }
       />
@@ -450,9 +563,7 @@ export function TrainingDetailsPage() {
                 <span className="text-green-200">
                   <ClockIcon />
                 </span>
-                <span className="font-medium">
-                  {formatTime(training.startTime, training.endTime)}
-                </span>
+                <span className="font-medium">{formatTimeRange(training)}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-green-200">
@@ -824,6 +935,154 @@ export function TrainingDetailsPage() {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Edit Training Modal */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title="Edit Training"
+      >
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Topic (optional)
+            </label>
+            <input
+              type="text"
+              value={editForm.topic}
+              onChange={(e) =>
+                setEditForm((prev) => ({ ...prev, topic: e.target.value }))
+              }
+              placeholder="e.g., Ball control & passing drills"
+              className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Date & Time
+              </label>
+              <input
+                type="datetime-local"
+                value={editForm.startTime}
+                min={formatDateTimeLocal(new Date())}
+                onChange={(e) =>
+                  setEditForm((prev) => ({
+                    ...prev,
+                    startTime: e.target.value,
+                  }))
+                }
+                className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Duration
+              </label>
+              <select
+                value={editForm.durationMinutes}
+                onChange={(e) =>
+                  setEditForm((prev) => ({
+                    ...prev,
+                    durationMinutes: Number(e.target.value),
+                  }))
+                }
+                className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
+              >
+                <option value={60}>1 hour</option>
+                <option value={90}>1.5 hours</option>
+                <option value={120}>2 hours</option>
+                <option value={150}>2.5 hours</option>
+                <option value={180}>3 hours</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Location
+            </label>
+            <select
+              value={editForm.location}
+              onChange={(e) =>
+                setEditForm((prev) => ({ ...prev, location: e.target.value }))
+              }
+              className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
+            >
+              <option value="Main Field">Main Field</option>
+              <option value="Training Field 2">Training Field 2</option>
+              <option value="Gym">Gym</option>
+              <option value="Indoor Arena">Indoor Arena</option>
+            </select>
+          </div>
+
+          {error && (
+            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-xl text-sm">
+              {error}
+            </div>
+          )}
+
+          <div className="flex items-center gap-3 pt-2">
+            <Button
+              variant="secondary"
+              onClick={() => setIsEditModalOpen(false)}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdate}
+              disabled={isSaving}
+              className="flex-1"
+            >
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Delete Training"
+      >
+        <div className="space-y-4">
+          <p className="text-gray-600 dark:text-gray-400">
+            Are you sure you want to delete this training? This action cannot be
+            undone.
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-500">
+            All attendance records and evaluations for this training will also
+            be deleted.
+          </p>
+
+          {error && (
+            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-xl text-sm">
+              {error}
+            </div>
+          )}
+
+          <div className="flex items-center gap-3 pt-2">
+            <Button
+              variant="secondary"
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="flex-1"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete Training'}
+            </Button>
+          </div>
+        </div>
       </Modal>
     </>
   );

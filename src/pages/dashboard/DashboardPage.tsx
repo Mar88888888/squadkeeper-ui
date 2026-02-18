@@ -9,7 +9,7 @@ import {
   type AttendanceStats,
   type PlayerAttendanceStats,
 } from '../../api/attendance';
-import { trainingsApi, type Training } from '../../api/trainings';
+import { trainingsApi, getTrainingEndTime, type Training } from '../../api/trainings';
 import { matchesApi, type Match } from '../../api/matches';
 import {
   statsApi,
@@ -316,7 +316,12 @@ export function DashboardPage() {
               <div className="flex items-center gap-6 flex-wrap">
                 <div className="flex items-center gap-2">
                   <div className="text-green-200"><ClockIcon /></div>
-                  <span className="font-medium">{formatEventTime(upcomingEvent.data.startTime, upcomingEvent.data.endTime)}</span>
+                  <span className="font-medium">{formatEventTime(
+                    upcomingEvent.data.startTime,
+                    upcomingEvent.type === 'training'
+                      ? getTrainingEndTime(upcomingEvent.data).toISOString()
+                      : upcomingEvent.data.endTime
+                  )}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="text-green-200"><LocationIcon /></div>

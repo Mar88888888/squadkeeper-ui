@@ -126,7 +126,7 @@ export function UserManagementPage() {
         email: player.user.email,
         role: 'player',
         subtitle: POSITION_LABELS[player.position as Position] || player.position,
-        group: player.group ? `${player.group.name} (${player.group.ageGroup})` : '-',
+        group: player.group?.name || '-',
         originalData: player,
       });
     });

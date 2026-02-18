@@ -1,11 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { PageHeader, PageContent } from '../../components/layout';
-import { Button, Card, Badge, Modal, Select, Tabs, EmptyState } from '../../components/ui';
+import {
+  Button,
+  Card,
+  Badge,
+  Modal,
+  Tabs,
+  EmptyState,
+} from '../../components/ui';
 import {
   trainingsApi,
+  getTrainingEndTime,
   type Training,
   type TrainingTimeFilter,
   type TrainingFilters,
@@ -23,38 +31,97 @@ const TIME_FILTER_OPTIONS = [
 ];
 
 const PlusIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 4v16m8-8H4"
+    />
   </svg>
 );
 
 const TrainingIcon = () => (
-  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z"/>
+  <svg
+    className="w-7 h-7"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M13 10V3L4 14h7v7l9-11h-7z"
+    />
   </svg>
 );
 
 const ClockIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
   </svg>
 );
 
 const LocationIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+    />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+    />
   </svg>
 );
 
 const SearchIcon = () => (
-  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+  <svg
+    className="w-5 h-5 text-gray-400"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+    />
   </svg>
 );
 
 function formatTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+  return new Date(dateStr).toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
 }
 
 function formatDateTimeLocal(date: Date): string {
@@ -66,7 +133,9 @@ function formatDateForApi(date: Date): string {
   return date.toISOString().split('T')[0];
 }
 
-function groupTrainingsByDate(trainings: Training[]): Record<string, Training[]> {
+function groupTrainingsByDate(
+  trainings: Training[],
+): Record<string, Training[]> {
   const grouped: Record<string, Training[]> = {};
   const now = new Date();
   const today = now.toDateString();
@@ -84,7 +153,11 @@ function groupTrainingsByDate(trainings: Training[]): Record<string, Training[]>
     } else if (dateStr === tomorrowStr) {
       key = 'Tomorrow';
     } else {
-      key = date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+      key = date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'short',
+        day: 'numeric',
+      });
     }
 
     if (!grouped[key]) grouped[key] = [];
@@ -95,7 +168,6 @@ function groupTrainingsByDate(trainings: Training[]): Record<string, Training[]>
 }
 
 export function TrainingsPage() {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [groups, setGroups] = useState<GroupInfo[]>([]);
@@ -116,7 +188,8 @@ export function TrainingsPage() {
     topic: '',
   });
 
-  const canCreate = user?.role === UserRole.ADMIN || user?.role === UserRole.COACH;
+  const canCreate =
+    user?.role === UserRole.ADMIN || user?.role === UserRole.COACH;
 
   const buildFilters = useCallback((): TrainingFilters => {
     const filters: TrainingFilters = {};
@@ -151,8 +224,16 @@ export function TrainingsPage() {
 
   const filteredTrainings = trainings
     .filter((t) => !filterGroupId || t.group.id === filterGroupId)
-    .filter((t) => !searchQuery || t.topic?.toLowerCase().includes(searchQuery.toLowerCase()) || t.location.toLowerCase().includes(searchQuery.toLowerCase()))
-    .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+    .filter(
+      (t) =>
+        !searchQuery ||
+        t.topic?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.location.toLowerCase().includes(searchQuery.toLowerCase()),
+    )
+    .sort(
+      (a, b) =>
+        new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
+    );
 
   const groupedTrainings = groupTrainingsByDate(filteredTrainings);
 
@@ -187,13 +268,12 @@ export function TrainingsPage() {
     }
 
     const start = new Date(formData.startTime);
-    const end = new Date(start.getTime() + formData.duration * 60 * 1000);
 
     try {
       const newTraining = await trainingsApi.create({
         groupId: formData.groupId,
         startTime: start.toISOString(),
-        endTime: end.toISOString(),
+        durationMinutes: formData.duration,
         location: formData.location,
         topic: formData.topic,
       });
@@ -245,7 +325,9 @@ export function TrainingsPage() {
               >
                 <option value="">All groups</option>
                 {groups.map((group) => (
-                  <option key={group.id} value={group.id}>{group.name}</option>
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
                 ))}
               </select>
               <DatePicker
@@ -294,7 +376,11 @@ export function TrainingsPage() {
             }}
           />
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Found: <span className="font-semibold text-gray-900 dark:text-white">{filteredTrainings.length}</span> trainings
+            Found:{' '}
+            <span className="font-semibold text-gray-900 dark:text-white">
+              {filteredTrainings.length}
+            </span>{' '}
+            trainings
           </p>
         </div>
 
@@ -312,73 +398,120 @@ export function TrainingsPage() {
           </div>
         ) : filteredTrainings.length === 0 ? (
           <EmptyState
-            title={trainings.length === 0 ? 'No trainings scheduled' : 'No trainings found'}
-            description={trainings.length === 0 ? 'Start by scheduling your first training session.' : 'No trainings match your current filters.'}
-            action={canCreate && trainings.length === 0 ? <Button onClick={openCreateModal}>Schedule Training</Button> : undefined}
+            title={
+              trainings.length === 0
+                ? 'No trainings scheduled'
+                : 'No trainings found'
+            }
+            description={
+              trainings.length === 0
+                ? 'Start by scheduling your first training session.'
+                : 'No trainings match your current filters.'
+            }
+            action={
+              canCreate && trainings.length === 0 ? (
+                <Button onClick={openCreateModal}>Schedule Training</Button>
+              ) : undefined
+            }
           />
         ) : (
           <div className="space-y-6">
-            {Object.entries(groupedTrainings).map(([dateLabel, dateTrainings]) => (
-              <div key={dateLabel}>
-                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">{dateLabel}</h3>
-                <div className="space-y-3">
-                  {dateTrainings.map((training) => (
-                    <Link
-                      key={training.id}
-                      to={`/trainings/${training.id}`}
-                      className={`block bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow overflow-hidden group ${
-                        !isUpcoming(training.startTime) ? 'opacity-70' : ''
-                      }`}
-                    >
-                      <div className="flex">
-                        <div className={`w-2 ${isUpcoming(training.startTime) ? 'bg-gradient-to-b from-green-500 to-emerald-600' : 'bg-gray-300 dark:bg-gray-700'}`} />
-                        <div className="flex-1 p-5">
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-start gap-4">
-                              <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${
-                                isUpcoming(training.startTime)
-                                  ? 'bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30'
-                                  : 'bg-gray-100 dark:bg-gray-800'
-                              }`}>
-                                <span className={isUpcoming(training.startTime) ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}>
-                                  <TrainingIcon />
-                                </span>
-                              </div>
-                              <div>
-                                <h4 className={`text-lg font-semibold group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors ${
-                                  isUpcoming(training.startTime) ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'
-                                }`}>
-                                  Training Session
-                                </h4>
-                                {training.topic && (
-                                  <p className="text-sm text-gray-500 dark:text-gray-400">Topic: {training.topic}</p>
-                                )}
-                                <div className="flex items-center gap-4 mt-1">
-                                  <span className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
-                                    <ClockIcon />
-                                    {formatTime(training.startTime)} - {formatTime(training.endTime)}
-                                  </span>
-                                  <span className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
-                                    <LocationIcon />
-                                    {training.location}
+            {Object.entries(groupedTrainings).map(
+              ([dateLabel, dateTrainings]) => (
+                <div key={dateLabel}>
+                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                    {dateLabel}
+                  </h3>
+                  <div className="space-y-3">
+                    {dateTrainings.map((training) => (
+                      <Link
+                        key={training.id}
+                        to={`/trainings/${training.id}`}
+                        className={`block bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow overflow-hidden group ${
+                          !isUpcoming(training.startTime) ? 'opacity-70' : ''
+                        }`}
+                      >
+                        <div className="flex">
+                          <div
+                            className={`w-2 ${isUpcoming(training.startTime) ? 'bg-gradient-to-b from-green-500 to-emerald-600' : 'bg-gray-300 dark:bg-gray-700'}`}
+                          />
+                          <div className="flex-1 p-5">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-start gap-4">
+                                <div
+                                  className={`w-14 h-14 rounded-xl flex items-center justify-center ${
+                                    isUpcoming(training.startTime)
+                                      ? 'bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30'
+                                      : 'bg-gray-100 dark:bg-gray-800'
+                                  }`}
+                                >
+                                  <span
+                                    className={
+                                      isUpcoming(training.startTime)
+                                        ? 'text-green-600 dark:text-green-400'
+                                        : 'text-gray-400'
+                                    }
+                                  >
+                                    <TrainingIcon />
                                   </span>
                                 </div>
+                                <div>
+                                  <h4
+                                    className={`text-lg font-semibold group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors ${
+                                      isUpcoming(training.startTime)
+                                        ? 'text-gray-900 dark:text-white'
+                                        : 'text-gray-500 dark:text-gray-400'
+                                    }`}
+                                  >
+                                    Training Session
+                                  </h4>
+                                  {training.topic && (
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                      Topic: {training.topic}
+                                    </p>
+                                  )}
+                                  <div className="flex items-center gap-4 mt-1">
+                                    <span className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
+                                      <ClockIcon />
+                                      {formatTime(training.startTime)} -{' '}
+                                      {formatTime(
+                                        getTrainingEndTime(
+                                          training,
+                                        ).toISOString(),
+                                      )}
+                                    </span>
+                                    <span className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
+                                      <LocationIcon />
+                                      {training.location}
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <Badge variant="info">{training.group.name}</Badge>
-                              <Badge variant={isUpcoming(training.startTime) ? 'success' : 'default'}>
-                                {isUpcoming(training.startTime) ? 'Planned' : 'Completed'}
-                              </Badge>
+                              <div className="flex items-center gap-3">
+                                <Badge variant="info">
+                                  {training.group.name}
+                                </Badge>
+                                <Badge
+                                  variant={
+                                    isUpcoming(training.startTime)
+                                      ? 'success'
+                                      : 'default'
+                                  }
+                                >
+                                  {isUpcoming(training.startTime)
+                                    ? 'Planned'
+                                    : 'Completed'}
+                                </Badge>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </Link>
-                  ))}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ),
+            )}
           </div>
         )}
       </PageContent>
@@ -391,52 +524,79 @@ export function TrainingsPage() {
         size="lg"
         footer={
           <>
-            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+              Cancel
+            </Button>
             <Button onClick={handleCreate}>Create Training</Button>
           </>
         }
       >
         <div className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Topic (optional)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Topic (optional)
+            </label>
             <input
               type="text"
               value={formData.topic}
-              onChange={(e) => setFormData((prev) => ({ ...prev, topic: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, topic: e.target.value }))
+              }
               placeholder="e.g., Ball control & passing drills"
               className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Group *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Group *
+            </label>
             <select
               value={formData.groupId}
-              onChange={(e) => setFormData((prev) => ({ ...prev, groupId: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, groupId: e.target.value }))
+              }
               className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
             >
               <option value="">Select group</option>
               {groups.map((group) => (
-                <option key={group.id} value={group.id}>{group.name}</option>
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
               ))}
             </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date & Time *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Date & Time *
+              </label>
               <input
                 type="datetime-local"
                 value={formData.startTime}
-                onChange={(e) => setFormData((prev) => ({ ...prev, startTime: e.target.value }))}
+                min={formatDateTimeLocal(new Date())}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    startTime: e.target.value,
+                  }))
+                }
                 className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Duration *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Duration *
+              </label>
               <select
                 value={formData.duration}
-                onChange={(e) => setFormData((prev) => ({ ...prev, duration: Number(e.target.value) }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    duration: Number(e.target.value),
+                  }))
+                }
                 className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
               >
                 <option value={60}>1 hour</option>
@@ -449,10 +609,14 @@ export function TrainingsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Location *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Location *
+            </label>
             <select
               value={formData.location}
-              onChange={(e) => setFormData((prev) => ({ ...prev, location: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, location: e.target.value }))
+              }
               className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
             >
               <option value="">Select location</option>

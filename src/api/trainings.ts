@@ -3,13 +3,17 @@ import { apiClient } from './client';
 export interface Training {
   id: string;
   startTime: string;
-  endTime: string;
+  durationMinutes: number;
   location: string;
   topic?: string;
   group: {
     id: string;
     name: string;
   };
+}
+
+export function getTrainingEndTime(training: { startTime: string; durationMinutes: number }): Date {
+  return new Date(new Date(training.startTime).getTime() + training.durationMinutes * 60000);
 }
 
 export interface PlayerBrief {
@@ -30,8 +34,16 @@ export interface TrainingDetails extends Training {
 export interface CreateTrainingRequest {
   groupId: string;
   startTime: string;
-  endTime: string;
+  durationMinutes: number;
   location: string;
+  topic?: string;
+}
+
+export interface UpdateTrainingRequest {
+  groupId?: string;
+  startTime?: string;
+  durationMinutes?: number;
+  location?: string;
   topic?: string;
 }
 
@@ -89,5 +101,14 @@ export const trainingsApi = {
   create: async (data: CreateTrainingRequest): Promise<Training> => {
     const response = await apiClient.post<Training>('/trainings', data);
     return response.data;
+  },
+
+  update: async (id: string, data: UpdateTrainingRequest): Promise<Training> => {
+    const response = await apiClient.patch<Training>(`/trainings/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`/trainings/${id}`);
   },
 };

@@ -18,7 +18,7 @@ describe('trainingsApi', () => {
   describe('getAll', () => {
     it('should call GET /trainings without filters', async () => {
       const mockTrainings = [
-        { id: '1', startTime: '2024-01-01T10:00:00Z', endTime: '2024-01-01T12:00:00Z', location: 'Field A', group: { id: 'g1', name: 'U12' } },
+        { id: '1', startTime: '2024-01-01T10:00:00Z', durationMinutes: 120, location: 'Field A', group: { id: 'g1', name: 'U12' } },
       ];
       mockApiClient.get.mockResolvedValue({ data: mockTrainings });
 
@@ -55,7 +55,7 @@ describe('trainingsApi', () => {
 
   describe('getMy', () => {
     it('should call GET /trainings/my', async () => {
-      const mockTrainings = [{ id: '1', startTime: '2024-01-01T10:00:00Z', endTime: '2024-01-01T12:00:00Z', location: 'Field A', group: { id: 'g1', name: 'U12' } }];
+      const mockTrainings = [{ id: '1', startTime: '2024-01-01T10:00:00Z', durationMinutes: 120, location: 'Field A', group: { id: 'g1', name: 'U12' } }];
       mockApiClient.get.mockResolvedValue({ data: mockTrainings });
 
       const result = await trainingsApi.getMy();
@@ -78,7 +78,7 @@ describe('trainingsApi', () => {
       const mockTraining = {
         id: '123',
         startTime: '2024-01-01T10:00:00Z',
-        endTime: '2024-01-01T12:00:00Z',
+        durationMinutes: 120,
         location: 'Field A',
         group: { id: 'g1', name: 'U12', players: [] },
       };
@@ -93,7 +93,7 @@ describe('trainingsApi', () => {
 
   describe('getByGroup', () => {
     it('should call GET /trainings/group/:groupId', async () => {
-      const mockTrainings = [{ id: '1', startTime: '2024-01-01T10:00:00Z', endTime: '2024-01-01T12:00:00Z', location: 'Field A', group: { id: 'g1', name: 'U12' } }];
+      const mockTrainings = [{ id: '1', startTime: '2024-01-01T10:00:00Z', durationMinutes: 120, location: 'Field A', group: { id: 'g1', name: 'U12' } }];
       mockApiClient.get.mockResolvedValue({ data: mockTrainings });
 
       const result = await trainingsApi.getByGroup('g1');
@@ -108,7 +108,7 @@ describe('trainingsApi', () => {
       const createData = {
         groupId: 'g1',
         startTime: '2024-01-01T10:00:00Z',
-        endTime: '2024-01-01T12:00:00Z',
+        durationMinutes: 120,
         location: 'Field A',
         topic: 'Passing drills',
       };
@@ -129,7 +129,7 @@ describe('trainingsApi', () => {
         trainingsApi.create({
           groupId: 'g1',
           startTime: '2024-01-01T10:00:00Z',
-          endTime: '2024-01-01T12:00:00Z',
+          durationMinutes: 120,
           location: 'Field A',
         }),
       ).rejects.toThrow('Failed to create training');
