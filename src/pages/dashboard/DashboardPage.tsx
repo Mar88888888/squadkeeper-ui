@@ -1,41 +1,110 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserRole } from '../../types';
-import { attendanceApi, type AttendanceStats, type PlayerAttendanceStats } from '../../api/attendance';
+import { PageHeader, PageContent } from '../../components/layout';
+import { StatCard, Card, CardHeader, CardTitle, CardContent, Badge } from '../../components/ui';
+import {
+  attendanceApi,
+  type AttendanceStats,
+  type PlayerAttendanceStats,
+} from '../../api/attendance';
 import { trainingsApi, type Training } from '../../api/trainings';
 import { matchesApi, type Match } from '../../api/matches';
-import { statsApi, type PlayerStats } from '../../api/stats';
+import {
+  statsApi,
+  type ChildInfo,
+  type ChildrenStats,
+  type PlayerStats,
+} from '../../api/stats';
 import { evaluationsApi, type RatingStats } from '../../api/evaluations';
-import { usersApi } from '../../api/users';
-import { roleColors } from '../../constants/colors';
-import { UpcomingEventCard } from '../../components/dashboard/UpcomingEventCard';
-import { QuickStatsRow, statIcons } from '../../components/dashboard/QuickStatsRow';
-import { PerformanceScoreRing, defaultBreakdownColors } from '../../components/dashboard/PerformanceScoreRing';
+import { PerformanceScoreRing } from '../../components/dashboard/PerformanceScoreRing';
 import { RatingTrendChart } from '../../components/dashboard/RatingTrendChart';
-import { CompactNavigation, navIcons } from '../../components/dashboard/CompactNavigation';
-import { ParentUpcomingEvents } from '../../components/dashboard/ParentUpcomingEvents';
-import { ThemeToggle } from '../../components/ThemeToggle';
 
-const roleLabels: Record<UserRole, string> = {
-  [UserRole.ADMIN]: 'Administrator',
-  [UserRole.COACH]: 'Coach',
-  [UserRole.PLAYER]: 'Player',
-  [UserRole.PARENT]: 'Parent',
-};
+// Icons
+const PlayersIcon = () => (
+  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+  </svg>
+);
 
-type UpcomingEvent =
-  | { type: 'training'; data: Training }
-  | { type: 'match'; data: Match };
+const GroupsIcon = () => (
+  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+  </svg>
+);
+
+const TrainingsIcon = () => (
+  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z"/>
+  </svg>
+);
+
+const MatchesIcon = () => (
+  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
+  </svg>
+);
+
+const GoalsIcon = () => (
+  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10" strokeWidth={2}/>
+    <circle cx="12" cy="12" r="3" strokeWidth={2}/>
+  </svg>
+);
+
+const AttendanceIcon = () => (
+  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+  </svg>
+);
+
+const ClockIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+  </svg>
+);
+
+const LocationIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+  </svg>
+);
+
+const TeamIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+  </svg>
+);
+
+const PlusIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
+  </svg>
+);
+
+const StatsIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+  </svg>
+);
+
+const SquadsIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
+  </svg>
+);
+
+type UpcomingEvent = { type: 'training'; data: Training } | { type: 'match'; data: Match };
 
 function findNextEvent(trainings: Training[], matches: Match[]): UpcomingEvent | null {
   const now = new Date();
-
   const upcomingTrainings = trainings
-    .filter(t => new Date(t.startTime) > now)
+    .filter((t) => new Date(t.startTime) > now)
     .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
-
   const upcomingMatches = matches
-    .filter(m => new Date(m.startTime) > now)
+    .filter((m) => new Date(m.startTime) > now)
     .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
 
   const nextTraining = upcomingTrainings[0];
@@ -50,25 +119,55 @@ function findNextEvent(trainings: Training[], matches: Match[]): UpcomingEvent |
     : { type: 'match', data: nextMatch };
 }
 
-interface ChildWithGroup {
-  id: string;
-  firstName: string;
-  lastName: string;
-  groupId: string | null;
+function formatEventTime(startTime: string, endTime: string): string {
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  return `${start.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })} - ${end.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}`;
+}
+
+function getTimeUntil(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diff = date.getTime() - now.getTime();
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const days = Math.floor(hours / 24);
+
+  if (days > 0) return `in ${days} day${days > 1 ? 's' : ''}`;
+  if (hours > 0) return `in ${hours} hour${hours > 1 ? 's' : ''}`;
+  return 'soon';
+}
+
+function formatEventDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const time = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+  if (date.toDateString() === now.toDateString()) return `Today, ${time}`;
+  if (date.toDateString() === tomorrow.toDateString()) return `Tomorrow, ${time}`;
+
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
 }
 
 export function DashboardPage() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [attendanceStats, setAttendanceStats] = useState<AttendanceStats | null>(null);
   const [childrenStats, setChildrenStats] = useState<PlayerAttendanceStats[]>([]);
   const [upcomingEvent, setUpcomingEvent] = useState<UpcomingEvent | null>(null);
+  const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
   const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
   const [ratingStats, setRatingStats] = useState<RatingStats | null>(null);
-  // Parent-specific state
-  const [parentTrainings, setParentTrainings] = useState<Training[]>([]);
-  const [parentMatches, setParentMatches] = useState<Match[]>([]);
-  const [childrenWithGroups, setChildrenWithGroups] = useState<ChildWithGroup[]>([]);
+  const [childrenWithGroups, setChildrenWithGroups] = useState<ChildInfo[]>([]);
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -87,80 +186,45 @@ export function DashboardPage() {
           setPlayerStats(stats);
           setAttendanceStats(attendance);
           setRatingStats(ratings);
+
+          // Build upcoming events list
+          const events: UpcomingEvent[] = [
+            ...trainings.slice(0, 3).map((t): UpcomingEvent => ({ type: 'training', data: t })),
+            ...matches.slice(0, 3).map((m): UpcomingEvent => ({ type: 'match', data: m })),
+          ].sort((a, b) => new Date(a.data.startTime).getTime() - new Date(b.data.startTime).getTime()).slice(0, 3);
+          setUpcomingEvents(events);
         } else if (user?.role === UserRole.PARENT) {
           const [trainings, matches, attendanceStats, childrenData] = await Promise.all([
             trainingsApi.getMy({ timeFilter: 'upcoming' }).catch(() => []),
             matchesApi.getMy({ timeFilter: 'upcoming' }).catch(() => []),
-            attendanceApi.getMyStatsAsParent().catch(() => []),
-            statsApi.getChildrenStats().catch(() => ({ children: [], stats: null })),
+            attendanceApi.getMyStatsAsParent().catch((): PlayerAttendanceStats[] => []),
+            statsApi.getChildrenStats().catch((): ChildrenStats => ({ children: [] })),
           ]);
 
-          // Build children info - prefer childrenData as it's more reliable
-          let childrenFromStats: ChildWithGroup[] = [];
-
           if (childrenData.children.length > 0) {
-            // Use children from stats API
-            childrenFromStats = childrenData.children.map(c => ({
-              id: c.id,
-              firstName: c.firstName,
-              lastName: c.lastName,
-              groupId: null as string | null,
-            }));
-          } else if (attendanceStats.length > 0) {
-            // Fallback to attendance stats
-            childrenFromStats = attendanceStats.map(s => {
-              const nameParts = s.playerName.split(' ');
-              return {
-                id: s.playerId,
-                firstName: nameParts[0] || '',
-                lastName: nameParts.slice(1).join(' ') || '',
-                groupId: null as string | null,
-              };
-            });
+            setChildrenWithGroups(childrenData.children);
           }
 
-          // Collect all unique group IDs from events
-          const eventGroups = new Set<string>();
-          trainings.forEach(t => eventGroups.add(t.group.id));
-          matches.forEach(m => eventGroups.add(m.group.id));
-
-          // If single child, assign all groups to them
-          // If multiple children and multiple groups, we can't determine mapping without more data
-          if (childrenFromStats.length === 1 && eventGroups.size > 0) {
-            // Single child - all events are theirs, pick first group for mapping
-            childrenFromStats[0].groupId = Array.from(eventGroups)[0];
-            // Actually, add all groups for this child
-            const allGroupIds = Array.from(eventGroups);
-            // We need to handle multiple groups for single child
-            // For now, we'll show child name for all events
-          }
-
-          // For the component, we need to map groups to children
-          // If we have same number of children and groups, try to match them
-          // Otherwise, show group names as fallback
-          const childrenWithGroupInfo = childrenFromStats.map((child, index) => {
-            const groupIds = Array.from(eventGroups);
-            // If single child, they get all groups
-            // If multiple children and same count as groups, assign 1:1
-            if (childrenFromStats.length === 1) {
-              return { ...child, groupId: groupIds[0] || null };
-            }
-            if (childrenFromStats.length === groupIds.length) {
-              return { ...child, groupId: groupIds[index] || null };
-            }
-            return child;
-          });
-
-          setParentTrainings(trainings);
-          setParentMatches(matches);
-          setChildrenWithGroups(childrenWithGroupInfo);
+          setUpcomingEvent(findNextEvent(trainings, matches));
           setChildrenStats(attendanceStats);
-        } else if (user?.role === UserRole.COACH) {
+
+          const events: UpcomingEvent[] = [
+            ...trainings.slice(0, 3).map((t): UpcomingEvent => ({ type: 'training', data: t })),
+            ...matches.slice(0, 3).map((m): UpcomingEvent => ({ type: 'match', data: m })),
+          ].sort((a, b) => new Date(a.data.startTime).getTime() - new Date(b.data.startTime).getTime()).slice(0, 3);
+          setUpcomingEvents(events);
+        } else if (user?.role === UserRole.COACH || user?.role === UserRole.ADMIN) {
           const [trainings, matches] = await Promise.all([
             trainingsApi.getMy({ timeFilter: 'upcoming' }).catch(() => []),
             matchesApi.getMy({ timeFilter: 'upcoming' }).catch(() => []),
           ]);
           setUpcomingEvent(findNextEvent(trainings, matches));
+
+          const events: UpcomingEvent[] = [
+            ...trainings.slice(0, 3).map((t): UpcomingEvent => ({ type: 'training', data: t })),
+            ...matches.slice(0, 3).map((m): UpcomingEvent => ({ type: 'match', data: m })),
+          ].sort((a, b) => new Date(a.data.startTime).getTime() - new Date(b.data.startTime).getTime()).slice(0, 3);
+          setUpcomingEvents(events);
         }
       } finally {
         setLoading(false);
@@ -170,273 +234,259 @@ export function DashboardPage() {
     loadDashboardData();
   }, [user]);
 
-  const playerNavItems = [
-    { to: '/trainings', label: 'Trainings', icon: navIcons.trainings },
-    { to: '/matches', label: 'Matches', icon: navIcons.matches },
-    { to: '/calendar', label: 'Calendar', icon: navIcons.calendar },
-    { to: '/stats/my', label: 'My Stats', icon: navIcons.stats },
-    { to: '/contacts', label: 'Contacts', icon: navIcons.contacts },
-  ];
-
-  const parentNavItems = [
-    { to: '/trainings', label: 'Trainings', icon: navIcons.trainings },
-    { to: '/matches', label: 'Matches', icon: navIcons.matches },
-    { to: '/calendar', label: 'Calendar', icon: navIcons.calendar },
-    { to: '/stats/children', label: 'Child Stats', icon: navIcons.children },
-    { to: '/contacts', label: 'Contacts', icon: navIcons.contacts },
-  ];
-
-  const coachNavItems = [
-    { to: '/trainings', label: 'Trainings', icon: navIcons.trainings },
-    { to: '/matches', label: 'Matches', icon: navIcons.matches },
-    { to: '/calendar', label: 'Calendar', icon: navIcons.calendar },
-    { to: '/stats/team', label: 'Team Stats', icon: navIcons.stats },
-    { to: '/my-groups', label: 'My Groups', icon: navIcons.groups },
-    { to: '/squads', label: 'Squads', icon: navIcons.squads },
-    { to: '/analytics/performance', label: 'Performance', icon: navIcons.performance },
-  ];
-
-  const adminNavItems = [
-    { to: '/admin/users', label: 'Create User', icon: navIcons.users },
-    { to: '/admin/users/list', label: 'User List', icon: navIcons.groups },
-    { to: '/admin/groups', label: 'Groups', icon: navIcons.groups },
-    { to: '/trainings', label: 'Trainings', icon: navIcons.trainings },
-    { to: '/matches', label: 'Matches', icon: navIcons.matches },
-    { to: '/calendar', label: 'Calendar', icon: navIcons.calendar },
-  ];
-
-  const getNavItems = () => {
-    switch (user?.role) {
-      case UserRole.PLAYER: return playerNavItems;
-      case UserRole.PARENT: return parentNavItems;
-      case UserRole.COACH: return coachNavItems;
-      case UserRole.ADMIN: return adminNavItems;
-      default: return [];
-    }
-  };
-
-  const getQuickStats = () => {
-    if (user?.role === UserRole.PLAYER && playerStats) {
-      return [
-        { label: 'Goals', value: playerStats.goals, icon: statIcons.goals, color: 'green' as const },
-        { label: 'Assists', value: playerStats.assists, icon: statIcons.assists, color: 'amber' as const },
-        { label: 'Matches', value: playerStats.matchesPlayed, icon: statIcons.matches, color: 'blue' as const },
-        { label: 'Attendance', value: `${attendanceStats?.rate ?? 0}%`, icon: statIcons.attendance, color: 'purple' as const },
-      ];
-    }
-    return [];
-  };
-
   const getPerformanceBreakdown = () => {
     if (!ratingStats?.byCategory) return undefined;
     const { technical, tactical, physical, psychological } = ratingStats.byCategory;
     return [
-      { label: 'Technical', value: technical ?? 0, maxValue: 10, color: defaultBreakdownColors.technical },
-      { label: 'Tactical', value: tactical ?? 0, maxValue: 10, color: defaultBreakdownColors.tactical },
-      { label: 'Physical', value: physical ?? 0, maxValue: 10, color: defaultBreakdownColors.physical },
-      { label: 'Mental', value: psychological ?? 0, maxValue: 10, color: defaultBreakdownColors.mental },
+      { label: 'Technical', value: technical ?? 0, maxValue: 10, color: '#10b981' },
+      { label: 'Tactical', value: tactical ?? 0, maxValue: 10, color: '#3b82f6' },
+      { label: 'Physical', value: physical ?? 0, maxValue: 10, color: '#8b5cf6' },
+      { label: 'Mental', value: psychological ?? 0, maxValue: 10, color: '#f59e0b' },
     ];
   };
 
   const getRatingTrendData = () => {
     if (!ratingStats?.history) return [];
-    return ratingStats.history.map(point => ({
-      date: point.date,
-      rating: point.averageRating,
-    }));
+    return ratingStats.history.map((point) => ({ date: point.date, rating: point.averageRating }));
+  };
+
+  // Quick actions based on role
+  const quickActions = (() => {
+    switch (user?.role) {
+      case UserRole.COACH:
+        return [
+          { to: '/trainings', label: 'New Training', icon: <PlusIcon />, color: 'green' },
+          { to: '/matches', label: 'New Match', icon: <PlusIcon />, color: 'blue' },
+          { to: '/squads', label: 'Create Squad', icon: <SquadsIcon />, color: 'purple' },
+          { to: '/stats/team', label: 'Team Statistics', icon: <StatsIcon />, color: 'amber' },
+        ];
+      case UserRole.ADMIN:
+        return [
+          { to: '/admin/users', label: 'Create User', icon: <PlusIcon />, color: 'green' },
+          { to: '/admin/groups', label: 'Manage Groups', icon: <TeamIcon />, color: 'blue' },
+          { to: '/trainings', label: 'View Trainings', icon: <TrainingsIcon />, color: 'purple' },
+          { to: '/matches', label: 'View Matches', icon: <MatchesIcon />, color: 'amber' },
+        ];
+      case UserRole.PLAYER:
+        return [
+          { to: '/trainings', label: 'My Trainings', icon: <TrainingsIcon />, color: 'green' },
+          { to: '/matches', label: 'My Matches', icon: <MatchesIcon />, color: 'blue' },
+          { to: '/stats/my', label: 'My Statistics', icon: <StatsIcon />, color: 'purple' },
+          { to: '/calendar', label: 'Calendar', icon: <ClockIcon />, color: 'amber' },
+        ];
+      case UserRole.PARENT:
+        return [
+          { to: '/trainings', label: 'View Trainings', icon: <TrainingsIcon />, color: 'green' },
+          { to: '/matches', label: 'View Matches', icon: <MatchesIcon />, color: 'blue' },
+          { to: '/stats/children', label: 'Children Stats', icon: <StatsIcon />, color: 'purple' },
+          { to: '/calendar', label: 'Calendar', icon: <ClockIcon />, color: 'amber' },
+        ];
+      default:
+        return [];
+    }
+  })();
+
+  const colorClasses: Record<string, { bg: string; hover: string; icon: string }> = {
+    green: { bg: 'bg-green-100 dark:bg-green-900/30', hover: 'hover:bg-green-50 dark:hover:bg-green-900/20 group-hover:bg-green-200 dark:group-hover:bg-green-900/40', icon: 'text-green-600 dark:text-green-400' },
+    blue: { bg: 'bg-blue-100 dark:bg-blue-900/30', hover: 'hover:bg-blue-50 dark:hover:bg-blue-900/20 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/40', icon: 'text-blue-600 dark:text-blue-400' },
+    purple: { bg: 'bg-purple-100 dark:bg-purple-900/30', hover: 'hover:bg-purple-50 dark:hover:bg-purple-900/20 group-hover:bg-purple-200 dark:group-hover:bg-purple-900/40', icon: 'text-purple-600 dark:text-purple-400' },
+    amber: { bg: 'bg-amber-100 dark:bg-amber-900/30', hover: 'hover:bg-amber-50 dark:hover:bg-amber-900/20 group-hover:bg-amber-200 dark:group-hover:bg-amber-900/40', icon: 'text-amber-600 dark:text-amber-400' },
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-950">
-      <nav className="bg-white dark:bg-gray-900 shadow-sm dark:shadow-gray-900/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
-                  <svg
-                    className="w-6 h-6 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
+    <>
+      <PageHeader
+        title={`Welcome, ${user?.firstName || 'User'}!`}
+        subtitle="Here's what's happening today"
+      />
+      <PageContent>
+        {/* Welcome Card with Next Event */}
+        {upcomingEvent && (
+          <Link
+            to={upcomingEvent.type === 'training' ? `/trainings/${upcomingEvent.data.id}` : `/matches/${upcomingEvent.data.id}`}
+            className="block bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-8 text-white mb-8 relative overflow-hidden hover:from-green-600 hover:to-emerald-700 transition-all"
+          >
+            <div className="absolute right-0 top-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute right-20 bottom-0 w-32 h-32 bg-white/10 rounded-full translate-y-1/2" />
+            <div className="relative">
+              <h2 className="text-2xl font-bold mb-2">Next Event</h2>
+              <p className="text-green-100 mb-4">
+                {upcomingEvent.type === 'training' ? 'Training' : 'Match'} {getTimeUntil(upcomingEvent.data.startTime)}
+              </p>
+              <div className="flex items-center gap-6 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <div className="text-green-200"><ClockIcon /></div>
+                  <span className="font-medium">{formatEventTime(upcomingEvent.data.startTime, upcomingEvent.data.endTime)}</span>
                 </div>
-                <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Football Academy</span>
+                <div className="flex items-center gap-2">
+                  <div className="text-green-200"><LocationIcon /></div>
+                  <span className="font-medium">{upcomingEvent.data.location}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="text-green-200"><TeamIcon /></div>
+                  <span className="font-medium">
+                    {upcomingEvent.type === 'training'
+                      ? upcomingEvent.data.group.name
+                      : `vs ${(upcomingEvent.data as Match).opponent}`}
+                  </span>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                {user?.firstName} {user?.lastName}
-              </span>
-              <ThemeToggle />
-              <button
-                onClick={logout}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-200 dark:focus:ring-red-900 active:scale-95 transition-all"
-              >
-                Logout
+              <button className="mt-6 px-6 py-3 bg-white text-green-600 font-semibold rounded-xl hover:bg-green-50 transition-colors">
+                View Details
               </button>
             </div>
-          </div>
-        </div>
-      </nav>
+          </Link>
+        )}
 
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        {/* Welcome Header */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 mb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center select-none">
-              <span className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {user?.firstName?.[0]}
-                {user?.lastName?.[0]}
-              </span>
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-                Welcome back, {user?.firstName}!
-              </h1>
-              <div className="flex items-center gap-3 mt-1">
-                <span className="text-sm text-gray-500 dark:text-gray-400">{user?.email}</span>
-                {user?.role && (
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${roleColors[user.role]}`}
-                  >
-                    {roleLabels[user.role]}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Player Dashboard */}
-        {user?.role === UserRole.PLAYER && (
-          <div className="space-y-6">
-            {/* Hero: Upcoming Event */}
-            <UpcomingEventCard event={upcomingEvent} loading={loading} />
-
-            {/* Quick Stats Row */}
-            <QuickStatsRow stats={getQuickStats()} loading={loading} />
-
-            {/* Performance & Trend Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <PerformanceScoreRing
-                score={Math.round((ratingStats?.averageRating ?? 0) * 10)}
-                maxScore={100}
-                breakdown={getPerformanceBreakdown()}
-                loading={loading}
-              />
-              <RatingTrendChart data={getRatingTrendData()} loading={loading} />
-            </div>
-
-            {/* Compact Navigation */}
-            <CompactNavigation items={getNavItems()} />
+        {/* Stats Grid - Player */}
+        {user?.role === UserRole.PLAYER && playerStats && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <StatCard icon={<GoalsIcon />} value={playerStats.goals} label="Goals" color="green" />
+            <StatCard icon={<PlayersIcon />} value={playerStats.assists} label="Assists" color="blue" />
+            <StatCard icon={<MatchesIcon />} value={playerStats.matchesPlayed} label="Matches Played" color="purple" />
+            <StatCard icon={<AttendanceIcon />} value={`${attendanceStats?.rate ?? 0}%`} label="Attendance" color="amber" />
           </div>
         )}
 
-        {/* Parent Dashboard */}
-        {user?.role === UserRole.PARENT && (
-          <div className="space-y-6">
-            {/* Upcoming Events for Children */}
-            <ParentUpcomingEvents
-              trainings={parentTrainings}
-              matches={parentMatches}
-              children={childrenWithGroups}
+        {/* Stats Grid - Coach/Admin */}
+        {(user?.role === UserRole.COACH || user?.role === UserRole.ADMIN) && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <StatCard icon={<PlayersIcon />} value={childrenWithGroups.length || '-'} label="Players" color="green" />
+            <StatCard icon={<GroupsIcon />} value="-" label="Groups" color="blue" />
+            <StatCard icon={<TrainingsIcon />} value="-" label="Trainings" color="purple" />
+            <StatCard icon={<MatchesIcon />} value="-" label="Matches" color="amber" />
+          </div>
+        )}
+
+        {/* Performance Charts - Player */}
+        {user?.role === UserRole.PLAYER && ratingStats && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <PerformanceScoreRing
+              score={Math.round((ratingStats?.averageRating ?? 0) * 10)}
+              maxScore={100}
+              breakdown={getPerformanceBreakdown()}
               loading={loading}
             />
+            <RatingTrendChart data={getRatingTrendData()} loading={loading} />
+          </div>
+        )}
 
-            {/* Children Attendance Overview */}
-            {childrenStats.length > 0 && (
-              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Children Attendance</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {childrenStats.map((child) => (
-                    <div key={child.playerId} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-5">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
-                          <svg
-                            className="w-6 h-6 text-amber-600 dark:text-amber-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">{child.playerName}</p>
-                          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{child.rate}%</p>
-                          {child.total > 0 && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              {child.present + child.late} / {child.total} events
-                            </p>
-                          )}
-                        </div>
+        {/* Children Attendance - Parent */}
+        {user?.role === UserRole.PARENT && childrenStats.length > 0 && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Children Attendance</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {childrenStats.map((child) => (
+                  <div key={child.playerId} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-5">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
+                        <AttendanceIcon />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{child.playerName}</p>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-white">{child.rate}%</p>
+                        {child.total > 0 && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {child.present + child.late} / {child.total} events
+                          </p>
+                        )}
                       </div>
                     </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Upcoming Events */}
+          <Card className="lg:col-span-2">
+            <CardHeader action={<Link to="/calendar" className="text-sm text-green-600 hover:text-green-700 font-medium">View All</Link>}>
+              <CardTitle>Upcoming Events</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {loading ? (
+                <div className="animate-pulse space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-20 bg-gray-100 dark:bg-gray-800 rounded-xl" />
                   ))}
                 </div>
-              </div>
-            )}
+              ) : upcomingEvents.length > 0 ? (
+                upcomingEvents.map((event, index) => {
+                  const isTraining = event.type === 'training';
+                  const isToday = new Date(event.data.startTime).toDateString() === new Date().toDateString();
+                  return (
+                    <Link
+                      key={`${event.type}-${event.data.id}`}
+                      to={isTraining ? `/trainings/${event.data.id}` : `/matches/${event.data.id}`}
+                      className={`flex items-center gap-4 p-4 rounded-xl transition-colors ${
+                        isToday && index === 0
+                          ? 'bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800'
+                          : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      }`}
+                    >
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                        isTraining ? 'bg-green-500' : 'bg-blue-500'
+                      }`}>
+                        {isTraining ? (
+                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                          </svg>
+                        ) : (
+                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
+                          </svg>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {isTraining ? `Training - ${event.data.group.name}` : `Match vs ${(event.data as Match).opponent}`}
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{formatEventDate(event.data.startTime)}</p>
+                      </div>
+                      <Badge variant={isToday && index === 0 ? 'success' : isTraining ? 'default' : 'info'}>
+                        {isToday && index === 0 ? 'Today' : isTraining ? 'Training' : 'Match'}
+                      </Badge>
+                    </Link>
+                  );
+                })
+              ) : (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  No upcoming events
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-            {/* Compact Navigation */}
-            <CompactNavigation items={getNavItems()} />
-          </div>
-        )}
-
-        {/* Coach Dashboard */}
-        {user?.role === UserRole.COACH && (
-          <div className="space-y-6">
-            {/* Hero: Upcoming Event */}
-            <UpcomingEventCard event={upcomingEvent} loading={loading} />
-
-            {/* Compact Navigation */}
-            <CompactNavigation items={getNavItems()} />
-          </div>
-        )}
-
-        {/* Admin Dashboard */}
-        {user?.role === UserRole.ADMIN && (
-          <div className="space-y-6">
-            {/* Compact Navigation */}
-            <CompactNavigation items={getNavItems()} />
-          </div>
-        )}
-
-        {/* Account Information */}
-        <div className="mt-6 bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
-          <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100 mb-4">Account Information</h2>
-          <dl className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-              <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">Full Name</dt>
-              <dd className="mt-1 text-base font-medium text-gray-900 dark:text-gray-100">
-                {user?.firstName} {user?.lastName}
-              </dd>
-            </div>
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-              <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">Email</dt>
-              <dd className="mt-1 text-base font-medium text-gray-900 dark:text-gray-100">{user?.email}</dd>
-            </div>
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-              <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">Role</dt>
-              <dd className="mt-1 text-base font-medium text-gray-900 dark:text-gray-100">
-                {user?.role ? roleLabels[user.role] : '-'}
-              </dd>
-            </div>
-          </dl>
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {quickActions.map((action) => (
+                <Link
+                  key={action.to}
+                  to={action.to}
+                  className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors group"
+                >
+                  <div className={`w-10 h-10 ${colorClasses[action.color].bg} ${colorClasses[action.color].hover} rounded-lg flex items-center justify-center transition-colors`}>
+                    <span className={colorClasses[action.color].icon}>{action.icon}</span>
+                  </div>
+                  <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">
+                    {action.label}
+                  </span>
+                </Link>
+              ))}
+            </CardContent>
+          </Card>
         </div>
-      </main>
-    </div>
+      </PageContent>
+    </>
   );
 }

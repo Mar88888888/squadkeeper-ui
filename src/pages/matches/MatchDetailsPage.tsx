@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   matchesApi,
   type MatchDetails,
@@ -22,30 +22,101 @@ import {
   type Evaluation,
   type EvaluationRecord,
 } from '../../api/evaluations';
-import {
-  AttendanceStatusLabels,
-  AttendanceStatusColors,
-} from '../../constants/attendance.constants';
+import { AttendanceStatusLabels } from '../../constants/attendance.constants';
+import { PageHeader, PageContent } from '../../components/layout';
+import { Card, CardContent, Modal, Button, Avatar } from '../../components/ui';
 
-const EVALUATION_CATEGORIES = ['technical', 'tactical', 'physical', 'psychological'] as const;
-type EvaluationCategory = (typeof EVALUATION_CATEGORIES)[number];
+const EVAL_CATEGORIES = [
+  { key: 'technical', label: 'Technical' },
+  { key: 'tactical', label: 'Tactical' },
+  { key: 'physical', label: 'Physical' },
+  { key: 'psychological', label: 'Psychological' },
+] as const;
 
-const EvaluationCategoryLabels: Record<EvaluationCategory, string> = {
-  technical: 'Technical',
-  tactical: 'Tactical',
-  physical: 'Physical',
-  psychological: 'Psychological',
-};
+type EvalCategory = (typeof EVAL_CATEGORIES)[number]['key'];
 
-type Tab = 'attendance' | 'evaluations' | 'goals';
+// Icons
+const CalendarIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+  </svg>
+);
+
+const LocationIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+  </svg>
+);
+
+const UsersIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+  </svg>
+);
+
+const StarIcon = ({ filled = false }: { filled?: boolean }) => (
+  <svg className="w-5 h-5" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+  </svg>
+);
+
+const BallIcon = () => (
+  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10"/>
+  </svg>
+);
+
+// Avatar gradient colors
+const avatarColors = [
+  'from-amber-400 to-orange-500',
+  'from-blue-400 to-indigo-500',
+  'from-purple-400 to-violet-500',
+  'from-green-400 to-teal-500',
+  'from-red-400 to-rose-500',
+  'from-pink-400 to-fuchsia-500',
+  'from-cyan-400 to-sky-500',
+];
+
+function getPlayerColor(index: number): string {
+  return avatarColors[index % avatarColors.length];
+}
+
+function getTeamInitials(name: string): string {
+  return name.split(' ').map(word => word[0]).join('').slice(0, 2).toUpperCase();
+}
+
+function getAttendanceRowStyle(status: AttendanceStatus): string {
+  switch (status) {
+    case AttendanceStatus.ABSENT:
+      return 'bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/50';
+    case AttendanceStatus.LATE:
+      return 'bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/50';
+    case AttendanceStatus.EXCUSED:
+      return 'bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/50';
+    default:
+      return 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700';
+  }
+}
+
+function getSelectStyle(status: AttendanceStatus): string {
+  switch (status) {
+    case AttendanceStatus.ABSENT:
+      return 'border-red-200 dark:border-red-800 text-red-600 dark:text-red-400';
+    case AttendanceStatus.LATE:
+      return 'border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400';
+    case AttendanceStatus.EXCUSED:
+      return 'border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400';
+    default:
+      return 'border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white';
+  }
+}
 
 export function MatchDetailsPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { user } = useAuth();
 
   const canEdit = user?.role === UserRole.ADMIN || user?.role === UserRole.COACH;
-  const isReadOnly = !canEdit;
 
   const [match, setMatch] = useState<MatchDetails | null>(null);
   const [attendance, setAttendance] = useState<Attendance[]>([]);
@@ -53,13 +124,13 @@ export function MatchDetailsPage() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState<Tab>('attendance');
   const [isSaving, setIsSaving] = useState(false);
 
   const [attendanceRecords, setAttendanceRecords] = useState<Record<string, AttendanceStatus>>({});
 
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerBrief | null>(null);
-  const [evalRatings, setEvalRatings] = useState<Record<EvaluationCategory, number>>({
+  const [selectedPlayerIndex, setSelectedPlayerIndex] = useState(0);
+  const [evalRatings, setEvalRatings] = useState<Record<EvalCategory, number>>({
     technical: 5,
     tactical: 5,
     physical: 5,
@@ -124,6 +195,15 @@ export function MatchDetailsPage() {
     setAttendanceRecords((prev) => ({ ...prev, [playerId]: status }));
   };
 
+  const markAllPresent = () => {
+    if (!match) return;
+    const records: Record<string, AttendanceStatus> = {};
+    match.group.players.forEach((player) => {
+      records[player.id] = AttendanceStatus.PRESENT;
+    });
+    setAttendanceRecords(records);
+  };
+
   const saveAttendance = async () => {
     if (!id || !match) return;
     setIsSaving(true);
@@ -177,8 +257,9 @@ export function MatchDetailsPage() {
     }
   };
 
-  const openEvaluationModal = (player: PlayerBrief) => {
+  const openEvaluationModal = (player: PlayerBrief, index: number) => {
     setSelectedPlayer(player);
+    setSelectedPlayerIndex(index);
     const playerEval = evaluations.find((e) => e.player.id === player.id);
     if (playerEval) {
       setEvalRatings({
@@ -189,12 +270,7 @@ export function MatchDetailsPage() {
       });
       setEvalComment(playerEval.comment || '');
     } else {
-      setEvalRatings({
-        technical: 5,
-        tactical: 5,
-        physical: 5,
-        psychological: 5,
-      });
+      setEvalRatings({ technical: 5, tactical: 5, physical: 5, psychological: 5 });
       setEvalComment('');
     }
   };
@@ -209,12 +285,12 @@ export function MatchDetailsPage() {
   };
 
   const isPlayerPresent = (playerId: string): boolean => {
-    const status = getPlayerAttendance(playerId);
+    const status = attendanceRecords[playerId] || getPlayerAttendance(playerId);
     return status === AttendanceStatus.PRESENT || status === AttendanceStatus.LATE;
   };
 
   const canEvaluate = (playerId: string): boolean => {
-    if (user?.role !== UserRole.COACH) return false;
+    if (user?.role !== UserRole.COACH && user?.role !== UserRole.ADMIN) return false;
     return isPlayerPresent(playerId);
   };
 
@@ -261,9 +337,7 @@ export function MatchDetailsPage() {
     try {
       const updated = await matchesApi.updateResult(id, scoreForm);
       setMatch((prev) =>
-        prev
-          ? { ...prev, homeGoals: updated.homeGoals, awayGoals: updated.awayGoals }
-          : null
+        prev ? { ...prev, homeGoals: updated.homeGoals, awayGoals: updated.awayGoals } : null
       );
       setIsScoreModalOpen(false);
     } catch {
@@ -273,24 +347,21 @@ export function MatchDetailsPage() {
     }
   };
 
-  const formatDateTime = (dateStr: string) => {
+  const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('en-US', {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
       year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
     });
   };
 
-  const formatScore = () => {
-    if (!match || match.homeGoals === null || match.awayGoals === null) {
-      return null;
-    }
-    return match.isHome
-      ? `${match.homeGoals} - ${match.awayGoals}`
-      : `${match.awayGoals} - ${match.homeGoals}`;
+  const formatTime = (dateStr: string) => {
+    return new Date(dateStr).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
   };
 
   const getMatchResult = (): 'win' | 'draw' | 'loss' | null => {
@@ -302,394 +373,219 @@ export function MatchDetailsPage() {
     return 'draw';
   };
 
-  const resultColors = {
-    win: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
-    draw: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
-    loss: 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400',
+  const getAttendanceStats = () => {
+    const stats = { present: 0, absent: 0, late: 0, excused: 0 };
+    Object.values(attendanceRecords).forEach((status) => {
+      switch (status) {
+        case AttendanceStatus.PRESENT: stats.present++; break;
+        case AttendanceStatus.ABSENT: stats.absent++; break;
+        case AttendanceStatus.LATE: stats.late++; break;
+        case AttendanceStatus.EXCUSED: stats.excused++; break;
+      }
+    });
+    return stats;
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-950 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
       </div>
     );
   }
 
   if (!match) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-950 flex items-center justify-center">
+      <div className="flex items-center justify-center h-full">
         <div className="text-gray-500 dark:text-gray-400">Match not found</div>
       </div>
     );
   }
 
-  const score = formatScore();
   const result = getMatchResult();
+  const ourGoals = match.isHome ? match.homeGoals : match.awayGoals;
+  const theirGoals = match.isHome ? match.awayGoals : match.homeGoals;
+  const stats = getAttendanceStats();
+  const totalPlayers = match.group.players.length;
+  const attendancePercent = totalPlayers > 0 ? Math.round(((stats.present + stats.late) / totalPlayers) * 100) : 0;
+
+  const resultColors = {
+    win: 'from-green-500 to-emerald-600',
+    draw: 'from-amber-500 to-yellow-600',
+    loss: 'from-red-500 to-rose-600',
+  };
+
+  const resultLabels = {
+    win: 'Victory',
+    draw: 'Draw',
+    loss: 'Defeat',
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-950">
-      <header className="bg-white dark:bg-gray-900 shadow border-t-4 border-blue-500">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-                  vs {match.opponent}
-                </h1>
-                <span
-                  className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    match.isHome
-                      ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                      : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
-                  }`}
-                >
-                  {match.isHome ? 'Home' : 'Away'}
-                </span>
-                {result && (
-                  <span
-                    className={`px-2 py-1 text-xs font-medium rounded-full ${resultColors[result]}`}
-                  >
-                    {result.charAt(0).toUpperCase() + result.slice(1)}
-                  </span>
-                )}
-              </div>
-              {score && (
-                <p className="text-2xl font-bold text-gray-800 dark:text-gray-200 mt-1">{score}</p>
-              )}
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{match.group.name}</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{formatDateTime(match.startTime)}</p>
-              <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
-                <span className="flex items-center gap-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                    />
-                  </svg>
-                  {match.location}
-                </span>
-              </div>
-            </div>
-            <div className="flex flex-col items-end gap-2">
-              <button
-                onClick={() => navigate('/matches')}
-                className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-              >
-                Back to Matches
-              </button>
-              {canEdit && (
-                <button
-                  onClick={() => {
-                    setScoreForm({
-                      homeGoals: match.homeGoals ?? 0,
-                      awayGoals: match.awayGoals ?? 0,
-                    });
-                    setIsScoreModalOpen(true);
-                  }}
-                  className="text-sm px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:scale-95 transition-all"
-                >
-                  {score ? 'Edit Score' : 'Set Score'}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
+    <>
+      <PageHeader
+        title="Match Details"
+        subtitle={match.group.name}
+        backTo="/matches"
+        actions={
+          canEdit && (
+            <Button onClick={saveAttendance} disabled={isSaving}>
+              {isSaving ? 'Saving...' : 'Save'}
+            </Button>
+          )
+        }
+      />
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <PageContent>
         {error && (
-          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-gray-700 text-red-700 dark:text-red-400 rounded-lg text-sm">
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-xl text-sm">
             {error}
           </div>
         )}
 
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-          <div className="border-b border-gray-200 dark:border-gray-700">
-            <nav className="flex">
-              <button
-                onClick={() => setActiveTab('attendance')}
-                className={`px-6 py-4 text-sm font-medium transition-all duration-200 ${
-                  activeTab === 'attendance'
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-b-2 border-transparent'
-                }`}
-              >
-                Attendance
-              </button>
-              <button
-                onClick={() => setActiveTab('evaluations')}
-                className={`px-6 py-4 text-sm font-medium transition-all duration-200 ${
-                  activeTab === 'evaluations'
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-b-2 border-transparent'
-                }`}
-              >
-                Evaluations
-              </button>
-              <button
-                onClick={() => setActiveTab('goals')}
-                className={`px-6 py-4 text-sm font-medium transition-all duration-200 ${
-                  activeTab === 'goals'
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-b-2 border-transparent'
-                }`}
-              >
-                Goals ({goals.length})
-              </button>
-            </nav>
-          </div>
+        {/* Match Header Card */}
+        <div className={`bg-gradient-to-r ${result ? resultColors[result] : 'from-blue-600 to-indigo-700'} rounded-2xl p-8 text-white mb-8 relative overflow-hidden`}>
+          <div className="absolute right-0 top-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute left-20 bottom-0 w-32 h-32 bg-white/10 rounded-full translate-y-1/2"></div>
 
-          {activeTab === 'attendance' && (
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100">
-                  {isReadOnly ? 'Attendance' : `Players (${match.group.players.length})`}
-                </h2>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <span className="px-4 py-1.5 bg-white/20 text-white text-sm font-semibold rounded-full">
+                  {match.group.name}
+                </span>
+                <span className={`px-4 py-1.5 text-sm font-semibold rounded-full ${
+                  match.isHome ? 'bg-green-400/30' : 'bg-orange-400/30'
+                }`}>
+                  {match.isHome ? 'Home' : 'Away'}
+                </span>
+                {result && (
+                  <span className="px-4 py-1.5 bg-white/30 text-white text-sm font-semibold rounded-full">
+                    {resultLabels[result]}
+                  </span>
+                )}
+              </div>
+              <span className="text-white/80">{formatDate(match.startTime)}, {formatTime(match.startTime)}</span>
+            </div>
+
+            <div className="flex items-center justify-between">
+              {/* Our Team */}
+              <div className="flex items-center gap-6 flex-1">
+                <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center shadow-xl">
+                  <span className="text-2xl font-bold text-green-600">{getTeamInitials(match.group.name)}</span>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{match.group.name}</p>
+                  <p className="text-white/70">{match.isHome ? 'Home team' : 'Away team'}</p>
+                </div>
+              </div>
+
+              {/* Score */}
+              <div className="px-12">
+                {result ? (
+                  <div className="flex items-center gap-6">
+                    <span className="text-6xl font-bold">{ourGoals}</span>
+                    <span className="text-4xl font-bold text-white/50">:</span>
+                    <span className="text-6xl font-bold text-white/70">{theirGoals}</span>
+                  </div>
+                ) : (
+                  <div className="text-4xl font-bold text-white/50">VS</div>
+                )}
                 {canEdit && (
                   <button
-                    onClick={saveAttendance}
-                    disabled={isSaving}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 disabled:opacity-50 transition-all"
+                    onClick={() => {
+                      setScoreForm({
+                        homeGoals: match.homeGoals ?? 0,
+                        awayGoals: match.awayGoals ?? 0,
+                      });
+                      setIsScoreModalOpen(true);
+                    }}
+                    className="mt-4 px-4 py-2 bg-white/20 hover:bg-white/30 text-white text-sm font-medium rounded-lg transition-colors"
                   >
-                    {isSaving ? 'Saving...' : 'Save Attendance'}
+                    {result ? 'Edit Score' : 'Set Score'}
                   </button>
                 )}
               </div>
 
-              <div className="space-y-3">
-                {match.group.players.map((player) => {
-                  const playerStatus = attendanceRecords[player.id] || getPlayerAttendance(player.id);
-                  return (
-                    <div
-                      key={player.id}
-                      className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
-                    >
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-gray-100">
-                          {player.firstName} {player.lastName}
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{player.position}</p>
-                      </div>
-                      {isReadOnly ? (
-                        <span
-                          className={`px-3 py-2 rounded-lg font-medium ${
-                            playerStatus ? AttendanceStatusColors[playerStatus] : 'bg-gray-100 dark:bg-gray-950 text-gray-600 dark:text-gray-400'
-                          }`}
-                        >
-                          {playerStatus ? AttendanceStatusLabels[playerStatus] : 'Not marked'}
-                        </span>
-                      ) : (
-                        <select
-                          value={attendanceRecords[player.id] || AttendanceStatus.PRESENT}
-                          onChange={(e) =>
-                            handleAttendanceChange(player.id, e.target.value as AttendanceStatus)
-                          }
-                          className={`px-3 py-2 rounded-lg border-0 font-medium ${
-                            AttendanceStatusColors[
-                              attendanceRecords[player.id] || AttendanceStatus.PRESENT
-                            ]
-                          }`}
-                        >
-                          {Object.values(AttendanceStatus).map((status) => (
-                            <option key={status} value={status}>
-                              {AttendanceStatusLabels[status]}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                    </div>
-                  );
-                })}
+              {/* Opponent */}
+              <div className="flex items-center gap-6 flex-1 justify-end text-right">
+                <div>
+                  <p className="text-2xl font-bold">{match.opponent}</p>
+                  <p className="text-white/70">{match.isHome ? 'Away team' : 'Home team'}</p>
+                </div>
+                <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center shadow-xl">
+                  <span className="text-2xl font-bold text-amber-600">{getTeamInitials(match.opponent)}</span>
+                </div>
               </div>
             </div>
-          )}
 
-          {activeTab === 'evaluations' && (
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100">
-                  {isReadOnly ? 'Evaluations' : 'Player Evaluations'}
-                </h2>
-                {user?.role === UserRole.COACH && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Only present players can be evaluated
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-3">
-                {match.group.players.map((player) => {
-                  const playerEval = getPlayerEvaluation(player.id);
-                  const playerCanEvaluate = canEvaluate(player.id);
-                  const playerStatus = getPlayerAttendance(player.id);
-                  const avgRating = playerEval ? getEvaluationAverage(playerEval) : null;
-
-                  if (isReadOnly) {
-                    return (
-                      <div key={player.id} className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800">
-                        <div className="flex items-center justify-between mb-3">
-                          <div>
-                            <p className="font-medium text-gray-900 dark:text-gray-100">
-                              {player.firstName} {player.lastName}
-                            </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">{player.position}</p>
-                          </div>
-                          {avgRating !== null && (
-                            <div className="text-right">
-                              <p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">Average</p>
-                              <p className="text-xl font-bold text-green-600 dark:text-green-400">{avgRating}</p>
-                            </div>
-                          )}
-                        </div>
-                        {playerEval ? (
-                          <>
-                            <div className="grid grid-cols-4 gap-2">
-                              {EVALUATION_CATEGORIES.map((category) => (
-                                <div
-                                  key={category}
-                                  className="text-center p-2 bg-white dark:bg-gray-900 rounded-lg"
-                                >
-                                  <p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
-                                    {EvaluationCategoryLabels[category]}
-                                  </p>
-                                  <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                    {playerEval[category] ?? '-'}
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
-                            {playerEval.comment && (
-                              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 italic">
-                                "{playerEval.comment}"
-                              </p>
-                            )}
-                          </>
-                        ) : (
-                          <p className="text-sm text-gray-400 dark:text-gray-500">No evaluations yet</p>
-                        )}
-                      </div>
-                    );
-                  }
-
-                  const playerPresent = isPlayerPresent(player.id);
-
-                  return (
-                    <div
-                      key={player.id}
-                      className={`p-4 rounded-lg ${playerPresent ? 'bg-gray-50 dark:bg-gray-800' : 'bg-gray-100 dark:bg-gray-950 opacity-60'}`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div>
-                            <p className="font-medium text-gray-900 dark:text-gray-100">
-                              {player.firstName} {player.lastName}
-                            </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">{player.position}</p>
-                          </div>
-                          {playerStatus && (
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${AttendanceStatusColors[playerStatus]}`}>
-                              {AttendanceStatusLabels[playerStatus]}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-3">
-                          {avgRating !== null && (
-                            <span className="text-lg font-bold text-green-600 dark:text-green-400">{avgRating}</span>
-                          )}
-                          {playerCanEvaluate ? (
-                            <button
-                              onClick={() => openEvaluationModal(player)}
-                              className="px-3 py-1 text-sm text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition-colors"
-                            >
-                              {playerEval ? 'Edit' : 'Add'} Evaluation
-                            </button>
-                          ) : !playerPresent && user?.role === UserRole.COACH ? (
-                            <span className="text-sm text-gray-400 dark:text-gray-500">
-                              {playerStatus ? 'Not present' : 'Mark attendance first'}
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-
-                      {playerEval && playerPresent && (
-                        <>
-                          <div className="mt-3 grid grid-cols-4 gap-2">
-                            {EVALUATION_CATEGORIES.map((category) => (
-                              <div
-                                key={category}
-                                className="text-center p-2 bg-white dark:bg-gray-900 rounded-lg"
-                              >
-                                <p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
-                                  {EvaluationCategoryLabels[category]}
-                                </p>
-                                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                  {playerEval[category] ?? '-'}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                          {playerEval.comment && (
-                            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 italic">
-                              "{playerEval.comment}"
-                            </p>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+            <div className="flex items-center justify-center gap-8 mt-6 pt-6 border-t border-white/20">
+              <span className="flex items-center gap-2 text-white/80">
+                <LocationIcon />
+                {match.location}
+              </span>
+              <span className="flex items-center gap-2 text-white/80">
+                <UsersIcon />
+                {totalPlayers} players
+              </span>
+              <span className="flex items-center gap-2 text-white/80">
+                <CalendarIcon />
+                {formatTime(match.startTime)}
+              </span>
             </div>
-          )}
+          </div>
+        </div>
 
-          {activeTab === 'goals' && (
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100">Goals</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Goals Section */}
+            <Card>
+              <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Match Events</h3>
                 {canEdit && (
                   <button
                     onClick={() => setIsAddGoalModalOpen(true)}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 transition-all"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm font-medium rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
                   >
-                    + Add Goal
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Add Goal
                   </button>
                 )}
               </div>
-
-              {goals.length === 0 ? (
-                <div className="py-12 text-center text-gray-500 dark:text-gray-400">
-                  No goals recorded for this match
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {goals
-                    .sort((a, b) => (a.minute || 0) - (b.minute || 0))
-                    .map((goal) => (
-                      <div
-                        key={goal.id}
-                        className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
-                      >
-                        <div className="flex items-center gap-4">
-                          {goal.minute && (
-                            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-                              <span className="text-lg font-bold text-green-700 dark:text-green-400">
-                                {goal.minute}'
-                              </span>
-                            </div>
-                          )}
-                          <div>
+              <CardContent>
+                {goals.length === 0 ? (
+                  <div className="py-8 text-center text-gray-500 dark:text-gray-400">
+                    No goals recorded for this match
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {goals
+                      .sort((a, b) => (a.minute || 0) - (b.minute || 0))
+                      .map((goal) => (
+                        <div
+                          key={goal.id}
+                          className={`flex items-center gap-4 p-4 rounded-xl border ${
+                            goal.isOwnGoal
+                              ? 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-900/50'
+                              : 'bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-900/50'
+                          }`}
+                        >
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                            goal.isOwnGoal ? 'bg-red-500' : 'bg-green-500'
+                          }`}>
+                            <BallIcon />
+                          </div>
+                          <div className="flex-1">
                             <div className="flex items-center gap-2">
-                              <p className="font-medium text-gray-900 dark:text-gray-100">
+                              <span className="font-semibold text-gray-900 dark:text-white">
+                                {goal.isOwnGoal ? 'Own Goal' : 'Goal!'}
+                              </span>
+                              <span className="text-sm text-gray-500 dark:text-gray-400">
                                 {goal.scorer.firstName} {goal.scorer.lastName}
-                              </p>
-                              {goal.isOwnGoal && (
-                                <span className="px-2 py-0.5 text-xs font-medium bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-full">
-                                  OG
-                                </span>
-                              )}
+                              </span>
                             </div>
                             {goal.assist && (
                               <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -697,54 +593,268 @@ export function MatchDetailsPage() {
                               </p>
                             )}
                           </div>
+                          {goal.minute && (
+                            <span className={`text-lg font-bold ${
+                              goal.isOwnGoal ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'
+                            }`}>
+                              {goal.minute}'
+                            </span>
+                          )}
+                          {canEdit && (
+                            <button
+                              onClick={() => handleRemoveGoal(goal.id)}
+                              className="p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                              </svg>
+                            </button>
+                          )}
                         </div>
-                        {canEdit && (
-                          <button
-                            onClick={() => handleRemoveGoal(goal.id)}
-                            className="text-red-600 dark:text-red-400 hover:text-red-700 text-sm"
-                          >
-                            Remove
-                          </button>
-                        )}
-                      </div>
-                    ))}
+                      ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Attendance Section */}
+            <Card>
+              <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Squad</h3>
+                  <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-semibold rounded-full">
+                    {stats.present + stats.late}/{totalPlayers} present
+                  </span>
                 </div>
-              )}
-            </div>
-          )}
+                {canEdit && (
+                  <button
+                    onClick={markAllPresent}
+                    className="text-sm text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium"
+                  >
+                    Mark all
+                  </button>
+                )}
+              </div>
+              <CardContent>
+                <div className="space-y-3">
+                  {match.group.players.map((player, index) => {
+                    const currentStatus = attendanceRecords[player.id] || AttendanceStatus.PRESENT;
+                    const playerEval = getPlayerEvaluation(player.id);
+                    const avgRating = playerEval ? getEvaluationAverage(playerEval) : null;
+                    const playerCanEvaluate = canEvaluate(player.id);
+
+                    return (
+                      <div
+                        key={player.id}
+                        className={`flex items-center justify-between p-4 rounded-xl transition-colors ${getAttendanceRowStyle(currentStatus)}`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <Avatar
+                            name={`${player.firstName} ${player.lastName}`}
+                            className={`bg-gradient-to-br ${currentStatus === AttendanceStatus.ABSENT ? 'from-gray-300 to-gray-400' : getPlayerColor(index)}`}
+                          />
+                          <div>
+                            <p className="font-semibold text-gray-900 dark:text-white">
+                              {player.firstName} {player.lastName}
+                            </p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{player.position}</p>
+                          </div>
+                          {avgRating !== null && (
+                            <span className="px-2 py-1 text-sm font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                              {avgRating}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {canEdit ? (
+                            <select
+                              value={currentStatus}
+                              onChange={(e) => handleAttendanceChange(player.id, e.target.value as AttendanceStatus)}
+                              className={`px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white dark:bg-gray-800 ${getSelectStyle(currentStatus)}`}
+                            >
+                              {Object.values(AttendanceStatus).map((status) => (
+                                <option key={status} value={status}>
+                                  {AttendanceStatusLabels[status]}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span className={`px-3 py-2 rounded-lg font-medium text-sm ${getSelectStyle(currentStatus)} bg-white dark:bg-gray-800`}>
+                              {AttendanceStatusLabels[currentStatus]}
+                            </span>
+                          )}
+                          {canEdit && (
+                            <button
+                              onClick={() => playerCanEvaluate && openEvaluationModal(player, index)}
+                              className={`p-2 rounded-lg transition-colors ${
+                                playerCanEvaluate
+                                  ? 'text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30'
+                                  : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                              }`}
+                              title={playerCanEvaluate ? 'Rate player' : 'Player must be present to rate'}
+                              disabled={!playerCanEvaluate}
+                            >
+                              <StarIcon filled={avgRating !== null} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-6">
+            {/* Match Summary */}
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Match Summary</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Goals scored</span>
+                  <span className="text-lg font-bold text-green-600 dark:text-green-400">{ourGoals ?? 0}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Goals conceded</span>
+                  <span className="text-lg font-bold text-red-600 dark:text-red-400">{theirGoals ?? 0}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Total goals recorded</span>
+                  <span className="text-lg font-bold text-blue-600 dark:text-blue-400">{goals.length}</span>
+                </div>
+              </div>
+            </Card>
+
+            {/* Attendance Stats */}
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Attendance</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Attendance rate</span>
+                  <span className="text-lg font-bold text-green-600 dark:text-green-400">{attendancePercent}%</span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div
+                    className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${attendancePercent}%` }}
+                  ></div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
+                    <p className="text-xl font-bold text-green-600 dark:text-green-400">{stats.present}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Present</p>
+                  </div>
+                  <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
+                    <p className="text-xl font-bold text-red-600 dark:text-red-400">{stats.absent}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Absent</p>
+                  </div>
+                  <div className="text-center p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
+                    <p className="text-xl font-bold text-amber-600 dark:text-amber-400">{stats.late}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Late</p>
+                  </div>
+                  <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                    <p className="text-xl font-bold text-blue-600 dark:text-blue-400">{stats.excused}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Excused</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Top Players (those with evaluations) */}
+            {evaluations.length > 0 && (
+              <Card>
+                <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Top Players</h3>
+                </div>
+                <CardContent className="space-y-3">
+                  {evaluations
+                    .slice()
+                    .sort((a, b) => (getEvaluationAverage(b) ?? 0) - (getEvaluationAverage(a) ?? 0))
+                    .slice(0, 3)
+                    .map((evaluation, index) => {
+                      const avg = getEvaluationAverage(evaluation);
+                      const playerIndex = match.group.players.findIndex(p => p.id === evaluation.player.id);
+                      return (
+                        <div
+                          key={evaluation.id}
+                          className={`flex items-center gap-4 p-3 rounded-xl ${
+                            index === 0
+                              ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/50'
+                              : 'bg-gray-50 dark:bg-gray-800'
+                          }`}
+                        >
+                          <Avatar
+                            name={`${evaluation.player.firstName} ${evaluation.player.lastName}`}
+                            className={`bg-gradient-to-br ${getPlayerColor(playerIndex >= 0 ? playerIndex : index)}`}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-gray-900 dark:text-white truncate">
+                              {evaluation.player.firstName} {evaluation.player.lastName}
+                            </p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                              {evaluation.player.position}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <StarIcon filled />
+                            <span className="font-bold text-amber-600 dark:text-amber-400">{avg}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
-      </main>
+      </PageContent>
 
-      {selectedPlayer && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
-            <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100 mb-2">
-              Evaluate {selectedPlayer.firstName} {selectedPlayer.lastName}
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Rate from 1 to 10</p>
+      {/* Evaluation Modal */}
+      <Modal
+        isOpen={!!selectedPlayer}
+        onClose={() => setSelectedPlayer(null)}
+        title="Player Evaluation"
+      >
+        {selectedPlayer && (
+          <div>
+            <div className="flex items-center gap-4 mb-6">
+              <Avatar
+                name={`${selectedPlayer.firstName} ${selectedPlayer.lastName}`}
+                size="lg"
+                className={`bg-gradient-to-br ${getPlayerColor(selectedPlayerIndex)}`}
+              />
+              <div>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {selectedPlayer.firstName} {selectedPlayer.lastName}
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Match evaluation</p>
+              </div>
+            </div>
 
-            <div className="space-y-4">
-              {EVALUATION_CATEGORIES.map((category) => (
-                <div key={category}>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {EvaluationCategoryLabels[category]}
+            <div className="space-y-5">
+              {EVAL_CATEGORIES.map(({ key, label }) => (
+                <div key={key}>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    {label}
                   </label>
                   <div className="flex items-center gap-2">
                     <input
                       type="range"
                       min="1"
                       max="10"
-                      value={evalRatings[category]}
+                      value={evalRatings[key]}
                       onChange={(e) =>
                         setEvalRatings((prev) => ({
                           ...prev,
-                          [category]: parseInt(e.target.value),
+                          [key]: parseInt(e.target.value),
                         }))
                       }
-                      className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-600"
+                      className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
                     />
-                    <span className="w-8 text-center font-bold text-gray-900 dark:text-gray-100">
-                      {evalRatings[category]}
+                    <span className="w-8 text-center font-bold text-amber-600 dark:text-amber-400">
+                      {evalRatings[key]}
                     </span>
                   </div>
                 </div>
@@ -752,217 +862,179 @@ export function MatchDetailsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Comment (optional)
+                  Comment
                 </label>
                 <textarea
                   value={evalComment}
                   onChange={(e) => setEvalComment(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
                   rows={3}
-                  placeholder="Add a comment about this player's performance..."
+                  placeholder="Add a comment about the player..."
+                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 />
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={() => {
-                  setSelectedPlayer(null);
-                  setEvalComment('');
-                }}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-              >
+            <div className="flex items-center gap-3 mt-6">
+              <Button variant="secondary" onClick={() => setSelectedPlayer(null)} className="flex-1">
                 Cancel
-              </button>
+              </Button>
               <button
                 onClick={saveEvaluations}
                 disabled={isSaving}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 disabled:opacity-50 transition-all"
+                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold rounded-xl shadow-lg shadow-amber-500/30 transition-all disabled:opacity-50"
               >
-                {isSaving ? 'Saving...' : 'Save'}
+                {isSaving ? 'Saving...' : 'Save Evaluation'}
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
 
-      {isAddGoalModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
-            <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100 mb-4">Add Goal</h2>
+      {/* Add Goal Modal */}
+      <Modal
+        isOpen={isAddGoalModalOpen}
+        onClose={() => setIsAddGoalModalOpen(false)}
+        title="Add Goal"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Scorer *
+            </label>
+            <select
+              value={goalForm.scorerId}
+              onChange={(e) => setGoalForm((prev) => ({ ...prev, scorerId: e.target.value }))}
+              className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            >
+              <option value="">Select player</option>
+              {match.group.players.map((player) => (
+                <option key={player.id} value={player.id}>
+                  {player.firstName} {player.lastName}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Scorer *
-                </label>
-                <select
-                  value={goalForm.scorerId}
-                  onChange={(e) =>
-                    setGoalForm((prev) => ({ ...prev, scorerId: e.target.value }))
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
-                >
-                  <option value="">Select player</option>
-                  {match.group.players.map((player) => (
-                    <option key={player.id} value={player.id}>
-                      {player.firstName} {player.lastName}
-                    </option>
-                  ))}
-                </select>
-              </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Assist <span className="text-gray-400 dark:text-gray-500 font-normal">(optional)</span>
+            </label>
+            <select
+              value={goalForm.assistId || ''}
+              onChange={(e) => setGoalForm((prev) => ({ ...prev, assistId: e.target.value }))}
+              className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            >
+              <option value="">No assist</option>
+              {match.group.players
+                .filter((p) => p.id !== goalForm.scorerId)
+                .map((player) => (
+                  <option key={player.id} value={player.id}>
+                    {player.firstName} {player.lastName}
+                  </option>
+                ))}
+            </select>
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Assist <span className="text-gray-400 dark:text-gray-500 font-normal">(optional)</span>
-                </label>
-                <select
-                  value={goalForm.assistId || ''}
-                  onChange={(e) =>
-                    setGoalForm((prev) => ({ ...prev, assistId: e.target.value }))
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
-                >
-                  <option value="">No assist</option>
-                  {match.group.players
-                    .filter((p) => p.id !== goalForm.scorerId)
-                    .map((player) => (
-                      <option key={player.id} value={player.id}>
-                        {player.firstName} {player.lastName}
-                      </option>
-                    ))}
-                </select>
-              </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Minute <span className="text-gray-400 dark:text-gray-500 font-normal">(optional)</span>
+            </label>
+            <input
+              type="number"
+              min="1"
+              max="120"
+              value={goalForm.minute || ''}
+              onChange={(e) =>
+                setGoalForm((prev) => ({
+                  ...prev,
+                  minute: e.target.value ? parseInt(e.target.value) : undefined,
+                }))
+              }
+              className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              placeholder="e.g., 45"
+            />
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Minute <span className="text-gray-400 dark:text-gray-500 font-normal">(optional)</span>
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="120"
-                  value={goalForm.minute || ''}
-                  onChange={(e) =>
-                    setGoalForm((prev) => ({
-                      ...prev,
-                      minute: e.target.value ? parseInt(e.target.value) : undefined,
-                    }))
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
-                  placeholder="e.g., 45"
-                />
-              </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="isOwnGoal"
+              checked={goalForm.isOwnGoal}
+              onChange={(e) => setGoalForm((prev) => ({ ...prev, isOwnGoal: e.target.checked }))}
+              className="w-4 h-4 text-green-600 border-gray-300 dark:border-gray-600 rounded focus:ring-green-500"
+            />
+            <label htmlFor="isOwnGoal" className="text-sm text-gray-700 dark:text-gray-300">
+              Own goal
+            </label>
+          </div>
 
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="isOwnGoal"
-                  checked={goalForm.isOwnGoal}
-                  onChange={(e) =>
-                    setGoalForm((prev) => ({ ...prev, isOwnGoal: e.target.checked }))
-                  }
-                  className="w-4 h-4 text-green-600 border-gray-300 dark:border-gray-600 rounded focus:ring-green-500"
-                />
-                <label htmlFor="isOwnGoal" className="text-sm text-gray-700 dark:text-gray-300">
-                  Own goal
-                </label>
-              </div>
-            </div>
-
-            {error && (
-              <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-gray-700 text-red-700 dark:text-red-400 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
-
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={() => {
-                  setIsAddGoalModalOpen(false);
-                  setError('');
-                }}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddGoal}
-                disabled={isSaving}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 disabled:opacity-50 transition-all"
-              >
-                {isSaving ? 'Adding...' : 'Add Goal'}
-              </button>
-            </div>
+          <div className="flex items-center gap-3 pt-4">
+            <Button variant="secondary" onClick={() => setIsAddGoalModalOpen(false)} className="flex-1">
+              Cancel
+            </Button>
+            <Button onClick={handleAddGoal} disabled={isSaving} className="flex-1">
+              {isSaving ? 'Adding...' : 'Add Goal'}
+            </Button>
           </div>
         </div>
-      )}
+      </Modal>
 
-      {isScoreModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-sm w-full mx-4 p-6">
-            <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100 mb-4">
-              {match.homeGoals !== null ? 'Edit Score' : 'Set Score'}
-            </h2>
-
-            <div className="flex items-center justify-center gap-4">
-              <div className="text-center">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {match.isHome ? match.group.name : match.opponent}
-                </p>
-                <input
-                  type="number"
-                  min="0"
-                  max="99"
-                  value={scoreForm.homeGoals}
-                  onChange={(e) =>
-                    setScoreForm((prev) => ({
-                      ...prev,
-                      homeGoals: parseInt(e.target.value) || 0,
-                    }))
-                  }
-                  className="w-20 h-16 text-3xl font-bold text-center border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
-                />
-              </div>
-              <span className="text-2xl font-bold text-gray-400 dark:text-gray-500">-</span>
-              <div className="text-center">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {match.isHome ? match.opponent : match.group.name}
-                </p>
-                <input
-                  type="number"
-                  min="0"
-                  max="99"
-                  value={scoreForm.awayGoals}
-                  onChange={(e) =>
-                    setScoreForm((prev) => ({
-                      ...prev,
-                      awayGoals: parseInt(e.target.value) || 0,
-                    }))
-                  }
-                  className="w-20 h-16 text-3xl font-bold text-center border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
-                />
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={() => setIsScoreModalOpen(false)}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleUpdateScore}
-                disabled={isSaving}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 disabled:opacity-50 transition-all"
-              >
-                {isSaving ? 'Saving...' : 'Save'}
-              </button>
-            </div>
+      {/* Score Modal */}
+      <Modal
+        isOpen={isScoreModalOpen}
+        onClose={() => setIsScoreModalOpen(false)}
+        title={match.homeGoals !== null ? 'Edit Score' : 'Set Score'}
+        size="sm"
+      >
+        <div className="flex items-center justify-center gap-6 py-4">
+          <div className="text-center">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {match.isHome ? match.group.name : match.opponent}
+            </p>
+            <input
+              type="number"
+              min="0"
+              max="99"
+              value={scoreForm.homeGoals}
+              onChange={(e) =>
+                setScoreForm((prev) => ({
+                  ...prev,
+                  homeGoals: parseInt(e.target.value) || 0,
+                }))
+              }
+              className="w-20 h-20 text-4xl font-bold text-center border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            />
+          </div>
+          <span className="text-3xl font-bold text-gray-300 dark:text-gray-600">:</span>
+          <div className="text-center">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {match.isHome ? match.opponent : match.group.name}
+            </p>
+            <input
+              type="number"
+              min="0"
+              max="99"
+              value={scoreForm.awayGoals}
+              onChange={(e) =>
+                setScoreForm((prev) => ({
+                  ...prev,
+                  awayGoals: parseInt(e.target.value) || 0,
+                }))
+              }
+              className="w-20 h-20 text-4xl font-bold text-center border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            />
           </div>
         </div>
-      )}
-    </div>
+
+        <div className="flex items-center gap-3 mt-4">
+          <Button variant="secondary" onClick={() => setIsScoreModalOpen(false)} className="flex-1">
+            Cancel
+          </Button>
+          <Button onClick={handleUpdateScore} disabled={isSaving} className="flex-1">
+            {isSaving ? 'Saving...' : 'Save'}
+          </Button>
+        </div>
+      </Modal>
+    </>
   );
 }

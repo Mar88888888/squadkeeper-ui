@@ -23,7 +23,7 @@ function formatEventDate(dateStr: string): string {
   const time = date.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false
+    hour12: false,
   });
 
   if (isToday) return `Today, ${time}`;
@@ -70,8 +70,18 @@ export function UpcomingEventCard({ event, loading }: UpcomingEventCardProps) {
       <div className="bg-gradient-to-r from-gray-600 to-gray-500 rounded-xl p-5 text-white">
         <div className="flex items-center gap-3 mb-2">
           <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
             </svg>
           </div>
           <div>
@@ -87,7 +97,6 @@ export function UpcomingEventCard({ event, loading }: UpcomingEventCardProps) {
   const data = event.data;
   const linkTo = isTraining ? `/trainings/${data.id}` : `/matches/${data.id}`;
 
-  // Training: green (practice/growth), Match: blue (competition/game day)
   const gradientClass = isTraining
     ? 'from-green-600 to-green-500 hover:from-green-700 hover:to-green-600'
     : 'from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600';
@@ -101,23 +110,39 @@ export function UpcomingEventCard({ event, loading }: UpcomingEventCardProps) {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center group-hover:bg-white/30 transition-colors">
             {isTraining ? (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
               </svg>
             ) : (
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  fill="none"
+                />
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
               </svg>
             )}
           </div>
           <div>
-            <p className="text-sm text-white/70">Next {isTraining ? 'Training' : 'Match'}</p>
+            <p className="text-sm text-white/70">
+              Next {isTraining ? 'Training' : 'Match'}
+            </p>
             <p className="font-semibold text-lg">
-              {isTraining
-                ? data.group.name
-                : `vs ${(data as Match).opponent}`
-              }
+              {isTraining ? data.group.name : `vs ${(data as Match).opponent}`}
             </p>
           </div>
         </div>
@@ -128,14 +153,34 @@ export function UpcomingEventCard({ event, loading }: UpcomingEventCardProps) {
 
       <div className="mt-4 flex items-center gap-4 text-sm text-white/80">
         <span className="flex items-center gap-1">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
           {formatEventDate(data.startTime)}
         </span>
         <span className="flex items-center gap-1">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+            />
           </svg>
           {data.location}
         </span>
@@ -143,11 +188,13 @@ export function UpcomingEventCard({ event, loading }: UpcomingEventCardProps) {
 
       {!isTraining && (
         <div className="mt-2">
-          <span className={`text-xs px-2 py-0.5 rounded-full ${
-            (data as Match).isHome
-              ? 'bg-white/20 text-white'
-              : 'bg-amber-400/20 text-amber-100'
-          }`}>
+          <span
+            className={`text-xs px-2 py-0.5 rounded-full ${
+              (data as Match).isHome
+                ? 'bg-white/20 text-white'
+                : 'bg-amber-400/20 text-amber-100'
+            }`}
+          >
             {(data as Match).isHome ? 'Home' : 'Away'}
           </span>
         </div>

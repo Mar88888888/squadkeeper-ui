@@ -14,9 +14,11 @@ interface CalendarProps {
   month: number;
   events: CalendarEvent[];
   onEventClick: (event: CalendarEvent) => void;
+  onDayClick?: (date: Date) => void;
   onPrevMonth: () => void;
   onNextMonth: () => void;
   onToday: () => void;
+  selectedDate?: Date | null;
 }
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -36,7 +38,7 @@ function getFirstDayOfMonth(year: number, month: number): number {
 
 function formatTime(dateStr: string): string {
   const date = new Date(dateStr);
-  return date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
 function isSameDay(date1: Date, date2: Date): boolean {
@@ -52,14 +54,16 @@ export function Calendar({
   month,
   events,
   onEventClick,
+  onDayClick,
   onPrevMonth,
   onNextMonth,
   onToday,
+  selectedDate,
 }: CalendarProps) {
   const today = new Date();
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfMonth(year, month);
-  const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+  const prevMonthDays = getDaysInMonth(year, month - 1);
 
   const eventsByDay = useMemo(() => {
     const map = new Map<number, CalendarEvent[]>();
@@ -81,156 +85,155 @@ export function Calendar({
     return map;
   }, [events, year, month]);
 
-  const days: (number | null)[] = [];
-  for (let i = 0; i < firstDay; i++) {
-    days.push(null);
+  // Build day cells
+  const days: { day: number; isCurrentMonth: boolean }[] = [];
+
+  // Previous month days
+  for (let i = firstDay - 1; i >= 0; i--) {
+    days.push({ day: prevMonthDays - i, isCurrentMonth: false });
   }
+
+  // Current month days
   for (let i = 1; i <= daysInMonth; i++) {
-    days.push(i);
+    days.push({ day: i, isCurrentMonth: true });
+  }
+
+  // Next month days to fill the grid
+  const remainingDays = 42 - days.length; // 6 rows * 7 days
+  for (let i = 1; i <= remainingDays; i++) {
+    days.push({ day: i, isCurrentMonth: false });
   }
 
   const isToday = (day: number) => {
     return isSameDay(new Date(year, month, day), today);
   };
 
-  const isWeekend = (index: number) => {
-    return index % 7 === 5 || index % 7 === 6;
+  const isSelected = (day: number) => {
+    return selectedDate && isSameDay(new Date(year, month, day), selectedDate);
+  };
+
+  const handleDayClick = (day: number, isCurrentMonth: boolean) => {
+    if (isCurrentMonth && onDayClick) {
+      onDayClick(new Date(year, month, day));
+    }
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm overflow-hidden border border-gray-100 dark:border-gray-800">
-      <div className="bg-gradient-to-r from-green-600 to-green-500 px-5 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl font-bold text-white">
-              {MONTHS[month]} {year}
-            </h2>
-            {!isCurrentMonth && (
-              <button
-                onClick={onToday}
-                className="px-2.5 py-1 text-xs font-medium text-green-700 bg-white/90 hover:bg-white rounded-md transition-all shadow-sm"
-              >
-                Today
-              </button>
-            )}
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex gap-4">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-green-300"></span>
-                <span className="text-xs text-white/80">Training</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-blue-300"></span>
-                <span className="text-xs text-white/80">Match</span>
-              </div>
-            </div>
-            <div className="flex gap-0.5">
-              <button
-                onClick={onPrevMonth}
-                className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-all"
-                aria-label="Previous month"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <button
-                onClick={onNextMonth}
-                className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-all"
-                aria-label="Next month"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-7 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-800">
-        {WEEKDAYS.map((day, index) => (
-          <div
-            key={day}
-            className={`py-2 text-center text-xs font-semibold uppercase tracking-wider ${
-              index >= 5 ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-400'
-            }`}
+    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
+      {/* Calendar Header */}
+      <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onPrevMonth}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            aria-label="Previous month"
           >
-            {day}
-          </div>
-        ))}
+            <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+            {MONTHS[month]} {year}
+          </h3>
+          <button
+            onClick={onNextMonth}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            aria-label="Next month"
+          >
+            <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+        <button
+          onClick={onToday}
+          className="px-4 py-2 text-sm font-medium text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition-colors"
+        >
+          Today
+        </button>
       </div>
 
-      <div className="grid grid-cols-7">
-        {days.map((day, index) => {
-          const dayEvents = day ? eventsByDay.get(day) || [] : [];
-          const hasMore = dayEvents.length > 2;
-          const displayEvents = hasMore ? dayEvents.slice(0, 2) : dayEvents;
-          const hasEvents = dayEvents.length > 0;
-
-          return (
+      {/* Calendar Grid */}
+      <div className="p-4">
+        {/* Week days header */}
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {WEEKDAYS.map((day, index) => (
             <div
-              key={index}
-              className={`min-h-[90px] border-b border-r border-gray-100 dark:border-gray-800 p-1.5 transition-colors ${
-                day === null
-                  ? 'bg-gray-50/50 dark:bg-gray-800/50'
-                  : isWeekend(index)
-                    ? 'bg-gray-50/30 dark:bg-gray-800/30'
-                    : 'bg-white dark:bg-gray-900 hover:bg-gray-50/50 dark:hover:bg-gray-800/50'
-              } ${index % 7 === 6 ? 'border-r-0' : ''}`}
+              key={day}
+              className={`text-center text-sm font-semibold py-3 ${
+                index >= 5 ? 'text-red-400 dark:text-red-500' : 'text-gray-500 dark:text-gray-400'
+              }`}
             >
-              {day !== null && (
-                <>
-                  <div className="flex items-center justify-between mb-1">
-                    <div
-                      className={`text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full transition-all ${
-                        isToday(day)
-                          ? 'bg-green-600 text-white shadow-md shadow-green-200'
-                          : hasEvents
-                            ? 'text-gray-900 dark:text-gray-100'
-                            : 'text-gray-400 dark:text-gray-500'
-                      }`}
-                    >
-                      {day}
-                    </div>
-                    {hasEvents && (
-                      <div className="flex gap-0.5">
-                        {dayEvents.some(e => e.type === 'training') && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                        )}
-                        {dayEvents.some(e => e.type === 'match') && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <div className="space-y-0.5">
-                    {displayEvents.map((event) => (
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar days */}
+        <div className="grid grid-cols-7 gap-1">
+          {days.map((dayInfo, index) => {
+            const { day, isCurrentMonth } = dayInfo;
+            const dayEvents = isCurrentMonth ? eventsByDay.get(day) || [] : [];
+            const isTodayCell = isCurrentMonth && isToday(day);
+            const isSelectedCell = isCurrentMonth && isSelected(day);
+
+            return (
+              <div
+                key={index}
+                onClick={() => handleDayClick(day, isCurrentMonth)}
+                className={`min-h-[120px] p-2 rounded-lg cursor-pointer transition-all ${
+                  !isCurrentMonth
+                    ? 'bg-gray-50 dark:bg-gray-800/50 text-gray-400 dark:text-gray-600'
+                    : isTodayCell
+                      ? 'bg-green-50 dark:bg-green-900/20 border-2 border-green-500'
+                      : isSelectedCell
+                        ? 'bg-green-50 dark:bg-green-900/20 ring-2 ring-green-500'
+                        : 'bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-green-200 dark:hover:border-green-800'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className={`text-sm font-medium ${
+                    isTodayCell
+                      ? 'text-green-600 dark:text-green-400 font-bold'
+                      : isCurrentMonth
+                        ? 'text-gray-900 dark:text-white'
+                        : 'text-gray-400 dark:text-gray-600'
+                  }`}>
+                    {day}
+                  </span>
+                  {dayEvents.length > 0 && (
+                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                  )}
+                </div>
+                {isCurrentMonth && dayEvents.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    {dayEvents.slice(0, 2).map((event) => (
                       <button
                         key={event.id}
-                        onClick={() => onEventClick(event)}
-                        className={`w-full text-left px-1.5 py-0.5 rounded text-[11px] font-medium truncate transition-all hover:opacity-90 ${
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEventClick(event);
+                        }}
+                        className={`w-full text-left p-1.5 rounded text-xs truncate transition-colors ${
                           event.type === 'training'
-                            ? 'bg-green-500 text-white'
-                            : 'bg-blue-500 text-white'
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50'
+                            : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50'
                         }`}
-                        title={`${event.title} - ${event.group} (${formatTime(event.startTime)})`}
                       >
                         {formatTime(event.startTime)} {event.title}
                       </button>
                     ))}
-                    {hasMore && (
-                      <div className="text-[10px] font-medium text-gray-400 dark:text-gray-500 px-1.5">
+                    {dayEvents.length > 2 && (
+                      <div className="text-xs text-gray-500 dark:text-gray-400 pl-1">
                         +{dayEvents.length - 2} more
                       </div>
                     )}
                   </div>
-                </>
-              )}
-            </div>
-          );
-        })}
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

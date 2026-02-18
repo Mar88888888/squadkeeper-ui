@@ -6,7 +6,9 @@ import { GAME_FORMAT_LABELS } from '../../constants/squad.constants';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserRole } from '../../types';
-import { EmptyState, emptyStateIcons } from '../../components/EmptyState';
+import { PageHeader } from '../../components/layout/PageHeader';
+import { PageContent } from '../../components/layout/PageContent';
+import { Card, Modal, Button, EmptyState } from '../../components/ui';
 
 export function SquadListPage() {
   const navigate = useNavigate();
@@ -103,37 +105,43 @@ export function SquadListPage() {
     });
   };
 
-  return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-950">
-      <header className="bg-white dark:bg-gray-900 shadow">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Squad Builder</h1>
-          <div className="flex gap-3">
-            <button
-              onClick={() => navigate('/squads/new')}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 transition-all"
-            >
-              + Create Squad
-            </button>
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-            >
-              Back to Dashboard
-            </button>
-          </div>
-        </div>
-      </header>
+  const NoSquadsIcon = () => (
+    <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+    </svg>
+  );
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 mb-6">
+  const SelectGroupIcon = () => (
+    <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+    </svg>
+  );
+
+  return (
+    <>
+      <PageHeader
+        title="Squads"
+        subtitle="Team formations and lineups"
+        actions={
+          <Button onClick={() => navigate('/squads/new')}>
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Create Squad
+          </Button>
+        }
+      />
+
+      <PageContent>
+        {/* Group Selector */}
+        <Card className="p-6 mb-6">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Select Group
           </label>
           <select
             value={selectedGroupId}
             onChange={(e) => setSelectedGroupId(e.target.value)}
-            className="w-full md:w-64 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
+            className="w-full md:w-64 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
           >
             <option value="">Select a group...</option>
             {groups.map((group) => (
@@ -142,37 +150,41 @@ export function SquadListPage() {
               </option>
             ))}
           </select>
-        </div>
+        </Card>
 
         {error && (
-          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-400 rounded-lg text-sm">
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-xl text-sm">
             {error}
           </div>
         )}
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
           </div>
         ) : !selectedGroupId ? (
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow">
+          <Card>
             <EmptyState
-              icon={emptyStateIcons.group}
+              icon={<SelectGroupIcon />}
               title="Select a group"
               description="Choose a group from the dropdown above to view and manage squads."
             />
-          </div>
+          </Card>
         ) : squads.length === 0 ? (
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow">
+          <Card>
             <EmptyState
-              icon={emptyStateIcons.squad}
+              icon={<NoSquadsIcon />}
               title="No squads created"
               description="Create your first squad to start planning your team formations."
-              action={{ label: 'Create Squad', to: '/squads/new' }}
+              action={
+                <Button onClick={() => navigate('/squads/new')}>
+                  Create Squad
+                </Button>
+              }
             />
-          </div>
+          </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {squads.map((squad) => {
               const starterCount = squad.positions.filter((p) => p.isStarter).length;
               const filledCount = squad.positions.filter(
@@ -183,21 +195,18 @@ export function SquadListPage() {
               ).length;
 
               return (
-                <div
-                  key={squad.id}
-                  className="bg-white dark:bg-gray-900 rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden"
-                >
-                  <div className="bg-gradient-to-br from-green-500 to-green-600 p-4 text-white">
+                <Card key={squad.id} className="overflow-hidden">
+                  <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-5 text-white">
                     <h3 className="font-bold text-lg">{squad.name}</h3>
                     <p className="text-green-100 text-sm">
                       {GAME_FORMAT_LABELS[squad.gameFormat]}
                     </p>
                   </div>
 
-                  <div className="p-4">
+                  <div className="p-5">
                     <div className="flex items-center justify-between text-sm mb-3">
                       <span className="text-gray-500 dark:text-gray-400">Players</span>
-                      <span className="font-medium text-gray-900 dark:text-gray-100">
+                      <span className="font-medium text-gray-900 dark:text-white">
                         {filledCount}/{starterCount} starters
                         {benchCount > 0 && ` + ${benchCount} subs`}
                       </span>
@@ -210,7 +219,7 @@ export function SquadListPage() {
                         .map((pos) => (
                           <span
                             key={pos.id}
-                            className="px-2 py-0.5 bg-gray-100 dark:bg-gray-950 text-gray-600 dark:text-gray-400 text-xs rounded"
+                            className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs rounded"
                           >
                             {pos.player!.lastName}
                           </span>
@@ -234,7 +243,7 @@ export function SquadListPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => navigate(`/squads/${squad.id}`)}
-                        className="flex-1 px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 active:scale-95 transition-all"
+                        className="flex-1 px-4 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-medium rounded-xl hover:from-green-600 hover:to-emerald-700 shadow-md shadow-green-500/25 transition-all"
                       >
                         Edit
                       </button>
@@ -246,11 +255,11 @@ export function SquadListPage() {
                             newName: `${squad.name} (Copy)`,
                           })
                         }
-                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 text-sm rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                        className="px-3 py-2.5 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                         title="Duplicate"
                       >
                         <svg
-                          className="w-4 h-4"
+                          className="w-5 h-5"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -271,11 +280,11 @@ export function SquadListPage() {
                             squadName: squad.name,
                           })
                         }
-                        className="px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                        className="px-3 py-2.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
                         title="Delete"
                       >
                         <svg
-                          className="w-4 h-4"
+                          className="w-5 h-5"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -290,13 +299,14 @@ export function SquadListPage() {
                       </button>
                     </div>
                   </div>
-                </div>
+                </Card>
               );
             })}
           </div>
         )}
-      </main>
+      </PageContent>
 
+      {/* Delete Dialog */}
       <ConfirmDialog
         isOpen={deleteDialog.isOpen}
         title="Delete Squad"
@@ -308,44 +318,42 @@ export function SquadListPage() {
         onCancel={() => setDeleteDialog({ isOpen: false, squadId: '', squadName: '' })}
       />
 
-      {duplicateDialog.isOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
-            <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100 mb-4">
-              Duplicate Squad
-            </h2>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                New Squad Name
-              </label>
-              <input
-                type="text"
-                value={duplicateDialog.newName}
-                onChange={(e) =>
-                  setDuplicateDialog((prev) => ({ ...prev, newName: e.target.value }))
-                }
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
-              />
-            </div>
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={() =>
-                  setDuplicateDialog({ isOpen: false, squadId: '', newName: '' })
-                }
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDuplicate}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 transition-all"
-              >
-                Duplicate
-              </button>
-            </div>
+      {/* Duplicate Modal */}
+      <Modal
+        isOpen={duplicateDialog.isOpen}
+        onClose={() => setDuplicateDialog({ isOpen: false, squadId: '', newName: '' })}
+        title="Duplicate Squad"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              New Squad Name
+            </label>
+            <input
+              type="text"
+              value={duplicateDialog.newName}
+              onChange={(e) =>
+                setDuplicateDialog((prev) => ({ ...prev, newName: e.target.value }))
+              }
+              className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
+            />
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() =>
+                setDuplicateDialog({ isOpen: false, squadId: '', newName: '' })
+              }
+              className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            >
+              Cancel
+            </button>
+            <Button onClick={handleDuplicate} className="flex-1">
+              Duplicate
+            </Button>
           </div>
         </div>
-      )}
-    </div>
+      </Modal>
+    </>
   );
 }

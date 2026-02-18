@@ -1,19 +1,12 @@
 import { apiClient } from './client';
 import { Position } from '../constants/player.constants';
+import type { AttendanceStats } from './attendance';
 
-export type StatsPeriod = 'all_time' | 'this_season' | 'this_year' | 'this_month';
-
-export interface AttendanceBreakdown {
-  total: number;
-  present: number;
-  late: number;
-  benched: number;
-  absent: number;
-  sick: number;
-  rate: number;
-  totalTrainings: number;
-  totalMatches: number;
-}
+export type StatsPeriod =
+  | 'all_time'
+  | 'this_season'
+  | 'this_year'
+  | 'this_month';
 
 export interface PlayerStats {
   playerId: string;
@@ -23,7 +16,7 @@ export interface PlayerStats {
   goals: number;
   assists: number;
   cleanSheets: number;
-  attendance: AttendanceBreakdown;
+  attendance: AttendanceStats;
   period: StatsPeriod;
 }
 
@@ -38,48 +31,50 @@ export interface ChildInfo {
   id: string;
   firstName: string;
   lastName: string;
+  groupId: string | null;
+  stats: PlayerStats | null;
 }
 
 export interface ChildrenStats {
   children: ChildInfo[];
-  stats: PlayerStats | null;
 }
 
 export const statsApi = {
-  getMyStats: async (period: StatsPeriod = 'all_time'): Promise<PlayerStats> => {
+  getMyStats: async (
+    period: StatsPeriod = 'all_time',
+  ): Promise<PlayerStats> => {
     const response = await apiClient.get<PlayerStats>(
-      `/players/stats/my?period=${period}`
+      `/players/stats/my?period=${period}`,
     );
     return response.data;
   },
 
-  getTeamStats: async (period: StatsPeriod = 'all_time'): Promise<TeamStats[]> => {
+  getTeamStats: async (
+    period: StatsPeriod = 'all_time',
+  ): Promise<TeamStats[]> => {
     const response = await apiClient.get<TeamStats[]>(
-      `/players/stats/team?period=${period}`
+      `/players/stats/team?period=${period}`,
     );
     return response.data;
   },
 
   getPlayerStats: async (
     playerId: string,
-    period: StatsPeriod = 'all_time'
+    period: StatsPeriod = 'all_time',
   ): Promise<PlayerStats> => {
     const response = await apiClient.get<PlayerStats>(
-      `/players/stats/${playerId}?period=${period}`
+      `/players/stats/${playerId}?period=${period}`,
     );
     return response.data;
   },
 
   getChildrenStats: async (
     period: StatsPeriod = 'all_time',
-    childId?: string
   ): Promise<ChildrenStats> => {
     const params = new URLSearchParams({ period });
-    if (childId) {
-      params.append('childId', childId);
-    }
+
     const response = await apiClient.get<ChildrenStats>(
-      `/players/stats/children?${params.toString()}`
+      `/players/stats/children?${params.toString()}`,
     );
     return response.data;
   },

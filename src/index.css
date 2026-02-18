@@ -114,6 +114,41 @@
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.15s ease !important;
 }
 
+/* Hover-expanding sidebar */
+.sidebar {
+  width: 80px;
+  transition: width 0.3s ease;
+}
+
+.sidebar:hover {
+  width: 280px;
+}
+
+.sidebar:hover .nav-label {
+  opacity: 1;
+}
+
+.sidebar:hover .logo-text {
+  opacity: 1;
+}
+
+.sidebar:hover .user-info {
+  opacity: 1;
+}
+
+.sidebar:hover .section-label {
+  opacity: 1;
+}
+
+.nav-label,
+.logo-text,
+.user-info,
+.section-label {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
+}
+
 /* Dark mode DatePicker overrides */
 .dark .react-datepicker {
   background-color: var(--color-gray-900) !important;

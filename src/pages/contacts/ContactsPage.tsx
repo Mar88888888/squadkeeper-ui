@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { contactsApi, type ContactInfo, type ContactsResponse } from '../../api/contacts';
 import { UserRole } from '../../types';
-import { EmptyState, emptyStateIcons } from '../../components/EmptyState';
+import { PageHeader } from '../../components/layout/PageHeader';
+import { PageContent } from '../../components/layout/PageContent';
+import { Card, Avatar, Badge, EmptyState } from '../../components/ui';
 
 export function ContactsPage() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [contacts, setContacts] = useState<ContactsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,85 +40,34 @@ export function ContactsPage() {
   const canFilterMyCoaches =
     user?.role === UserRole.PLAYER || user?.role === UserRole.PARENT;
 
+  const NoContactsIcon = () => (
+    <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    </svg>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-950">
-      <nav className="bg-white dark:bg-gray-900 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center gap-4">
-              <Link to="/dashboard" className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
-                  <svg
-                    className="w-6 h-6 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                </div>
-                <span className="font-bold text-xl text-gray-900 dark:text-gray-100">Football Academy</span>
-              </Link>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                {user?.firstName} {user?.lastName}
-              </span>
-              <button
-                onClick={logout}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-200 dark:focus:ring-red-900 active:scale-95 transition-all"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+    <>
+      <PageHeader
+        title="Contacts"
+        subtitle="Staff and administration directory"
+      />
 
-      <main className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link
-              to="/dashboard"
-              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 flex items-center gap-2"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                />
-              </svg>
-              Back to Dashboard
-            </Link>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Contacts</h1>
-        </div>
-
+      <PageContent>
         {loading ? (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-8 text-center text-gray-500 dark:text-gray-400">
-            Loading contacts...
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
           </div>
         ) : error ? (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-8 text-center text-red-600 dark:text-red-400">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-xl">
             {error}
           </div>
         ) : (
           <div className="space-y-8">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+            {/* Coaches Section */}
+            <Card className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Coaches</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Coaches</h2>
                 {canFilterMyCoaches && contacts && contacts.myCoachIds.length > 0 && (
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -133,10 +83,9 @@ export function ContactsPage() {
 
               {filteredCoaches.length === 0 ? (
                 <EmptyState
-                  icon={emptyStateIcons.contact}
+                  icon={<NoContactsIcon />}
                   title="No coaches found"
                   description={showOnlyMyCoaches ? "You don't have any assigned coaches. Try turning off the filter." : "No coaches are available at the moment."}
-                  compact
                 />
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -149,11 +98,12 @@ export function ContactsPage() {
                   ))}
                 </div>
               )}
-            </div>
+            </Card>
 
+            {/* Admins Section */}
             {contacts && contacts.admins.length > 0 && (
-              <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
+              <Card className="p-6">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
                   Administration
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -161,12 +111,12 @@ export function ContactsPage() {
                     <ContactCard key={admin.id} contact={admin} />
                   ))}
                 </div>
-              </div>
+              </Card>
             )}
           </div>
         )}
-      </main>
-    </div>
+      </PageContent>
+    </>
   );
 }
 
@@ -199,21 +149,21 @@ function ContactCard({
   return (
     <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-5 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
       <div className="flex items-start gap-4">
-        <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center flex-shrink-0 select-none">
-          <span className="text-lg font-semibold text-blue-600 dark:text-blue-400">
-            {contact.firstName[0]}
-            {contact.lastName[0]}
-          </span>
-        </div>
+        <Avatar
+          firstName={contact.firstName}
+          lastName={contact.lastName}
+          size="lg"
+          className="bg-gradient-to-br from-green-400 to-emerald-500"
+        />
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="font-semibold text-gray-900 dark:text-white truncate">
               {contact.firstName} {contact.lastName}
             </h3>
             {isMyCoach && (
-              <span className="px-2 py-0.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
+              <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
                 My coach
-              </span>
+              </Badge>
             )}
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
@@ -223,7 +173,7 @@ function ContactCard({
           <div className="mt-3 space-y-1">
             <button
               onClick={() => copyToClipboard(contact.email, 'email')}
-              className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 truncate w-full text-left group cursor-pointer"
+              className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 truncate w-full text-left group cursor-pointer"
               title="Click to copy"
             >
               <svg
@@ -241,7 +191,7 @@ function ContactCard({
               </svg>
               <span className="truncate">{contact.email}</span>
               {copiedField === 'email' ? (
-                <span className="text-xs text-green-600 flex-shrink-0">Copied!</span>
+                <span className="text-xs text-green-600 dark:text-green-400 flex-shrink-0">Copied!</span>
               ) : (
                 <svg
                   className="w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-50"
@@ -261,7 +211,7 @@ function ContactCard({
             {contact.phoneNumber && (
               <button
                 onClick={() => copyToClipboard(contact.phoneNumber!, 'phone')}
-                className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 w-full text-left group cursor-pointer"
+                className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 w-full text-left group cursor-pointer"
                 title="Click to copy"
               >
                 <svg
@@ -279,7 +229,7 @@ function ContactCard({
                 </svg>
                 <span>{contact.phoneNumber}</span>
                 {copiedField === 'phone' ? (
-                  <span className="text-xs text-green-600 flex-shrink-0">Copied!</span>
+                  <span className="text-xs text-green-600 dark:text-green-400 flex-shrink-0">Copied!</span>
                 ) : (
                   <svg
                     className="w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-50"

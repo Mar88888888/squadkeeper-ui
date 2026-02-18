@@ -4,6 +4,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AdminRoute } from './components/AdminRoute';
 import { RoleRoute } from './components/RoleRoute';
+import { AppLayout } from './components/layout';
 import { LoginPage } from './pages/auth';
 import { DashboardPage } from './pages/dashboard';
 import { UserManagementPage, UserListPage, GroupManagementPage } from './pages/admin';
@@ -17,6 +18,10 @@ import { SquadListPage, SquadBuilderPage } from './pages/squads';
 import { PerformanceScorePage, PerformanceSettingsPage } from './pages/analytics';
 import { UserRole } from './types';
 
+function LayoutWrapper({ children }: { children: React.ReactNode }) {
+  return <AppLayout>{children}</AppLayout>;
+}
+
 function App() {
   return (
     <ThemeProvider>
@@ -28,7 +33,7 @@ function App() {
             path="/admin/users"
             element={
               <AdminRoute>
-                <UserManagementPage />
+                <LayoutWrapper><UserManagementPage /></LayoutWrapper>
               </AdminRoute>
             }
           />
@@ -36,7 +41,7 @@ function App() {
             path="/admin/users/list"
             element={
               <AdminRoute>
-                <UserListPage />
+                <LayoutWrapper><UserListPage /></LayoutWrapper>
               </AdminRoute>
             }
           />
@@ -44,7 +49,7 @@ function App() {
             path="/admin/groups"
             element={
               <AdminRoute>
-                <GroupManagementPage />
+                <LayoutWrapper><GroupManagementPage /></LayoutWrapper>
               </AdminRoute>
             }
           />
@@ -52,7 +57,7 @@ function App() {
             path="/trainings"
             element={
               <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH, UserRole.PLAYER, UserRole.PARENT]}>
-                <TrainingsPage />
+                <LayoutWrapper><TrainingsPage /></LayoutWrapper>
               </RoleRoute>
             }
           />
@@ -60,7 +65,7 @@ function App() {
             path="/trainings/:id"
             element={
               <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH, UserRole.PLAYER, UserRole.PARENT]}>
-                <TrainingDetailsPage />
+                <LayoutWrapper><TrainingDetailsPage /></LayoutWrapper>
               </RoleRoute>
             }
           />
@@ -68,7 +73,7 @@ function App() {
             path="/matches"
             element={
               <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH, UserRole.PLAYER, UserRole.PARENT]}>
-                <MatchesPage />
+                <LayoutWrapper><MatchesPage /></LayoutWrapper>
               </RoleRoute>
             }
           />
@@ -76,7 +81,7 @@ function App() {
             path="/matches/:id"
             element={
               <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH, UserRole.PLAYER, UserRole.PARENT]}>
-                <MatchDetailsPage />
+                <LayoutWrapper><MatchDetailsPage /></LayoutWrapper>
               </RoleRoute>
             }
           />
@@ -84,7 +89,7 @@ function App() {
             path="/calendar"
             element={
               <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH, UserRole.PLAYER, UserRole.PARENT]}>
-                <CalendarPage />
+                <LayoutWrapper><CalendarPage /></LayoutWrapper>
               </RoleRoute>
             }
           />
@@ -92,7 +97,7 @@ function App() {
             path="/stats/my"
             element={
               <RoleRoute allowedRoles={[UserRole.PLAYER]}>
-                <MyStatsPage />
+                <LayoutWrapper><MyStatsPage /></LayoutWrapper>
               </RoleRoute>
             }
           />
@@ -100,7 +105,7 @@ function App() {
             path="/stats/team"
             element={
               <RoleRoute allowedRoles={[UserRole.COACH, UserRole.ADMIN]}>
-                <TeamStatsPage />
+                <LayoutWrapper><TeamStatsPage /></LayoutWrapper>
               </RoleRoute>
             }
           />
@@ -108,7 +113,7 @@ function App() {
             path="/stats/player/:id"
             element={
               <RoleRoute allowedRoles={[UserRole.COACH, UserRole.ADMIN]}>
-                <PlayerStatsPage />
+                <LayoutWrapper><PlayerStatsPage /></LayoutWrapper>
               </RoleRoute>
             }
           />
@@ -116,7 +121,7 @@ function App() {
             path="/stats/children"
             element={
               <RoleRoute allowedRoles={[UserRole.PARENT]}>
-                <ChildStatsPage />
+                <LayoutWrapper><ChildStatsPage /></LayoutWrapper>
               </RoleRoute>
             }
           />
@@ -124,7 +129,7 @@ function App() {
             path="/my-groups"
             element={
               <RoleRoute allowedRoles={[UserRole.COACH]}>
-                <MyGroupsPage />
+                <LayoutWrapper><MyGroupsPage /></LayoutWrapper>
               </RoleRoute>
             }
           />
@@ -132,7 +137,7 @@ function App() {
             path="/contacts"
             element={
               <RoleRoute allowedRoles={[UserRole.PLAYER, UserRole.PARENT, UserRole.COACH, UserRole.ADMIN]}>
-                <ContactsPage />
+                <LayoutWrapper><ContactsPage /></LayoutWrapper>
               </RoleRoute>
             }
           />
@@ -140,7 +145,7 @@ function App() {
             path="/squads"
             element={
               <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH]}>
-                <SquadListPage />
+                <LayoutWrapper><SquadListPage /></LayoutWrapper>
               </RoleRoute>
             }
           />
@@ -148,7 +153,7 @@ function App() {
             path="/squads/new"
             element={
               <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH]}>
-                <SquadBuilderPage />
+                <LayoutWrapper><SquadBuilderPage /></LayoutWrapper>
               </RoleRoute>
             }
           />
@@ -156,7 +161,7 @@ function App() {
             path="/squads/:id"
             element={
               <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH]}>
-                <SquadBuilderPage />
+                <LayoutWrapper><SquadBuilderPage /></LayoutWrapper>
               </RoleRoute>
             }
           />
@@ -164,7 +169,7 @@ function App() {
             path="/analytics/performance"
             element={
               <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH]}>
-                <PerformanceScorePage />
+                <LayoutWrapper><PerformanceScorePage /></LayoutWrapper>
               </RoleRoute>
             }
           />
@@ -172,7 +177,7 @@ function App() {
             path="/performance-settings/:groupId"
             element={
               <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH]}>
-                <PerformanceSettingsPage />
+                <LayoutWrapper><PerformanceSettingsPage /></LayoutWrapper>
               </RoleRoute>
             }
           />
@@ -180,7 +185,7 @@ function App() {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <DashboardPage />
+                <LayoutWrapper><DashboardPage /></LayoutWrapper>
               </ProtectedRoute>
             }
           />

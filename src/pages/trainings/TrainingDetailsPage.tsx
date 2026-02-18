@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { trainingsApi, type TrainingDetails, type PlayerBrief } from '../../api/trainings';
+import {
+  trainingsApi,
+  type TrainingDetails,
+  type PlayerBrief,
+} from '../../api/trainings';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserRole } from '../../types';
 import {
@@ -15,10 +18,10 @@ import {
   type Evaluation,
   type EvaluationRecord,
 } from '../../api/evaluations';
-import {
-  AttendanceStatusLabels,
-  AttendanceStatusColors,
-} from '../../constants/attendance.constants';
+import { AttendanceStatusLabels } from '../../constants/attendance.constants';
+import { PageHeader, PageContent } from '../../components/layout';
+import { Card, CardContent, Modal, Button, Avatar } from '../../components/ui';
+import { useParams } from 'react-router-dom';
 
 const EVAL_CATEGORIES = [
   { key: 'technical', label: 'Technical' },
@@ -27,28 +30,142 @@ const EVAL_CATEGORIES = [
   { key: 'psychological', label: 'Psychological' },
 ] as const;
 
-type EvalCategory = typeof EVAL_CATEGORIES[number]['key'];
-type Tab = 'attendance' | 'evaluations';
+type EvalCategory = (typeof EVAL_CATEGORIES)[number]['key'];
+
+//Icons
+const CalendarIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+    />
+  </svg>
+);
+
+const ClockIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
+  </svg>
+);
+
+const LocationIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+    />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+    />
+  </svg>
+);
+
+const StarIcon = ({ filled = false }: { filled?: boolean }) => (
+  <svg
+    className="w-5 h-5"
+    fill={filled ? 'currentColor' : 'none'}
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+    />
+  </svg>
+);
+
+// Avatar gradient colors
+const avatarColors = [
+  'from-amber-400 to-orange-500',
+  'from-blue-400 to-indigo-500',
+  'from-purple-400 to-violet-500',
+  'from-green-400 to-teal-500',
+  'from-red-400 to-rose-500',
+  'from-pink-400 to-fuchsia-500',
+  'from-cyan-400 to-sky-500',
+];
+
+function getPlayerColor(index: number): string {
+  return avatarColors[index % avatarColors.length];
+}
+
+function getAttendanceRowStyle(status: AttendanceStatus): string {
+  switch (status) {
+    case AttendanceStatus.ABSENT:
+      return 'bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/50';
+    case AttendanceStatus.LATE:
+      return 'bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/50';
+    case AttendanceStatus.SICK:
+      return 'bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/50';
+    default:
+      return 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700';
+  }
+}
+
+function getSelectStyle(status: AttendanceStatus): string {
+  switch (status) {
+    case AttendanceStatus.ABSENT:
+      return 'border-red-200 dark:border-red-800 text-red-600 dark:text-red-400';
+    case AttendanceStatus.LATE:
+      return 'border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400';
+    case AttendanceStatus.SICK:
+      return 'border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400';
+    default:
+      return 'border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white';
+  }
+}
 
 export function TrainingDetailsPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { user } = useAuth();
 
-  const canEdit = user?.role === UserRole.ADMIN || user?.role === UserRole.COACH;
-  const isReadOnly = !canEdit;
+  const canEdit =
+    user?.role === UserRole.ADMIN || user?.role === UserRole.COACH;
 
   const [training, setTraining] = useState<TrainingDetails | null>(null);
   const [attendance, setAttendance] = useState<Attendance[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState<Tab>('attendance');
   const [isSaving, setIsSaving] = useState(false);
 
-  const [attendanceRecords, setAttendanceRecords] = useState<Record<string, AttendanceStatus>>({});
+  const [attendanceRecords, setAttendanceRecords] = useState<
+    Record<string, AttendanceStatus>
+  >({});
 
-  const [selectedPlayer, setSelectedPlayer] = useState<PlayerBrief | null>(null);
+  const [selectedPlayer, setSelectedPlayer] = useState<PlayerBrief | null>(
+    null,
+  );
+  const [selectedPlayerIndex, setSelectedPlayerIndex] = useState(0);
   const [evalRatings, setEvalRatings] = useState<Record<EvalCategory, number>>({
     technical: 5,
     tactical: 5,
@@ -62,11 +179,13 @@ export function TrainingDetailsPage() {
     setIsLoading(true);
     setError('');
     try {
-      const [trainingData, attendanceData, evaluationsData] = await Promise.all([
-        trainingsApi.getOne(id),
-        attendanceApi.getByTraining(id),
-        evaluationsApi.getByTraining(id),
-      ]);
+      const [trainingData, attendanceData, evaluationsData] = await Promise.all(
+        [
+          trainingsApi.getOne(id),
+          attendanceApi.getByTraining(id),
+          evaluationsApi.getByTraining(id),
+        ],
+      );
       setTraining(trainingData);
       setAttendance(attendanceData);
       setEvaluations(evaluationsData);
@@ -88,8 +207,20 @@ export function TrainingDetailsPage() {
     loadData();
   }, [id]);
 
-  const handleAttendanceChange = (playerId: string, status: AttendanceStatus) => {
+  const handleAttendanceChange = (
+    playerId: string,
+    status: AttendanceStatus,
+  ) => {
     setAttendanceRecords((prev) => ({ ...prev, [playerId]: status }));
+  };
+
+  const markAllPresent = () => {
+    if (!training) return;
+    const records: Record<string, AttendanceStatus> = {};
+    training.group.players.forEach((player) => {
+      records[player.id] = AttendanceStatus.PRESENT;
+    });
+    setAttendanceRecords(records);
   };
 
   const saveAttendance = async () => {
@@ -97,10 +228,12 @@ export function TrainingDetailsPage() {
     setIsSaving(true);
     setError('');
     try {
-      const records: AttendanceRecord[] = training.group.players.map((player) => ({
-        playerId: player.id,
-        status: attendanceRecords[player.id] || AttendanceStatus.PRESENT,
-      }));
+      const records: AttendanceRecord[] = training.group.players.map(
+        (player) => ({
+          playerId: player.id,
+          status: attendanceRecords[player.id] || AttendanceStatus.PRESENT,
+        }),
+      );
 
       const result = await attendanceApi.markBatch({
         eventId: id,
@@ -145,8 +278,9 @@ export function TrainingDetailsPage() {
     }
   };
 
-  const openEvaluationModal = (player: PlayerBrief) => {
+  const openEvaluationModal = (player: PlayerBrief, index: number) => {
     setSelectedPlayer(player);
+    setSelectedPlayerIndex(index);
     const playerEval = evaluations.find((e) => e.player.id === player.id);
     if (playerEval) {
       setEvalRatings({
@@ -177,29 +311,66 @@ export function TrainingDetailsPage() {
   };
 
   const isPlayerPresent = (playerId: string): boolean => {
-    const status = getPlayerAttendance(playerId);
-    return status === AttendanceStatus.PRESENT || status === AttendanceStatus.LATE;
+    const status = attendanceRecords[playerId] || getPlayerAttendance(playerId);
+    return (
+      status === AttendanceStatus.PRESENT || status === AttendanceStatus.LATE
+    );
   };
 
   const canEvaluate = (playerId: string): boolean => {
-    if (user?.role !== UserRole.COACH) return false;
+    if (user?.role !== UserRole.COACH && user?.role !== UserRole.ADMIN)
+      return false;
     return isPlayerPresent(playerId);
   };
 
-  const formatDateTime = (dateStr: string) => {
+  const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('en-US', {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
       year: 'numeric',
+    });
+  };
+
+  const formatTime = (startStr: string, endStr: string) => {
+    const start = new Date(startStr).toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
+      hour12: false,
     });
+    const end = new Date(endStr).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+    return `${start} - ${end}`;
+  };
+
+  // Calculate attendance stats
+  const getAttendanceStats = () => {
+    const stats = { present: 0, absent: 0, late: 0, excused: 0 };
+    Object.values(attendanceRecords).forEach((status) => {
+      switch (status) {
+        case AttendanceStatus.PRESENT:
+          stats.present++;
+          break;
+        case AttendanceStatus.ABSENT:
+          stats.absent++;
+          break;
+        case AttendanceStatus.LATE:
+          stats.late++;
+          break;
+        case AttendanceStatus.SICK:
+          stats.excused++;
+          break;
+      }
+    });
+    return stats;
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-950 flex items-center justify-center">
+      <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
       </div>
     );
@@ -207,278 +378,397 @@ export function TrainingDetailsPage() {
 
   if (!training) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-950 flex items-center justify-center">
-        <div className="text-gray-500 dark:text-gray-400">Training not found</div>
+      <div className="flex items-center justify-center h-full">
+        <div className="text-gray-500 dark:text-gray-400">
+          Training not found
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-950">
-      <header className="bg-white dark:bg-gray-900 shadow border-t-4 border-green-500">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">{training.group.name}</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{formatDateTime(training.startTime)}</p>
-              <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
-                <span className="flex items-center gap-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                    />
-                  </svg>
-                  {training.location}
-                </span>
-                {training.topic && <span>| {training.topic}</span>}
-              </div>
-            </div>
-            <button
-              onClick={() => navigate('/trainings')}
-              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-            >
-              Back to Trainings
-            </button>
-          </div>
-        </div>
-      </header>
+  const stats = getAttendanceStats();
+  const totalPlayers = training.group.players.length;
+  const attendancePercent =
+    totalPlayers > 0
+      ? Math.round(((stats.present + stats.late) / totalPlayers) * 100)
+      : 0;
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
+  return (
+    <>
+      <PageHeader
+        title={training.topic || 'Training Session'}
+        subtitle={training.group.name}
+        actions={
+          canEdit && (
+            <Button onClick={saveAttendance} disabled={isSaving}>
+              {isSaving ? 'Saving...' : 'Save'}
+            </Button>
+          )
+        }
+      />
+
+      <PageContent>
         {error && (
-          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-gray-700 text-red-700 dark:text-red-400 rounded-lg text-sm">
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-xl text-sm">
             {error}
           </div>
         )}
 
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-          <div className="border-b border-gray-200 dark:border-gray-700">
-            <nav className="flex">
-              <button
-                onClick={() => setActiveTab('attendance')}
-                className={`px-6 py-4 text-sm font-medium transition-all duration-200 ${
-                  activeTab === 'attendance'
-                    ? 'text-green-600 border-b-2 border-green-600'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-b-2 border-transparent'
-                }`}
-              >
-                Attendance
-              </button>
-              <button
-                onClick={() => setActiveTab('evaluations')}
-                className={`px-6 py-4 text-sm font-medium transition-all duration-200 ${
-                  activeTab === 'evaluations'
-                    ? 'text-green-600 border-b-2 border-green-600'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-b-2 border-transparent'
-                }`}
-              >
-                Evaluations
-              </button>
-            </nav>
-          </div>
-
-          {activeTab === 'attendance' && (
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100">
-                  {isReadOnly ? 'Attendance' : `Players (${training.group.players.length})`}
+        {/* Training Info Card */}
+        <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-6 text-white mb-8 relative overflow-hidden">
+          <div className="absolute right-0 top-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute right-20 bottom-0 w-32 h-32 bg-white/10 rounded-full translate-y-1/2"></div>
+          <div className="relative">
+            <div className="flex items-start justify-between">
+              <div>
+                {training.topic && (
+                  <span className="px-3 py-1 bg-white/20 text-white text-xs font-semibold rounded-full">
+                    {training.topic}
+                  </span>
+                )}
+                <h2 className="text-2xl font-bold mt-3">
+                  {training.group.name}
                 </h2>
+                <p className="text-green-100 mt-1">{training.location}</p>
+              </div>
+              <span className="px-4 py-2 bg-white/20 text-white text-sm font-semibold rounded-xl">
+                {new Date(training.startTime) > new Date()
+                  ? 'Planned'
+                  : 'Completed'}
+              </span>
+            </div>
+            <div className="flex items-center gap-8 mt-6 flex-wrap">
+              <div className="flex items-center gap-2">
+                <span className="text-green-200">
+                  <CalendarIcon />
+                </span>
+                <span className="font-medium">
+                  {formatDate(training.startTime)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-green-200">
+                  <ClockIcon />
+                </span>
+                <span className="font-medium">
+                  {formatTime(training.startTime, training.endTime)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-green-200">
+                  <LocationIcon />
+                </span>
+                <span className="font-medium">{training.location}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Attendance */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Attendance Section */}
+            <Card>
+              <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Attendance
+                  </h3>
+                  <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-semibold rounded-full">
+                    {stats.present + stats.late}/{totalPlayers} present
+                  </span>
+                </div>
                 {canEdit && (
                   <button
-                    onClick={saveAttendance}
-                    disabled={isSaving}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 disabled:opacity-50 transition-all"
+                    onClick={markAllPresent}
+                    className="text-sm text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium"
                   >
-                    {isSaving ? 'Saving...' : 'Save Attendance'}
+                    Mark all
                   </button>
                 )}
               </div>
+              <CardContent>
+                <div className="space-y-3">
+                  {training.group.players.map((player, index) => {
+                    const currentStatus =
+                      attendanceRecords[player.id] || AttendanceStatus.PRESENT;
+                    const playerEval = getPlayerEvaluation(player.id);
+                    const avgRating = playerEval
+                      ? getEvaluationAverage(playerEval)
+                      : null;
+                    const playerCanEvaluate = canEvaluate(player.id);
 
-              <div className="space-y-3">
-                {training.group.players.map((player) => {
-                  const playerStatus = attendanceRecords[player.id] || getPlayerAttendance(player.id);
-                  return (
-                    <div
-                      key={player.id}
-                      className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
-                    >
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-gray-100">
-                          {player.firstName} {player.lastName}
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{player.position}</p>
-                      </div>
-                      {isReadOnly ? (
-                        <span
-                          className={`px-3 py-2 rounded-lg font-medium ${
-                            playerStatus ? AttendanceStatusColors[playerStatus] : 'bg-gray-100 dark:bg-gray-950 text-gray-600 dark:text-gray-400'
-                          }`}
-                        >
-                          {playerStatus ? AttendanceStatusLabels[playerStatus] : 'Not marked'}
-                        </span>
-                      ) : (
-                        <select
-                          value={attendanceRecords[player.id] || AttendanceStatus.PRESENT}
-                          onChange={(e) =>
-                            handleAttendanceChange(player.id, e.target.value as AttendanceStatus)
-                          }
-                          className={`px-3 py-2 rounded-lg border-0 font-medium ${
-                            AttendanceStatusColors[
-                              attendanceRecords[player.id] || AttendanceStatus.PRESENT
-                            ]
-                          }`}
-                        >
-                          {Object.values(AttendanceStatus).map((status) => (
-                            <option key={status} value={status}>
-                              {AttendanceStatusLabels[status]}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'evaluations' && (
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100">
-                  {isReadOnly ? 'Evaluations' : 'Player Evaluations'}
-                </h2>
-                {user?.role === UserRole.COACH && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Only present players can be evaluated
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-3">
-                {training.group.players.map((player) => {
-                  const playerEval = getPlayerEvaluation(player.id);
-                  const playerCanEvaluate = canEvaluate(player.id);
-                  const playerStatus = getPlayerAttendance(player.id);
-                  const avgRating = playerEval ? getEvaluationAverage(playerEval) : null;
-
-                  if (isReadOnly) {
                     return (
-                      <div key={player.id} className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900 dark:text-gray-100">
+                      <div
+                        key={player.id}
+                        className={`flex items-center justify-between p-4 rounded-xl transition-colors ${getAttendanceRowStyle(currentStatus)}`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <Avatar
+                            className={`bg-gradient-to-br ${currentStatus === AttendanceStatus.ABSENT ? 'from-gray-300 to-gray-400' : getPlayerColor(index)}`}
+                          />
+                          <div>
+                            <p className="font-semibold text-gray-900 dark:text-white">
                               {player.firstName} {player.lastName}
                             </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">{player.position}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              {player.position}
+                            </p>
                           </div>
                           {avgRating !== null && (
-                            <div className="text-center px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
-                              <p className="text-lg font-bold text-yellow-700 dark:text-yellow-400">{avgRating}</p>
-                              <p className="text-xs text-yellow-600 dark:text-yellow-400">Avg</p>
-                            </div>
+                            <span className="px-2 py-1 text-sm font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                              {avgRating}
+                            </span>
                           )}
                         </div>
-                        {playerEval ? (
-                          <>
-                            <div className="grid grid-cols-4 gap-2">
-                              {EVAL_CATEGORIES.map(({ key, label }) => (
-                                <div key={key} className="text-center p-2 bg-white dark:bg-gray-900 rounded-lg">
-                                  <p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">{label}</p>
-                                  <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                    {playerEval[key] ?? '-'}
-                                  </p>
-                                </div>
+                        <div className="flex items-center gap-3">
+                          {canEdit ? (
+                            <select
+                              value={currentStatus}
+                              onChange={(e) =>
+                                handleAttendanceChange(
+                                  player.id,
+                                  e.target.value as AttendanceStatus,
+                                )
+                              }
+                              className={`px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white dark:bg-gray-800 ${getSelectStyle(currentStatus)}`}
+                            >
+                              {Object.values(AttendanceStatus).map((status) => (
+                                <option key={status} value={status}>
+                                  {AttendanceStatusLabels[status]}
+                                </option>
                               ))}
-                            </div>
-                            {playerEval.comment && (
-                              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 italic">
-                                "{playerEval.comment}"
-                              </p>
-                            )}
-                          </>
-                        ) : (
-                          <p className="text-sm text-gray-400 dark:text-gray-500">No evaluation yet</p>
-                        )}
+                            </select>
+                          ) : (
+                            <span
+                              className={`px-3 py-2 rounded-lg font-medium text-sm ${getSelectStyle(currentStatus)} bg-white dark:bg-gray-800`}
+                            >
+                              {AttendanceStatusLabels[currentStatus]}
+                            </span>
+                          )}
+                          {canEdit && (
+                            <button
+                              onClick={() =>
+                                playerCanEvaluate &&
+                                openEvaluationModal(player, index)
+                              }
+                              className={`p-2 rounded-lg transition-colors ${
+                                playerCanEvaluate
+                                  ? 'text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30'
+                                  : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                              }`}
+                              title={
+                                playerCanEvaluate
+                                  ? 'Rate player'
+                                  : 'Player must be present to rate'
+                              }
+                              disabled={!playerCanEvaluate}
+                            >
+                              <StarIcon filled={avgRating !== null} />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     );
-                  }
+                  })}
+                </div>
+              </CardContent>
+            </Card>
 
-                  const playerPresent = isPlayerPresent(player.id);
+            {/* Evaluations Summary (Read-only for players/parents) */}
+            {!canEdit && evaluations.length > 0 && (
+              <Card>
+                <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Evaluations
+                  </h3>
+                </div>
+                <CardContent>
+                  <div className="space-y-4">
+                    {training.group.players.map((player) => {
+                      const playerEval = getPlayerEvaluation(player.id);
+                      if (!playerEval) return null;
+                      const avgRating = getEvaluationAverage(playerEval);
 
-                  return (
-                    <div
-                      key={player.id}
-                      className={`p-4 rounded-lg ${playerPresent ? 'bg-gray-50 dark:bg-gray-800' : 'bg-gray-100 dark:bg-gray-950 opacity-60'}`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div>
-                            <p className="font-medium text-gray-900 dark:text-gray-100">
-                              {player.firstName} {player.lastName}
-                            </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">{player.position}</p>
-                          </div>
-                          {playerStatus && (
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${AttendanceStatusColors[playerStatus]}`}>
-                              {AttendanceStatusLabels[playerStatus]}
-                            </span>
-                          )}
-                          {avgRating !== null && (
-                            <span className="px-2 py-1 text-sm font-bold text-yellow-700 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
-                              Avg: {avgRating}
-                            </span>
-                          )}
-                        </div>
-                        {playerCanEvaluate ? (
-                          <button
-                            onClick={() => openEvaluationModal(player)}
-                            className="px-3 py-1 text-sm text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition-colors"
-                          >
-                            {playerEval ? 'Edit' : 'Add'} Evaluation
-                          </button>
-                        ) : !playerPresent && user?.role === UserRole.COACH ? (
-                          <span className="text-sm text-gray-400 dark:text-gray-500">
-                            {playerStatus ? 'Not present' : 'Mark attendance first'}
-                          </span>
-                        ) : null}
-                      </div>
-
-                      {playerEval && playerPresent && (
-                        <div className="mt-3 grid grid-cols-4 gap-2">
-                          {EVAL_CATEGORIES.map(({ key, label }) => (
-                            <div key={key} className="text-center p-2 bg-white dark:bg-gray-900 rounded-lg">
-                              <p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">{label}</p>
-                              <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                {playerEval[key] ?? '-'}
+                      return (
+                        <div
+                          key={player.id}
+                          className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div>
+                              <p className="font-semibold text-gray-900 dark:text-white">
+                                {player.firstName} {player.lastName}
+                              </p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                                {player.position}
                               </p>
                             </div>
-                          ))}
+                            {avgRating !== null && (
+                              <div className="text-center px-3 py-1 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                                <p className="text-lg font-bold text-amber-700 dark:text-amber-400">
+                                  {avgRating}
+                                </p>
+                                <p className="text-xs text-amber-600 dark:text-amber-500">
+                                  Avg
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-4 gap-2">
+                            {EVAL_CATEGORIES.map(({ key, label }) => (
+                              <div
+                                key={key}
+                                className="text-center p-2 bg-white dark:bg-gray-900 rounded-lg"
+                              >
+                                <p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                                  {label}
+                                </p>
+                                <p className="text-lg font-bold text-gray-900 dark:text-white">
+                                  {playerEval[key] ?? '-'}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                          {playerEval.comment && (
+                            <p className="mt-3 text-sm text-gray-600 dark:text-gray-400 italic">
+                              "{playerEval.comment}"
+                            </p>
+                          )}
                         </div>
-                      )}
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Right Column - Stats */}
+          <div className="space-y-6">
+            {/* Quick Stats */}
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Statistics
+              </h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Attendance
+                  </span>
+                  <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                    {attendancePercent}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div
+                    className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${attendancePercent}%` }}
+                  ></div>
+                </div>
+
+                <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
+                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                        {stats.present}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Present
+                      </p>
                     </div>
-                  );
-                })}
+                    <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
+                      <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                        {stats.absent}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Absent
+                      </p>
+                    </div>
+                    <div className="text-center p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
+                      <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                        {stats.late}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Late
+                      </p>
+                    </div>
+                    <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                      <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {stats.excused}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Excused
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Group Info */}
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Group Info
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Group
+                  </span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {training.group.name}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Players
+                  </span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {totalPlayers}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Evaluations
+                  </span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {evaluations.length}
+                  </span>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </PageContent>
+
+      {/* Evaluation Modal */}
+      <Modal
+        isOpen={!!selectedPlayer}
+        onClose={() => setSelectedPlayer(null)}
+        title="Player Evaluation"
+      >
+        {selectedPlayer && (
+          <div>
+            <div className="flex items-center gap-4 mb-6">
+              <Avatar
+                size="lg"
+                className={`bg-gradient-to-br ${getPlayerColor(selectedPlayerIndex)}`}
+              />
+              <div>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {selectedPlayer.firstName} {selectedPlayer.lastName}
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Training evaluation
+                </p>
               </div>
             </div>
-          )}
-        </div>
-      </main>
 
-      {selectedPlayer && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
-            <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100 mb-2">
-              Evaluate {selectedPlayer.firstName} {selectedPlayer.lastName}
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Rate from 1 to 10</p>
-
-            <div className="space-y-4">
+            <div className="space-y-5">
               {EVAL_CATEGORIES.map(({ key, label }) => (
                 <div key={key}>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                     {label}
                   </label>
                   <div className="flex items-center gap-2">
@@ -493,9 +783,9 @@ export function TrainingDetailsPage() {
                           [key]: parseInt(e.target.value),
                         }))
                       }
-                      className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-600"
+                      className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
                     />
-                    <span className="w-8 text-center font-bold text-gray-900 dark:text-gray-100">
+                    <span className="w-8 text-center font-bold text-amber-600 dark:text-amber-400">
                       {evalRatings[key]}
                     </span>
                   </div>
@@ -504,36 +794,37 @@ export function TrainingDetailsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Comment (optional)
+                  Comment
                 </label>
                 <textarea
                   value={evalComment}
                   onChange={(e) => setEvalComment(e.target.value)}
-                  rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
-                  placeholder="Add a comment..."
+                  rows={3}
+                  placeholder="Add a comment about the player..."
+                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 />
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
-              <button
+            <div className="flex items-center gap-3 mt-6">
+              <Button
+                variant="secondary"
                 onClick={() => setSelectedPlayer(null)}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                className="flex-1"
               >
                 Cancel
-              </button>
+              </Button>
               <button
                 onClick={saveEvaluations}
                 disabled={isSaving}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 disabled:opacity-50 transition-all"
+                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold rounded-xl shadow-lg shadow-amber-500/30 transition-all disabled:opacity-50"
               >
-                {isSaving ? 'Saving...' : 'Save'}
+                {isSaving ? 'Saving...' : 'Save Evaluation'}
               </button>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </Modal>
+    </>
   );
 }

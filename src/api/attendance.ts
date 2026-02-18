@@ -8,7 +8,8 @@ export const AttendanceStatus = {
   BENCHED: 'BENCHED',
 } as const;
 
-export type AttendanceStatus = (typeof AttendanceStatus)[keyof typeof AttendanceStatus];
+export type AttendanceStatus =
+  (typeof AttendanceStatus)[keyof typeof AttendanceStatus];
 
 export interface AttendanceRecord {
   playerId: string;
@@ -36,10 +37,10 @@ export interface MarkAttendanceBatchRequest {
 export interface AttendanceStats {
   total: number;
   present: number;
-  absent: number;
   late: number;
-  sick: number;
   benched: number;
+  absent: number;
+  sick: number;
   rate: number;
   totalTrainings: number;
   totalMatches: number;
@@ -52,27 +53,40 @@ export interface PlayerAttendanceStats extends AttendanceStats {
 
 export const attendanceApi = {
   getByTraining: async (trainingId: string): Promise<Attendance[]> => {
-    const response = await apiClient.get<Attendance[]>(`/attendance/training/${trainingId}`);
+    const response = await apiClient.get<Attendance[]>(
+      `/attendance/training/${trainingId}`,
+    );
     return response.data;
   },
 
   getByMatch: async (matchId: string): Promise<Attendance[]> => {
-    const response = await apiClient.get<Attendance[]>(`/attendance/match/${matchId}`);
+    const response = await apiClient.get<Attendance[]>(
+      `/attendance/match/${matchId}`,
+    );
     return response.data;
   },
 
-  markBatch: async (data: MarkAttendanceBatchRequest): Promise<Attendance[]> => {
-    const response = await apiClient.post<Attendance[]>('/attendance/batch', data);
+  markBatch: async (
+    data: MarkAttendanceBatchRequest,
+  ): Promise<Attendance[]> => {
+    const response = await apiClient.post<Attendance[]>(
+      '/attendance/batch',
+      data,
+    );
     return response.data;
   },
 
   getMyStats: async (): Promise<AttendanceStats> => {
-    const response = await apiClient.get<AttendanceStats>('/attendance/my/stats');
+    const response = await apiClient.get<AttendanceStats>(
+      '/attendance/my/stats',
+    );
     return response.data;
   },
 
   getMyStatsAsParent: async (): Promise<PlayerAttendanceStats[]> => {
-    const response = await apiClient.get<PlayerAttendanceStats[]>('/attendance/my/stats');
+    const response = await apiClient.get<PlayerAttendanceStats[]>(
+      '/attendance/my/stats',
+    );
     return response.data;
   },
 };
