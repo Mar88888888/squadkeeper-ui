@@ -20,7 +20,17 @@ describe('matchesApi', () => {
   describe('getAll', () => {
     it('should call GET /matches without filters', async () => {
       const mockMatches = [
-        { id: '1', startTime: '2024-01-01T15:00:00Z', endTime: '2024-01-01T17:00:00Z', location: 'Stadium', opponent: 'Team B', isHome: true, homeGoals: null, awayGoals: null, group: { id: 'g1', name: 'U12' } },
+        {
+          id: '1',
+          startTime: '2024-01-01T15:00:00Z',
+          durationMinutes: 90,
+          location: 'Stadium',
+          opponent: 'Team B',
+          isHome: true,
+          homeGoals: null,
+          awayGoals: null,
+          group: { id: 'g1', name: 'U12' },
+        },
       ];
       mockApiClient.get.mockResolvedValue({ data: mockMatches });
 
@@ -33,9 +43,14 @@ describe('matchesApi', () => {
     it('should call GET /matches with filters', async () => {
       mockApiClient.get.mockResolvedValue({ data: [] });
 
-      await matchesApi.getAll({ timeFilter: 'upcoming', dateFrom: '2024-01-01' });
+      await matchesApi.getAll({
+        timeFilter: 'upcoming',
+        dateFrom: '2024-01-01',
+      });
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/matches?dateFrom=2024-01-01&timeFilter=upcoming');
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        '/matches?dateFrom=2024-01-01&timeFilter=upcoming',
+      );
     });
   });
 
@@ -53,7 +68,9 @@ describe('matchesApi', () => {
 
       await matchesApi.getMy({ timeFilter: 'past' });
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/matches/my?timeFilter=past');
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        '/matches/my?timeFilter=past',
+      );
     });
   });
 
@@ -62,7 +79,7 @@ describe('matchesApi', () => {
       const mockMatch = {
         id: '123',
         startTime: '2024-01-01T15:00:00Z',
-        endTime: '2024-01-01T17:00:00Z',
+        durationMinutes: 90,
         location: 'Stadium',
         opponent: 'Team B',
         isHome: true,
@@ -80,27 +97,23 @@ describe('matchesApi', () => {
     });
   });
 
-  describe('getByGroup', () => {
-    it('should call GET /matches/group/:groupId', async () => {
-      mockApiClient.get.mockResolvedValue({ data: [] });
-
-      await matchesApi.getByGroup('g1');
-
-      expect(mockApiClient.get).toHaveBeenCalledWith('/matches/group/g1');
-    });
-  });
-
   describe('create', () => {
     it('should call POST /matches with data', async () => {
       const createData = {
         groupId: 'g1',
         startTime: '2024-01-01T15:00:00Z',
-        endTime: '2024-01-01T17:00:00Z',
+        durationMinutes: 90,
         location: 'Stadium',
         opponent: 'Team B',
         isHome: true,
       };
-      const mockResponse = { id: '1', ...createData, homeGoals: null, awayGoals: null, group: { id: 'g1', name: 'U12' } };
+      const mockResponse = {
+        id: '1',
+        ...createData,
+        homeGoals: null,
+        awayGoals: null,
+        group: { id: 'g1', name: 'U12' },
+      };
       mockApiClient.post.mockResolvedValue({ data: mockResponse });
 
       const result = await matchesApi.create(createData);
@@ -115,9 +128,15 @@ describe('matchesApi', () => {
       const mockResponse = { id: '123', homeGoals: 3, awayGoals: 1 };
       mockApiClient.patch.mockResolvedValue({ data: mockResponse });
 
-      const result = await matchesApi.updateResult('123', { homeGoals: 3, awayGoals: 1 });
+      const result = await matchesApi.updateResult('123', {
+        homeGoals: 3,
+        awayGoals: 1,
+      });
 
-      expect(mockApiClient.patch).toHaveBeenCalledWith('/matches/123/score', { homeGoals: 3, awayGoals: 1 });
+      expect(mockApiClient.patch).toHaveBeenCalledWith('/matches/123/score', {
+        homeGoals: 3,
+        awayGoals: 1,
+      });
       expect(result).toEqual(mockResponse);
     });
   });
@@ -135,7 +154,20 @@ describe('matchesApi', () => {
   describe('goals endpoints', () => {
     describe('getGoals', () => {
       it('should call GET /matches/:matchId/goals', async () => {
-        const mockGoals = [{ id: 'goal1', scorer: { id: 'p1', firstName: 'John', lastName: 'Doe', position: 'FW' }, assist: null, minute: 45, isOwnGoal: false }];
+        const mockGoals = [
+          {
+            id: 'goal1',
+            scorer: {
+              id: 'p1',
+              firstName: 'John',
+              lastName: 'Doe',
+              position: 'FW',
+            },
+            assist: null,
+            minute: 45,
+            isOwnGoal: false,
+          },
+        ];
         mockApiClient.get.mockResolvedValue({ data: mockGoals });
 
         const result = await matchesApi.getGoals('123');
@@ -148,22 +180,36 @@ describe('matchesApi', () => {
     describe('addGoal', () => {
       it('should call POST /matches/:matchId/goals', async () => {
         const goalData = { scorerId: 'p1', assistId: 'p2', minute: 30 };
-        const mockGoal = { id: 'goal1', scorer: { id: 'p1' }, assist: { id: 'p2' }, minute: 30, isOwnGoal: false };
+        const mockGoal = {
+          id: 'goal1',
+          scorer: { id: 'p1' },
+          assist: { id: 'p2' },
+          minute: 30,
+          isOwnGoal: false,
+        };
         mockApiClient.post.mockResolvedValue({ data: mockGoal });
 
         const result = await matchesApi.addGoal('123', goalData);
 
-        expect(mockApiClient.post).toHaveBeenCalledWith('/matches/123/goals', goalData);
+        expect(mockApiClient.post).toHaveBeenCalledWith(
+          '/matches/123/goals',
+          goalData,
+        );
         expect(result).toEqual(mockGoal);
       });
 
       it('should handle own goal', async () => {
         const goalData = { scorerId: 'p1', isOwnGoal: true };
-        mockApiClient.post.mockResolvedValue({ data: { id: 'goal1', isOwnGoal: true } });
+        mockApiClient.post.mockResolvedValue({
+          data: { id: 'goal1', isOwnGoal: true },
+        });
 
         await matchesApi.addGoal('123', goalData);
 
-        expect(mockApiClient.post).toHaveBeenCalledWith('/matches/123/goals', goalData);
+        expect(mockApiClient.post).toHaveBeenCalledWith(
+          '/matches/123/goals',
+          goalData,
+        );
       });
     });
 
@@ -173,7 +219,9 @@ describe('matchesApi', () => {
 
         await matchesApi.removeGoal('123', 'goal1');
 
-        expect(mockApiClient.delete).toHaveBeenCalledWith('/matches/123/goals/goal1');
+        expect(mockApiClient.delete).toHaveBeenCalledWith(
+          '/matches/123/goals/goal1',
+        );
       });
     });
   });

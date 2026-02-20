@@ -83,8 +83,8 @@ describe('MyGroupsPage', () => {
   ];
 
   const mockSchedule = [
-    { dayOfWeek: 1, startTime: '16:00', endTime: '17:30', location: 'Field A' },
-    { dayOfWeek: 3, startTime: '16:00', endTime: '17:30', location: 'Field B' },
+    { dayOfWeek: 1, startTime: '16:00', durationMinutes: 90, location: 'Field A' },
+    { dayOfWeek: 3, startTime: '16:00', durationMinutes: 90, location: 'Field B' },
   ];
 
   beforeEach(() => {

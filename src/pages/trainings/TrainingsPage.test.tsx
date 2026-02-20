@@ -67,7 +67,7 @@ describe('TrainingsPage', () => {
     {
       id: 't1',
       startTime: new Date(Date.now() + 86400000).toISOString(), // tomorrow
-      endTime: new Date(Date.now() + 86400000 + 5400000).toISOString(),
+      durationMinutes: 90,
       location: 'Field A',
       topic: 'Passing drills',
       group: { id: 'g1', name: 'U12' },
@@ -75,7 +75,7 @@ describe('TrainingsPage', () => {
     {
       id: 't2',
       startTime: new Date(Date.now() - 86400000).toISOString(), // yesterday
-      endTime: new Date(Date.now() - 86400000 + 5400000).toISOString(),
+      durationMinutes: 90,
       location: 'Field B',
       group: { id: 'g1', name: 'U12' },
     },
@@ -516,7 +516,7 @@ describe('TrainingsPage', () => {
       mockTrainingsApi.create.mockResolvedValue({
         id: 't3',
         startTime: new Date().toISOString(),
-        endTime: new Date().toISOString(),
+        durationMinutes: 90,
         location: 'New Field',
         topic: 'New Topic',
         group: { id: 'g1', name: 'U12' },

@@ -70,7 +70,7 @@ describe('TrainingDetailsPage', () => {
   const mockTraining = {
     id: 't1',
     startTime: '2024-01-15T10:00:00Z',
-    endTime: '2024-01-15T12:00:00Z',
+    durationMinutes: 120,
     location: 'Field A',
     topic: 'Passing drills',
     group: {

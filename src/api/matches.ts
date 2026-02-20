@@ -3,7 +3,7 @@ import { apiClient } from './client';
 export interface Match {
   id: string;
   startTime: string;
-  endTime: string;
+  durationMinutes: number;
   location: string;
   opponent: string;
   isHome: boolean;
@@ -13,6 +13,10 @@ export interface Match {
     id: string;
     name: string;
   };
+}
+
+export function getMatchEndTime(match: { startTime: string; durationMinutes: number }): Date {
+  return new Date(new Date(match.startTime).getTime() + match.durationMinutes * 60000);
 }
 
 export interface PlayerBrief {
@@ -42,7 +46,7 @@ export interface MatchDetails extends Match {
 export interface CreateMatchRequest {
   groupId: string;
   startTime: string;
-  endTime: string;
+  durationMinutes: number;
   location: string;
   opponent: string;
   isHome: boolean;
@@ -89,14 +93,14 @@ const buildFilterParams = (filters?: MatchFilters): string => {
 export const matchesApi = {
   getAll: async (filters?: MatchFilters): Promise<Match[]> => {
     const response = await apiClient.get<Match[]>(
-      `/matches${buildFilterParams(filters)}`
+      `/matches${buildFilterParams(filters)}`,
     );
     return response.data;
   },
 
   getMy: async (filters?: MatchFilters): Promise<Match[]> => {
     const response = await apiClient.get<Match[]>(
-      `/matches/my${buildFilterParams(filters)}`
+      `/matches/my${buildFilterParams(filters)}`,
     );
     return response.data;
   },
@@ -106,17 +110,15 @@ export const matchesApi = {
     return response.data;
   },
 
-  getByGroup: async (groupId: string): Promise<Match[]> => {
-    const response = await apiClient.get<Match[]>(`/matches/group/${groupId}`);
-    return response.data;
-  },
-
   create: async (data: CreateMatchRequest): Promise<Match> => {
     const response = await apiClient.post<Match>('/matches', data);
     return response.data;
   },
 
-  updateResult: async (id: string, data: UpdateMatchResultRequest): Promise<Match> => {
+  updateResult: async (
+    id: string,
+    data: UpdateMatchResultRequest,
+  ): Promise<Match> => {
     const response = await apiClient.patch<Match>(`/matches/${id}/score`, data);
     return response.data;
   },
@@ -131,7 +133,10 @@ export const matchesApi = {
   },
 
   addGoal: async (matchId: string, data: AddGoalRequest): Promise<Goal> => {
-    const response = await apiClient.post<Goal>(`/matches/${matchId}/goals`, data);
+    const response = await apiClient.post<Goal>(
+      `/matches/${matchId}/goals`,
+      data,
+    );
     return response.data;
   },
 

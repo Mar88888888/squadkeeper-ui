@@ -10,7 +10,7 @@ import {
   type PlayerAttendanceStats,
 } from '../../api/attendance';
 import { trainingsApi, getTrainingEndTime, type Training } from '../../api/trainings';
-import { matchesApi, type Match } from '../../api/matches';
+import { matchesApi, getMatchEndTime, type Match } from '../../api/matches';
 import {
   statsApi,
   type ChildInfo,
@@ -320,7 +320,7 @@ export function DashboardPage() {
                     upcomingEvent.data.startTime,
                     upcomingEvent.type === 'training'
                       ? getTrainingEndTime(upcomingEvent.data).toISOString()
-                      : upcomingEvent.data.endTime
+                      : getMatchEndTime(upcomingEvent.data).toISOString()
                   )}</span>
                 </div>
                 <div className="flex items-center gap-2">

@@ -233,13 +233,12 @@ export function MatchesPage() {
     }
 
     const start = new Date(formData.startTime);
-    const end = new Date(start.getTime() + formData.duration * 60 * 1000);
 
     try {
       const newMatch = await matchesApi.create({
         groupId: formData.groupId,
         startTime: start.toISOString(),
-        endTime: end.toISOString(),
+        durationMinutes: formData.duration,
         location: formData.location,
         opponent: formData.opponent,
         isHome: formData.isHome,

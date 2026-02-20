@@ -67,7 +67,7 @@ describe('MatchesPage', () => {
     {
       id: 'm1',
       startTime: new Date(Date.now() + 86400000).toISOString(),
-      endTime: new Date(Date.now() + 86400000 + 5400000).toISOString(),
+      durationMinutes: 90,
       location: 'Stadium A',
       opponent: 'Team B',
       isHome: true,
@@ -78,7 +78,7 @@ describe('MatchesPage', () => {
     {
       id: 'm2',
       startTime: new Date(Date.now() - 86400000).toISOString(),
-      endTime: new Date(Date.now() - 86400000 + 5400000).toISOString(),
+      durationMinutes: 90,
       location: 'Stadium B',
       opponent: 'Team C',
       isHome: false,
@@ -255,7 +255,7 @@ describe('MatchesPage', () => {
       mockMatchesApi.create.mockResolvedValue({
         id: 'm3',
         startTime: new Date().toISOString(),
-        endTime: new Date().toISOString(),
+        durationMinutes: 90,
         location: 'New Stadium',
         opponent: 'New Team',
         isHome: true,

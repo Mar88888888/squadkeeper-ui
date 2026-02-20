@@ -80,7 +80,7 @@ describe('MatchDetailsPage', () => {
   const mockMatch = {
     id: 'm1',
     startTime: '2024-01-20T15:00:00Z',
-    endTime: '2024-01-20T17:00:00Z',
+    durationMinutes: 90,
     location: 'Stadium A',
     opponent: 'Team B',
     isHome: true,

@@ -5,8 +5,6 @@ jest.mock('./client', () => ({
   apiClient: {
     get: jest.fn(),
     put: jest.fn(),
-    post: jest.fn(),
-    delete: jest.fn(),
   },
 }));
 
@@ -20,8 +18,8 @@ describe('schedulesApi', () => {
   describe('getSchedule', () => {
     it('should call GET /groups/:groupId/schedule', async () => {
       const mockSchedule = [
-        { id: 's1', dayOfWeek: 1, startTime: '10:00', endTime: '12:00', location: 'Field A' },
-        { id: 's2', dayOfWeek: 3, startTime: '15:00', endTime: '17:00', location: 'Field B' },
+        { id: 's1', dayOfWeek: 1, startTime: '10:00', durationMinutes: 120, location: 'Field A' },
+        { id: 's2', dayOfWeek: 3, startTime: '15:00', durationMinutes: 120, location: 'Field B' },
       ];
       mockApiClient.get.mockResolvedValue({ data: mockSchedule });
 
@@ -40,89 +38,75 @@ describe('schedulesApi', () => {
     });
   });
 
-  describe('updateSchedule', () => {
-    it('should call PUT /groups/:groupId/schedule', async () => {
-      const scheduleItems = [
-        { dayOfWeek: 1, startTime: '10:00', endTime: '12:00', location: 'Field A' },
-        { dayOfWeek: 5, startTime: '16:00', endTime: '18:00', location: 'Field C' },
-      ];
-      const mockResponse = [
-        { id: 's1', ...scheduleItems[0] },
-        { id: 's2', ...scheduleItems[1] },
-      ];
-      mockApiClient.put.mockResolvedValue({ data: mockResponse });
+  describe('previewChanges', () => {
+    it('should call GET /groups/:groupId/schedule/preview with params', async () => {
+      const mockResponse = { total: 10, withAttendance: 2 };
+      mockApiClient.get.mockResolvedValue({ data: mockResponse });
 
-      const result = await schedulesApi.updateSchedule('g1', scheduleItems);
+      const result = await schedulesApi.previewChanges('g1', '2024-01-01', '2024-03-31');
 
-      expect(mockApiClient.put).toHaveBeenCalledWith('/groups/g1/schedule', { items: scheduleItems });
+      expect(mockApiClient.get).toHaveBeenCalledWith('/groups/g1/schedule/preview', {
+        params: { fromDate: '2024-01-01', toDate: '2024-03-31' },
+      });
       expect(result).toEqual(mockResponse);
     });
 
-    it('should handle empty schedule update', async () => {
-      mockApiClient.put.mockResolvedValue({ data: [] });
+    it('should return zero counts when no trainings exist', async () => {
+      mockApiClient.get.mockResolvedValue({ data: { total: 0, withAttendance: 0 } });
 
-      const result = await schedulesApi.updateSchedule('g1', []);
+      const result = await schedulesApi.previewChanges('g1', '2024-01-01', '2024-01-31');
 
-      expect(mockApiClient.put).toHaveBeenCalledWith('/groups/g1/schedule', { items: [] });
-      expect(result).toEqual([]);
+      expect(result).toEqual({ total: 0, withAttendance: 0 });
     });
   });
 
-  describe('generateTrainings', () => {
-    it('should call POST /groups/:groupId/schedule/generate', async () => {
-      const generateData = {
+  describe('applySchedule', () => {
+    it('should call PUT /groups/:groupId/schedule', async () => {
+      const requestData = {
+        items: [
+          { dayOfWeek: 1, startTime: '10:00', durationMinutes: 120, location: 'Field A' },
+          { dayOfWeek: 5, startTime: '16:00', durationMinutes: 90, location: 'Field C' },
+        ],
         fromDate: '2024-01-01',
         toDate: '2024-03-31',
         defaultTopic: 'Regular training',
       };
-      const mockResponse = { created: 24, skipped: 2 };
-      mockApiClient.post.mockResolvedValue({ data: mockResponse });
+      const mockResponse = { deleted: 5, created: 24 };
+      mockApiClient.put.mockResolvedValue({ data: mockResponse });
 
-      const result = await schedulesApi.generateTrainings('g1', generateData);
+      const result = await schedulesApi.applySchedule('g1', requestData);
 
-      expect(mockApiClient.post).toHaveBeenCalledWith('/groups/g1/schedule/generate', generateData);
+      expect(mockApiClient.put).toHaveBeenCalledWith('/groups/g1/schedule', requestData);
       expect(result).toEqual(mockResponse);
     });
 
-    it('should generate without defaultTopic', async () => {
-      const generateData = {
+    it('should apply schedule without defaultTopic', async () => {
+      const requestData = {
+        items: [
+          { dayOfWeek: 1, startTime: '10:00', durationMinutes: 120, location: 'Field A' },
+        ],
         fromDate: '2024-01-01',
         toDate: '2024-01-31',
       };
-      mockApiClient.post.mockResolvedValue({ data: { created: 8, skipped: 0 } });
+      mockApiClient.put.mockResolvedValue({ data: { deleted: 0, created: 4 } });
 
-      await schedulesApi.generateTrainings('g1', generateData);
+      const result = await schedulesApi.applySchedule('g1', requestData);
 
-      expect(mockApiClient.post).toHaveBeenCalledWith('/groups/g1/schedule/generate', generateData);
+      expect(mockApiClient.put).toHaveBeenCalledWith('/groups/g1/schedule', requestData);
+      expect(result).toEqual({ deleted: 0, created: 4 });
     });
 
-    it('should handle error on generate', async () => {
-      const error = new Error('No schedule defined');
-      mockApiClient.post.mockRejectedValue(error);
+    it('should handle error on apply', async () => {
+      const error = new Error('Network error');
+      mockApiClient.put.mockRejectedValue(error);
 
       await expect(
-        schedulesApi.generateTrainings('g1', { fromDate: '2024-01-01', toDate: '2024-01-31' }),
-      ).rejects.toThrow('No schedule defined');
-    });
-  });
-
-  describe('deleteFutureGenerated', () => {
-    it('should call DELETE /groups/:groupId/schedule/trainings', async () => {
-      const mockResponse = { deleted: 10, kept: 5 };
-      mockApiClient.delete.mockResolvedValue({ data: mockResponse });
-
-      const result = await schedulesApi.deleteFutureGenerated('g1');
-
-      expect(mockApiClient.delete).toHaveBeenCalledWith('/groups/g1/schedule/trainings');
-      expect(result).toEqual(mockResponse);
-    });
-
-    it('should return zero counts when nothing to delete', async () => {
-      mockApiClient.delete.mockResolvedValue({ data: { deleted: 0, kept: 0 } });
-
-      const result = await schedulesApi.deleteFutureGenerated('g1');
-
-      expect(result).toEqual({ deleted: 0, kept: 0 });
+        schedulesApi.applySchedule('g1', {
+          items: [],
+          fromDate: '2024-01-01',
+          toDate: '2024-01-31',
+        }),
+      ).rejects.toThrow('Network error');
     });
   });
 });

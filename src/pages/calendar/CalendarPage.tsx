@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, type CalendarEvent } from '../../components/Calendar';
 import { trainingsApi, getTrainingEndTime, type Training } from '../../api/trainings';
-import { matchesApi, type Match } from '../../api/matches';
+import { matchesApi, getMatchEndTime, type Match } from '../../api/matches';
 import { groupsApi, type GroupInfo } from '../../api/groups';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserRole } from '../../types';
@@ -122,7 +122,7 @@ export function CalendarPage() {
       type: 'match' as const,
       title: m.isHome ? `vs ${m.opponent}` : `@ ${m.opponent}`,
       startTime: m.startTime,
-      endTime: m.endTime,
+      endTime: getMatchEndTime(m).toISOString(),
       group: m.group.name,
     }));
 

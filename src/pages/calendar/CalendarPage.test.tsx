@@ -77,7 +77,7 @@ describe('CalendarPage', () => {
     {
       id: 't1',
       startTime: '2024-01-15T10:00:00Z',
-      endTime: '2024-01-15T12:00:00Z',
+      durationMinutes: 120,
       location: 'Field A',
       topic: 'Passing drills',
       group: { id: 'g1', name: 'U12' },
@@ -88,7 +88,7 @@ describe('CalendarPage', () => {
     {
       id: 'm1',
       startTime: '2024-01-20T15:00:00Z',
-      endTime: '2024-01-20T17:00:00Z',
+      durationMinutes: 90,
       location: 'Stadium',
       opponent: 'Team B',
       isHome: true,
