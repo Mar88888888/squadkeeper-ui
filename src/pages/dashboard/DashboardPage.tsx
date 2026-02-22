@@ -197,7 +197,7 @@ export function DashboardPage() {
           const [trainings, matches, attendanceStats, childrenData] = await Promise.all([
             trainingsApi.getMy({ timeFilter: 'upcoming' }).catch(() => []),
             matchesApi.getMy({ timeFilter: 'upcoming' }).catch(() => []),
-            attendanceApi.getMyStatsAsParent().catch((): PlayerAttendanceStats[] => []),
+            attendanceApi.getMyChildrenStats().catch((): PlayerAttendanceStats[] => []),
             statsApi.getChildrenStats().catch((): ChildrenStats => ({ children: [] })),
           ]);
 
@@ -395,7 +395,7 @@ export function DashboardPage() {
                         <p className="text-2xl font-bold text-gray-900 dark:text-white">{child.rate}%</p>
                         {child.total > 0 && (
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {child.present + child.late} / {child.total} events
+                            {child.present} / {child.total} events
                           </p>
                         )}
                       </div>

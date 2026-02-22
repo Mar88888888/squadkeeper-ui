@@ -69,9 +69,9 @@ export const attendanceApi = {
     return response.data;
   },
 
-  getMyStatsAsParent: async (): Promise<PlayerAttendanceStats[]> => {
+  getMyChildrenStats: async (): Promise<PlayerAttendanceStats[]> => {
     const response = await apiClient.get<PlayerAttendanceStats[]>(
-      '/attendance/my/stats',
+      '/attendance/my/children/stats',
     );
     return response.data;
   },

@@ -5,7 +5,7 @@ jest.mock('../../contexts/AuthContext', () => ({
 jest.mock('../../api/attendance', () => ({
   attendanceApi: {
     getMyStats: jest.fn(),
-    getMyStatsAsParent: jest.fn(),
+    getMyChildrenStats: jest.fn(),
   },
 }));
 
@@ -476,7 +476,7 @@ describe('DashboardPage', () => {
     });
 
     it('should display Parent badge', () => {
-      mockAttendanceApi.getMyStatsAsParent.mockResolvedValue([]);
+      mockAttendanceApi.getMyChildrenStats.mockResolvedValue([]);
 
       render(<DashboardPage />);
 
@@ -485,7 +485,7 @@ describe('DashboardPage', () => {
     });
 
     it('should show Child Statistics link', async () => {
-      mockAttendanceApi.getMyStatsAsParent.mockResolvedValue([]);
+      mockAttendanceApi.getMyChildrenStats.mockResolvedValue([]);
 
       render(<DashboardPage />);
 
@@ -495,15 +495,15 @@ describe('DashboardPage', () => {
     });
 
     it('should fetch parent children stats', () => {
-      mockAttendanceApi.getMyStatsAsParent.mockResolvedValue([]);
+      mockAttendanceApi.getMyChildrenStats.mockResolvedValue([]);
 
       render(<DashboardPage />);
 
-      expect(mockAttendanceApi.getMyStatsAsParent).toHaveBeenCalled();
+      expect(mockAttendanceApi.getMyChildrenStats).toHaveBeenCalled();
     });
 
     it('should display children attendance stats', async () => {
-      mockAttendanceApi.getMyStatsAsParent.mockResolvedValue([
+      mockAttendanceApi.getMyChildrenStats.mockResolvedValue([
         {
           playerId: 'p1',
           playerName: 'Child One',

@@ -123,17 +123,17 @@ describe('attendanceApi', () => {
     });
   });
 
-  describe('getMyStatsAsParent', () => {
-    it('should call GET /attendance/my/stats and return array', async () => {
+  describe('getMyChildrenStats', () => {
+    it('should call GET /attendance/my/children/stats and return array', async () => {
       const mockStats = [
         { playerId: 'p1', playerName: 'John Doe', total: 10, present: 8, absent: 1, late: 1, sick: 0, benched: 0, rate: 80, totalTrainings: 8, totalMatches: 2 },
         { playerId: 'p2', playerName: 'Jane Doe', total: 10, present: 9, absent: 0, late: 0, sick: 1, benched: 0, rate: 90, totalTrainings: 8, totalMatches: 2 },
       ];
       mockApiClient.get.mockResolvedValue({ data: mockStats });
 
-      const result = await attendanceApi.getMyStatsAsParent();
+      const result = await attendanceApi.getMyChildrenStats();
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/attendance/my/stats');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/attendance/my/children/stats');
       expect(result).toEqual(mockStats);
     });
   });
