@@ -4,15 +4,12 @@ import { groupsApi, type GroupInfo } from '../../api/groups';
 import { squadsApi, type Squad } from '../../api/squads';
 import { GAME_FORMAT_LABELS } from '../../constants/squad.constants';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
-import { useAuth } from '../../contexts/AuthContext';
-import { UserRole } from '../../types';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { PageContent } from '../../components/layout/PageContent';
 import { Card, Modal, Button, EmptyState } from '../../components/ui';
 
 export function SquadListPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   const [groups, setGroups] = useState<GroupInfo[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<string>('');
@@ -33,10 +30,7 @@ export function SquadListPage() {
   useEffect(() => {
     const loadGroups = async () => {
       try {
-        const data =
-          user?.role === UserRole.ADMIN
-            ? await groupsApi.getAll()
-            : await groupsApi.getMy();
+        const data = await groupsApi.getMy();
         setGroups(data);
         if (data.length > 0) {
           setSelectedGroupId(data[0].id);
@@ -48,7 +42,7 @@ export function SquadListPage() {
       }
     };
     loadGroups();
-  }, [user?.role]);
+  }, []);
 
   useEffect(() => {
     const loadSquads = async () => {

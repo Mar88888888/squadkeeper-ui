@@ -229,8 +229,8 @@ function getNavSections(role: UserRole): NavSection[] {
     });
   }
 
-  // Coach/Admin features
-  if (role === UserRole.COACH || role === UserRole.ADMIN) {
+  // Coach features
+  if (role === UserRole.COACH) {
     sections[0].items.push({ to: '/squads', label: 'Squads', icon: <SquadsIcon /> });
   }
 

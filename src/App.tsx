@@ -143,7 +143,7 @@ function App() {
           <Route
             path="/squads"
             element={
-              <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH]}>
+              <RoleRoute allowedRoles={[UserRole.COACH]}>
                 <LayoutWrapper><SquadListPage /></LayoutWrapper>
               </RoleRoute>
             }
@@ -151,7 +151,7 @@ function App() {
           <Route
             path="/squads/new"
             element={
-              <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH]}>
+              <RoleRoute allowedRoles={[UserRole.COACH]}>
                 <LayoutWrapper><SquadBuilderPage /></LayoutWrapper>
               </RoleRoute>
             }
@@ -159,7 +159,7 @@ function App() {
           <Route
             path="/squads/:id"
             element={
-              <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH]}>
+              <RoleRoute allowedRoles={[UserRole.COACH]}>
                 <LayoutWrapper><SquadBuilderPage /></LayoutWrapper>
               </RoleRoute>
             }

@@ -5,8 +5,6 @@ import { squadsApi } from '../../api/squads';
 import { FootballPitch, FormatSelector, type PlayerData } from '../../components/squad-builder';
 import { GameFormat, DEFAULT_FORMATIONS } from '../../constants/squad.constants';
 import { Position, POSITION_LABELS } from '../../constants/player.constants';
-import { useAuth } from '../../contexts/AuthContext';
-import { UserRole } from '../../types';
 
 interface SquadPositionState {
   id: string;
@@ -20,7 +18,6 @@ interface SquadPositionState {
 export function SquadBuilderPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
   const isEditMode = !!id;
 
   const [groups, setGroups] = useState<GroupInfo[]>([]);
@@ -38,10 +35,7 @@ export function SquadBuilderPage() {
   useEffect(() => {
     const loadGroups = async () => {
       try {
-        const data =
-          user?.role === UserRole.ADMIN
-            ? await groupsApi.getAll()
-            : await groupsApi.getMy();
+        const data = await groupsApi.getMy();
         setGroups(data);
         if (data.length > 0 && !isEditMode) {
           setSelectedGroupId(data[0].id);
@@ -51,7 +45,7 @@ export function SquadBuilderPage() {
       }
     };
     loadGroups();
-  }, [user?.role, isEditMode]);
+  }, [isEditMode]);
 
   useEffect(() => {
     const loadSquad = async () => {
