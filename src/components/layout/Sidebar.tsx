@@ -221,7 +221,7 @@ function getNavSections(role: UserRole): NavSection[] {
       label: 'Children Stats',
       icon: <StatsIcon />,
     });
-  } else if (role === UserRole.COACH || role === UserRole.ADMIN) {
+  } else if (role === UserRole.COACH) {
     sections[0].items.push({
       to: '/stats/team',
       label: 'Statistics',
