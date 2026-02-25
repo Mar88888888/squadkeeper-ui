@@ -116,7 +116,10 @@ describe('usersApi', () => {
           firstName: 'New',
           lastName: 'Player',
           dateOfBirth: '2012-06-15',
-          position: 'MF',
+          position: 'CM' as const,
+          height: 150,
+          weight: 45,
+          strongFoot: 'RIGHT' as const,
         };
         const mockResponse = { id: 'p2', email: 'newplayer@example.com', firstName: 'New', lastName: 'Player', role: 'PLAYER' };
         mockApiClient.post.mockResolvedValue({ data: mockResponse });

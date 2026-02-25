@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { PageContent } from '../../components/layout/PageContent';
-import { Card, Modal, Button, Avatar, Badge } from '../../components/ui';
+import { Card, Modal, Button, Avatar, Badge, PasswordInput, isPasswordValid } from '../../components/ui';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { PlayerSelector } from '../../components/PlayerSelector';
 import { useUserForm, type UserType } from '../../hooks/useUserForm';
@@ -179,6 +179,12 @@ export function UserManagementPage() {
   const handleCreateSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
+
+      if (!isPasswordValid(form.password)) {
+        setError('Password does not meet requirements');
+        return;
+      }
+
       setLoading(true);
 
       try {
@@ -554,13 +560,10 @@ export function UserManagementPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password *</label>
-                <input
-                  type="password"
+                <PasswordInput
                   value={form.password}
-                  onChange={(e) => updateField('password', e.target.value)}
+                  onChange={(value) => updateField('password', value)}
                   required
-                  minLength={6}
-                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
                 />
               </div>
             </div>

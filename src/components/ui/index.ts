@@ -8,3 +8,4 @@ export { StatCard } from './StatCard';
 export { FormField, Textarea } from './FormField';
 export { Select } from './Select';
 export { EmptyState } from './EmptyState';
+export { PasswordInput, isPasswordValid } from './PasswordInput';

@@ -353,7 +353,7 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
                             ? `${cat.bgLight} text-gray-800 dark:text-gray-200 ring-2 ring-offset-1 dark:ring-offset-gray-900`
                             : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
                         }`}
-                        style={isVisible ? { ringColor: cat.color } : undefined}
+                        style={isVisible ? { '--tw-ring-color': cat.color } as React.CSSProperties : undefined}
                       >
                         <span
                           className={`w-2.5 h-2.5 rounded-full ${isVisible ? cat.bgColor : 'bg-gray-300 dark:bg-gray-600'}`}
@@ -372,7 +372,7 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
                     <YAxis domain={[0, 10]} tick={{ fontSize: 12, fill: chartColors.axis }} stroke={chartColors.axisLine} />
                     <Tooltip
                       contentStyle={{ backgroundColor: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: '8px', color: chartColors.tooltipText }}
-                      formatter={(value: number, name: string) => [value?.toFixed(1) ?? '-', name.charAt(0).toUpperCase() + name.slice(1)]}
+                      formatter={(value, name) => [typeof value === 'number' ? value.toFixed(1) : '-', String(name).charAt(0).toUpperCase() + String(name).slice(1)]}
                       labelFormatter={(label, payload) => {
                         if (payload && payload[0]) {
                           const data = payload[0].payload;

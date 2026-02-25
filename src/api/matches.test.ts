@@ -36,7 +36,9 @@ describe('matchesApi', () => {
 
       const result = await matchesApi.getAll();
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/matches');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/matches', {
+        params: undefined,
+      });
       expect(result).toEqual(mockMatches);
     });
 
@@ -48,9 +50,9 @@ describe('matchesApi', () => {
         dateFrom: '2024-01-01',
       });
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        '/matches?dateFrom=2024-01-01&timeFilter=upcoming',
-      );
+      expect(mockApiClient.get).toHaveBeenCalledWith('/matches', {
+        params: { dateFrom: '2024-01-01', timeFilter: 'upcoming' },
+      });
     });
   });
 
@@ -60,7 +62,9 @@ describe('matchesApi', () => {
 
       await matchesApi.getMy();
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/matches/my');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/matches/my', {
+        params: undefined,
+      });
     });
 
     it('should call GET /matches/my with filters', async () => {
@@ -68,9 +72,9 @@ describe('matchesApi', () => {
 
       await matchesApi.getMy({ timeFilter: 'past' });
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        '/matches/my?timeFilter=past',
-      );
+      expect(mockApiClient.get).toHaveBeenCalledWith('/matches/my', {
+        params: { timeFilter: 'past' },
+      });
     });
   });
 

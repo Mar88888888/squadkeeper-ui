@@ -3,7 +3,7 @@ import { groupsApi, type GroupInfo } from '../../api/groups';
 import { usersApi, type CoachInfo, type PlayerInfo } from '../../api/users';
 import { schedulesApi, type ScheduleItem, type PreviewResponse } from '../../api/schedules';
 import { PageHeader, PageContent } from '../../components/layout';
-import { Card, Modal, Button, Avatar, EmptyState } from '../../components/ui';
+import { Card, Modal, Button, Avatar, EmptyState, getInitials } from '../../components/ui';
 
 type ModalType = 'create' | 'edit' | 'staff' | 'players' | 'schedule' | null;
 
@@ -626,7 +626,7 @@ export function GroupManagementPage() {
                               className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800 rounded-xl p-4 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
                             >
                               <Avatar
-                                name={`${player.firstName} ${player.lastName}`}
+                                initials={getInitials(player.firstName, player.lastName)}
                                 className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 shadow-sm"
                               />
                               <div className="flex-1 min-w-0">

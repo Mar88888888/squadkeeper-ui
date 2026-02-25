@@ -3,6 +3,9 @@ type AvatarColor = 'amber' | 'green' | 'blue' | 'purple' | 'red' | 'gray';
 
 interface AvatarProps {
   initials?: string;
+  firstName?: string;
+  lastName?: string;
+  name?: string;
   src?: string;
   alt?: string;
   size?: AvatarSize;
@@ -26,7 +29,7 @@ const colorStyles: Record<AvatarColor, string> = {
   gray: 'from-gray-400 to-gray-500 shadow-gray-500/25',
 };
 
-export function Avatar({ initials, src, alt, size = 'md', color = 'amber', className = '' }: AvatarProps) {
+export function Avatar({ initials, firstName, lastName, name, src, alt, size = 'md', color = 'amber', className = '' }: AvatarProps) {
   if (src) {
     return (
       <img
@@ -37,6 +40,12 @@ export function Avatar({ initials, src, alt, size = 'md', color = 'amber', class
     );
   }
 
+  const displayInitials = initials ?? (
+    name
+      ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+      : getInitials(firstName, lastName)
+  );
+
   return (
     <div
       className={`
@@ -46,7 +55,7 @@ export function Avatar({ initials, src, alt, size = 'md', color = 'amber', class
         ${className}
       `}
     >
-      <span className="font-bold text-white">{initials || 'U'}</span>
+      <span className="font-bold text-white">{displayInitials || 'U'}</span>
     </div>
   );
 }

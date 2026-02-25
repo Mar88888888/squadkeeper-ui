@@ -103,7 +103,7 @@ export function MatchDetailsPage() {
   const canEdit = user?.role === UserRole.ADMIN || user?.role === UserRole.COACH;
 
   const [match, setMatch] = useState<MatchDetails | null>(null);
-  const [attendance, setAttendance] = useState<Attendance[]>([]);
+  const [, setAttendance] = useState<Attendance[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [isLoading, setIsLoading] = useState(true);

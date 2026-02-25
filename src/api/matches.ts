@@ -78,30 +78,29 @@ export interface MatchFilters {
   timeFilter?: MatchTimeFilter;
 }
 
-const buildFilterParams = (filters?: MatchFilters): string => {
-  if (!filters) return '';
-  const params = new URLSearchParams();
-  if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
-  if (filters.dateTo) params.append('dateTo', filters.dateTo);
+const buildFilterParams = (filters?: MatchFilters): Record<string, string> | undefined => {
+  if (!filters) return undefined;
+  const params: Record<string, string> = {};
+  if (filters.dateFrom) params.dateFrom = filters.dateFrom;
+  if (filters.dateTo) params.dateTo = filters.dateTo;
   if (filters.timeFilter && filters.timeFilter !== 'all') {
-    params.append('timeFilter', filters.timeFilter);
+    params.timeFilter = filters.timeFilter;
   }
-  const queryString = params.toString();
-  return queryString ? `?${queryString}` : '';
+  return Object.keys(params).length > 0 ? params : undefined;
 };
 
 export const matchesApi = {
   getAll: async (filters?: MatchFilters): Promise<Match[]> => {
-    const response = await apiClient.get<Match[]>(
-      `/matches${buildFilterParams(filters)}`,
-    );
+    const response = await apiClient.get<Match[]>('/matches', {
+      params: buildFilterParams(filters),
+    });
     return response.data;
   },
 
   getMy: async (filters?: MatchFilters): Promise<Match[]> => {
-    const response = await apiClient.get<Match[]>(
-      `/matches/my${buildFilterParams(filters)}`,
-    );
+    const response = await apiClient.get<Match[]>('/matches/my', {
+      params: buildFilterParams(filters),
+    });
     return response.data;
   },
 

@@ -15,6 +15,7 @@ import {
   STRONG_FEET,
   STRONG_FOOT_LABELS,
 } from '../constants/player.constants';
+import { PasswordInput, isPasswordValid } from './ui';
 
 type UserType = 'coach' | 'player' | 'parent';
 
@@ -82,6 +83,12 @@ export function EditUserModal({ isOpen, userType, user, onSave, onClose }: EditU
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (formData.password && !isPasswordValid(formData.password)) {
+      setError('Password does not meet requirements');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -195,13 +202,11 @@ export function EditUserModal({ isOpen, userType, user, onSave, onClose }: EditU
                 New Password
                 <span className="text-gray-400 dark:text-gray-500 font-normal ml-1">(leave empty to keep current)</span>
               </label>
-              <input
-                type="password"
+              <PasswordInput
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                minLength={6}
+                onChange={(value) => setFormData({ ...formData, password: value })}
                 placeholder="Enter new password..."
+                showRequirements={formData.password.length > 0}
               />
             </div>
 

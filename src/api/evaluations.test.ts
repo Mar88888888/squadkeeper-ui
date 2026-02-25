@@ -1,4 +1,4 @@
-import { evaluationsApi, getEvaluationAverage, Evaluation } from './evaluations';
+import { evaluationsApi, getEvaluationAverage, type Evaluation } from './evaluations';
 import { apiClient } from './client';
 
 jest.mock('./client', () => ({
@@ -25,7 +25,7 @@ describe('evaluationsApi', () => {
           physical: 5,
           psychological: 4,
           comment: 'Good performance',
-          player: { id: 'p1', firstName: 'John', lastName: 'Doe' },
+          player: { id: 'p1', firstName: 'John', lastName: 'Doe', position: 'ST' },
           coach: { id: 'c1', firstName: 'Coach', lastName: 'Smith' },
         },
       ];
@@ -56,7 +56,7 @@ describe('evaluationsApi', () => {
           physical: 4,
           psychological: 5,
           comment: 'Excellent positioning',
-          player: { id: 'p1', firstName: 'John', lastName: 'Doe' },
+          player: { id: 'p1', firstName: 'John', lastName: 'Doe', position: 'ST' },
           coach: { id: 'c1', firstName: 'Coach', lastName: 'Smith' },
         },
       ];
@@ -86,7 +86,7 @@ describe('evaluationsApi', () => {
           physical: 5,
           psychological: 4,
           comment: 'Good',
-          player: { id: 'p1', firstName: 'John', lastName: 'Doe' },
+          player: { id: 'p1', firstName: 'John', lastName: 'Doe', position: 'ST' },
           coach: { id: 'c1', firstName: 'Coach', lastName: 'Smith' },
         },
         {
@@ -162,7 +162,9 @@ describe('evaluationsApi', () => {
 
       const result = await evaluationsApi.getMyRatingStats();
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/evaluations/stats/my?period=all_time');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/evaluations/stats/my', {
+        params: { period: 'all_time' },
+      });
       expect(result).toEqual(mockStats);
     });
 
@@ -171,7 +173,9 @@ describe('evaluationsApi', () => {
 
       await evaluationsApi.getMyRatingStats('this_month');
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/evaluations/stats/my?period=this_month');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/evaluations/stats/my', {
+        params: { period: 'this_month' },
+      });
     });
   });
 
@@ -181,7 +185,9 @@ describe('evaluationsApi', () => {
 
       await evaluationsApi.getPlayerRatingStats('p1', 'this_year');
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/evaluations/stats/p1?period=this_year');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/evaluations/stats/p1', {
+        params: { period: 'this_year' },
+      });
     });
   });
 });
@@ -195,7 +201,7 @@ describe('getEvaluationAverage', () => {
       physical: 5,
       psychological: 4,
       comment: null,
-      player: { id: 'p1', firstName: 'John', lastName: 'Doe' },
+      player: { id: 'p1', firstName: 'John', lastName: 'Doe', position: 'ST' },
       coach: { id: 'c1', firstName: 'Coach', lastName: 'Smith' },
     };
 
@@ -210,7 +216,7 @@ describe('getEvaluationAverage', () => {
       physical: 5,
       psychological: null,
       comment: null,
-      player: { id: 'p1', firstName: 'John', lastName: 'Doe' },
+      player: { id: 'p1', firstName: 'John', lastName: 'Doe', position: 'ST' },
       coach: { id: 'c1', firstName: 'Coach', lastName: 'Smith' },
     };
 
@@ -225,7 +231,7 @@ describe('getEvaluationAverage', () => {
       physical: null,
       psychological: null,
       comment: null,
-      player: { id: 'p1', firstName: 'John', lastName: 'Doe' },
+      player: { id: 'p1', firstName: 'John', lastName: 'Doe', position: 'ST' },
       coach: { id: 'c1', firstName: 'Coach', lastName: 'Smith' },
     };
 

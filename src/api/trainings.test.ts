@@ -24,7 +24,9 @@ describe('trainingsApi', () => {
 
       const result = await trainingsApi.getAll();
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/trainings');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/trainings', {
+        params: undefined,
+      });
       expect(result).toEqual(mockTrainings);
     });
 
@@ -33,7 +35,9 @@ describe('trainingsApi', () => {
 
       await trainingsApi.getAll({ dateFrom: '2024-01-01', dateTo: '2024-01-31' });
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/trainings?dateFrom=2024-01-01&dateTo=2024-01-31');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/trainings', {
+        params: { dateFrom: '2024-01-01', dateTo: '2024-01-31' },
+      });
     });
 
     it('should call GET /trainings with time filter', async () => {
@@ -41,7 +45,9 @@ describe('trainingsApi', () => {
 
       await trainingsApi.getAll({ timeFilter: 'upcoming' });
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/trainings?timeFilter=upcoming');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/trainings', {
+        params: { timeFilter: 'upcoming' },
+      });
     });
 
     it('should not add timeFilter=all to query params', async () => {
@@ -49,7 +55,9 @@ describe('trainingsApi', () => {
 
       await trainingsApi.getAll({ timeFilter: 'all' });
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/trainings');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/trainings', {
+        params: undefined,
+      });
     });
   });
 
@@ -60,7 +68,9 @@ describe('trainingsApi', () => {
 
       const result = await trainingsApi.getMy();
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/trainings/my');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/trainings/my', {
+        params: undefined,
+      });
       expect(result).toEqual(mockTrainings);
     });
 
@@ -69,7 +79,9 @@ describe('trainingsApi', () => {
 
       await trainingsApi.getMy({ timeFilter: 'this_week' });
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/trainings/my?timeFilter=this_week');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/trainings/my', {
+        params: { timeFilter: 'this_week' },
+      });
     });
   });
 

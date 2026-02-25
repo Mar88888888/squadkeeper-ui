@@ -43,18 +43,18 @@ export const statsApi = {
   getMyStats: async (
     period: StatsPeriod = 'all_time',
   ): Promise<PlayerStats> => {
-    const response = await apiClient.get<PlayerStats>(
-      `/players/stats/my?period=${period}`,
-    );
+    const response = await apiClient.get<PlayerStats>('/players/stats/my', {
+      params: { period },
+    });
     return response.data;
   },
 
   getTeamStats: async (
     period: StatsPeriod = 'all_time',
   ): Promise<TeamStats[]> => {
-    const response = await apiClient.get<TeamStats[]>(
-      `/players/stats/team?period=${period}`,
-    );
+    const response = await apiClient.get<TeamStats[]>('/players/stats/team', {
+      params: { period },
+    });
     return response.data;
   },
 
@@ -63,7 +63,8 @@ export const statsApi = {
     period: StatsPeriod = 'all_time',
   ): Promise<PlayerStats> => {
     const response = await apiClient.get<PlayerStats>(
-      `/players/stats/${playerId}?period=${period}`,
+      `/players/stats/${encodeURIComponent(playerId)}`,
+      { params: { period } },
     );
     return response.data;
   },
@@ -71,11 +72,9 @@ export const statsApi = {
   getChildrenStats: async (
     period: StatsPeriod = 'all_time',
   ): Promise<ChildrenStats> => {
-    const params = new URLSearchParams({ period });
-
-    const response = await apiClient.get<ChildrenStats>(
-      `/players/stats/children?${params.toString()}`,
-    );
+    const response = await apiClient.get<ChildrenStats>('/players/stats/children', {
+      params: { period },
+    });
     return response.data;
   },
 };

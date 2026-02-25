@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 
@@ -5,7 +6,14 @@ interface PageHeaderProps {
   title: string;
   subtitle?: string;
   actions?: React.ReactNode;
+  backTo?: string;
 }
+
+const BackIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+  </svg>
+);
 
 function getUserInitials(firstName: string, lastName: string): string {
   const first = firstName?.[0] || '';
@@ -25,7 +33,7 @@ const MoonIcon = () => (
   </svg>
 );
 
-export function PageHeader({ title, subtitle, actions }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, actions, backTo }: PageHeaderProps) {
   const { user } = useAuth();
   const { resolvedTheme, toggleTheme } = useTheme();
 
@@ -34,11 +42,21 @@ export function PageHeader({ title, subtitle, actions }: PageHeaderProps) {
   return (
     <header className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-8 py-5 sticky top-0 z-10">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
-          {subtitle && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{subtitle}</p>
+        <div className="flex items-center gap-3">
+          {backTo && (
+            <Link
+              to={backTo}
+              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all"
+            >
+              <BackIcon />
+            </Link>
           )}
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
+            {subtitle && (
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{subtitle}</p>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-3">
           {actions}

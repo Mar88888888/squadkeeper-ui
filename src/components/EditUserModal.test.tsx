@@ -166,7 +166,7 @@ describe('EditUserModal', () => {
     });
 
     it('should show loading state during save', async () => {
-      const slowSave = jest.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
+      const slowSave = jest.fn((): Promise<void> => new Promise(resolve => setTimeout(resolve, 100)));
       render(<EditUserModal {...defaultProps} onSave={slowSave} />);
 
       const saveButton = screen.getByText('Save Changes');
@@ -229,7 +229,7 @@ describe('EditUserModal', () => {
       render(<EditUserModal {...defaultProps} />);
 
       const passwordInput = screen.getByPlaceholderText('Enter new password...');
-      fireEvent.change(passwordInput, { target: { value: 'newpassword123' } });
+      fireEvent.change(passwordInput, { target: { value: 'NewPassword123' } });
 
       const saveButton = screen.getByText('Save Changes');
       fireEvent.click(saveButton);
@@ -237,7 +237,7 @@ describe('EditUserModal', () => {
       await waitFor(() => {
         expect(defaultProps.onSave).toHaveBeenCalledWith(
           expect.objectContaining({
-            password: 'newpassword123',
+            password: 'NewPassword123',
           })
         );
       });

@@ -7,8 +7,8 @@ jest.mock('../config', () => ({
 import { apiClient, setAuthToken } from './client';
 
 jest.mock('axios', () => {
-  const mockAxios = {
-    create: jest.fn(() => mockAxios),
+  const mockAxios: Record<string, unknown> = {
+    create: jest.fn(),
     defaults: {
       headers: {
         common: {},
@@ -23,6 +23,7 @@ jest.mock('axios', () => {
     put: jest.fn(),
     delete: jest.fn(),
   };
+  mockAxios.create = jest.fn(() => mockAxios);
   return {
     __esModule: true,
     default: mockAxios,

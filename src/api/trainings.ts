@@ -61,30 +61,29 @@ export interface TrainingFilters {
   timeFilter?: TrainingTimeFilter;
 }
 
-const buildFilterParams = (filters?: TrainingFilters): string => {
-  if (!filters) return '';
-  const params = new URLSearchParams();
-  if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
-  if (filters.dateTo) params.append('dateTo', filters.dateTo);
+const buildFilterParams = (filters?: TrainingFilters): Record<string, string> | undefined => {
+  if (!filters) return undefined;
+  const params: Record<string, string> = {};
+  if (filters.dateFrom) params.dateFrom = filters.dateFrom;
+  if (filters.dateTo) params.dateTo = filters.dateTo;
   if (filters.timeFilter && filters.timeFilter !== 'all') {
-    params.append('timeFilter', filters.timeFilter);
+    params.timeFilter = filters.timeFilter;
   }
-  const queryString = params.toString();
-  return queryString ? `?${queryString}` : '';
+  return Object.keys(params).length > 0 ? params : undefined;
 };
 
 export const trainingsApi = {
   getAll: async (filters?: TrainingFilters): Promise<Training[]> => {
-    const response = await apiClient.get<Training[]>(
-      `/trainings${buildFilterParams(filters)}`
-    );
+    const response = await apiClient.get<Training[]>('/trainings', {
+      params: buildFilterParams(filters),
+    });
     return response.data;
   },
 
   getMy: async (filters?: TrainingFilters): Promise<Training[]> => {
-    const response = await apiClient.get<Training[]>(
-      `/trainings/my${buildFilterParams(filters)}`
-    );
+    const response = await apiClient.get<Training[]>('/trainings/my', {
+      params: buildFilterParams(filters),
+    });
     return response.data;
   },
 

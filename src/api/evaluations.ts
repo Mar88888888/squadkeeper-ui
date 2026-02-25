@@ -20,6 +20,7 @@ export interface Evaluation {
     id: string;
     firstName: string;
     lastName: string;
+    position: string | null;
   };
   coach: {
     id: string;
@@ -88,12 +89,16 @@ export const evaluationsApi = {
   },
 
   getMyRatingStats: async (period: string = 'all_time'): Promise<RatingStats> => {
-    const response = await apiClient.get<RatingStats>(`/evaluations/stats/my?period=${period}`);
+    const response = await apiClient.get<RatingStats>('/evaluations/stats/my', {
+      params: { period },
+    });
     return response.data;
   },
 
   getPlayerRatingStats: async (playerId: string, period: string = 'all_time'): Promise<RatingStats> => {
-    const response = await apiClient.get<RatingStats>(`/evaluations/stats/${playerId}?period=${period}`);
+    const response = await apiClient.get<RatingStats>(`/evaluations/stats/${encodeURIComponent(playerId)}`, {
+      params: { period },
+    });
     return response.data;
   },
 };

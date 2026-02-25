@@ -176,7 +176,7 @@ export function TrainingDetailsPage() {
     user?.role === UserRole.ADMIN || user?.role === UserRole.COACH;
 
   const [training, setTraining] = useState<TrainingDetails | null>(null);
-  const [attendance, setAttendance] = useState<Attendance[]>([]);
+  const [, setAttendance] = useState<Attendance[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');

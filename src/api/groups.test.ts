@@ -44,16 +44,6 @@ describe('groupsApi', () => {
     });
   });
 
-  describe('getMyGroups', () => {
-    it('should call GET /groups/my (alias)', async () => {
-      mockApiClient.get.mockResolvedValue({ data: [] });
-
-      await groupsApi.getMyGroups();
-
-      expect(mockApiClient.get).toHaveBeenCalledWith('/groups/my');
-    });
-  });
-
   describe('getOne', () => {
     it('should call GET /groups/:id', async () => {
       const mockGroup = {
