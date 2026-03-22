@@ -178,6 +178,9 @@ export function TrainingsPage() {
   const [dateFrom, setDateFrom] = useState<Date | null>(null);
   const [dateTo, setDateTo] = useState<Date | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [totalTrainings, setTotalTrainings] = useState(0);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -205,37 +208,34 @@ export function TrainingsPage() {
     try {
       const isAdmin = user?.role === UserRole.ADMIN;
       const filters = buildFilters();
+      filters.groupId = filterGroupId || undefined;
+      filters.search = searchQuery || undefined;
+      filters.skip = (currentPage - 1) * itemsPerPage;
+      filters.take = itemsPerPage;
       const [trainingsData, groupsData] = await Promise.all([
         isAdmin ? trainingsApi.getAll(filters) : trainingsApi.getMy(filters),
         isAdmin ? groupsApi.getAll() : groupsApi.getMy(),
       ]);
-      setTrainings(trainingsData);
+      setTrainings(trainingsData.items);
+      setTotalTrainings(trainingsData.total);
       setGroups(groupsData);
     } catch {
       setError('Failed to load data');
     } finally {
       setIsLoading(false);
     }
-  }, [user, buildFilters]);
+  }, [user, buildFilters, filterGroupId, searchQuery, currentPage]);
 
   useEffect(() => {
     if (user) loadData();
   }, [user, loadData]);
 
-  const filteredTrainings = trainings
-    .filter((t) => !filterGroupId || t.group.id === filterGroupId)
-    .filter(
-      (t) =>
-        !searchQuery ||
-        t.topic?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.location.toLowerCase().includes(searchQuery.toLowerCase()),
-    )
-    .sort(
-      (a, b) =>
-        new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
-    );
+  const groupedTrainings = groupTrainingsByDate(trainings);
+  const totalPages = Math.ceil(totalTrainings / itemsPerPage);
 
-  const groupedTrainings = groupTrainingsByDate(filteredTrainings);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterGroupId, timeFilter, dateFrom, dateTo, searchQuery]);
 
   const openCreateModal = () => {
     const now = new Date();
@@ -277,8 +277,9 @@ export function TrainingsPage() {
         location: formData.location,
         topic: formData.topic,
       });
-      setTrainings((prev) => [...prev, newTraining]);
+      setTrainings((prev) => [newTraining, ...prev]);
       setIsModalOpen(false);
+      loadData();
     } catch {
       setError('Failed to create training');
     }
@@ -309,7 +310,10 @@ export function TrainingsPage() {
                   <input
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
                     placeholder="Search trainings..."
                     className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:text-white"
                   />
@@ -320,7 +324,10 @@ export function TrainingsPage() {
               </div>
               <select
                 value={filterGroupId}
-                onChange={(e) => setFilterGroupId(e.target.value)}
+                onChange={(e) => {
+                  setFilterGroupId(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:text-white"
               >
                 <option value="">All groups</option>
@@ -335,6 +342,7 @@ export function TrainingsPage() {
                 onChange={(date: Date | null) => {
                   setDateFrom(date);
                   if (date) setTimeFilter('all');
+                  setCurrentPage(1);
                 }}
                 selectsStart
                 startDate={dateFrom}
@@ -350,6 +358,7 @@ export function TrainingsPage() {
                 onChange={(date: Date | null) => {
                   setDateTo(date);
                   if (date) setTimeFilter('all');
+                  setCurrentPage(1);
                 }}
                 selectsEnd
                 startDate={dateFrom}
@@ -373,12 +382,13 @@ export function TrainingsPage() {
               setTimeFilter(id as TrainingTimeFilter);
               setDateFrom(null);
               setDateTo(null);
+              setCurrentPage(1);
             }}
           />
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Found:{' '}
             <span className="font-semibold text-gray-900 dark:text-white">
-              {filteredTrainings.length}
+              {totalTrainings}
             </span>{' '}
             trainings
           </p>
@@ -396,20 +406,20 @@ export function TrainingsPage() {
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600" />
           </div>
-        ) : filteredTrainings.length === 0 ? (
+        ) : trainings.length === 0 ? (
           <EmptyState
             title={
-              trainings.length === 0
+              totalTrainings === 0
                 ? 'No trainings scheduled'
                 : 'No trainings found'
             }
             description={
-              trainings.length === 0
+              totalTrainings === 0
                 ? 'Start by scheduling your first training session.'
                 : 'No trainings match your current filters.'
             }
             action={
-              canCreate && trainings.length === 0 ? (
+              canCreate && totalTrainings === 0 ? (
                 <Button onClick={openCreateModal}>Schedule Training</Button>
               ) : undefined
             }
@@ -511,6 +521,58 @@ export function TrainingsPage() {
                   </div>
                 </div>
               ),
+            )}
+
+            {totalPages > 1 && (
+              <Card>
+                <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Showing {(currentPage - 1) * itemsPerPage + 1}-
+                    {Math.min(currentPage * itemsPerPage, totalTrainings)} of {totalTrainings} trainings
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      Previous
+                    </button>
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum: number;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                            currentPage === pageNum
+                              ? 'bg-green-500 text-white'
+                              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </Card>
             )}
           </div>
         )}

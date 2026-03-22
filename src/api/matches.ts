@@ -73,32 +73,45 @@ export type MatchTimeFilter =
   | 'this_month';
 
 export interface MatchFilters {
+  groupId?: string;
+  search?: string;
   dateFrom?: string;
   dateTo?: string;
   timeFilter?: MatchTimeFilter;
+  skip?: number;
+  take?: number;
+}
+
+export interface PaginatedMatchResponse {
+  items: Match[];
+  total: number;
 }
 
 const buildFilterParams = (filters?: MatchFilters): Record<string, string> | undefined => {
   if (!filters) return undefined;
   const params: Record<string, string> = {};
+  if (filters.groupId) params.groupId = filters.groupId;
+  if (filters.search) params.search = filters.search;
   if (filters.dateFrom) params.dateFrom = filters.dateFrom;
   if (filters.dateTo) params.dateTo = filters.dateTo;
   if (filters.timeFilter && filters.timeFilter !== 'all') {
     params.timeFilter = filters.timeFilter;
   }
+  if (filters.skip !== undefined) params.skip = String(filters.skip);
+  if (filters.take !== undefined) params.take = String(filters.take);
   return Object.keys(params).length > 0 ? params : undefined;
 };
 
 export const matchesApi = {
-  getAll: async (filters?: MatchFilters): Promise<Match[]> => {
-    const response = await apiClient.get<Match[]>('/matches', {
+  getAll: async (filters?: MatchFilters): Promise<PaginatedMatchResponse> => {
+    const response = await apiClient.get<PaginatedMatchResponse>('/matches', {
       params: buildFilterParams(filters),
     });
     return response.data;
   },
 
-  getMy: async (filters?: MatchFilters): Promise<Match[]> => {
-    const response = await apiClient.get<Match[]>('/matches/my', {
+  getMy: async (filters?: MatchFilters): Promise<PaginatedMatchResponse> => {
+    const response = await apiClient.get<PaginatedMatchResponse>('/matches/my', {
       params: buildFilterParams(filters),
     });
     return response.data;

@@ -56,32 +56,45 @@ export type TrainingTimeFilter =
   | 'this_month';
 
 export interface TrainingFilters {
+  groupId?: string;
+  search?: string;
   dateFrom?: string;
   dateTo?: string;
   timeFilter?: TrainingTimeFilter;
+  skip?: number;
+  take?: number;
+}
+
+export interface PaginatedTrainingResponse {
+  items: Training[];
+  total: number;
 }
 
 const buildFilterParams = (filters?: TrainingFilters): Record<string, string> | undefined => {
   if (!filters) return undefined;
   const params: Record<string, string> = {};
+  if (filters.groupId) params.groupId = filters.groupId;
+  if (filters.search) params.search = filters.search;
   if (filters.dateFrom) params.dateFrom = filters.dateFrom;
   if (filters.dateTo) params.dateTo = filters.dateTo;
   if (filters.timeFilter && filters.timeFilter !== 'all') {
     params.timeFilter = filters.timeFilter;
   }
+  if (filters.skip !== undefined) params.skip = String(filters.skip);
+  if (filters.take !== undefined) params.take = String(filters.take);
   return Object.keys(params).length > 0 ? params : undefined;
 };
 
 export const trainingsApi = {
-  getAll: async (filters?: TrainingFilters): Promise<Training[]> => {
-    const response = await apiClient.get<Training[]>('/trainings', {
+  getAll: async (filters?: TrainingFilters): Promise<PaginatedTrainingResponse> => {
+    const response = await apiClient.get<PaginatedTrainingResponse>('/trainings', {
       params: buildFilterParams(filters),
     });
     return response.data;
   },
 
-  getMy: async (filters?: TrainingFilters): Promise<Training[]> => {
-    const response = await apiClient.get<Training[]>('/trainings/my', {
+  getMy: async (filters?: TrainingFilters): Promise<PaginatedTrainingResponse> => {
+    const response = await apiClient.get<PaginatedTrainingResponse>('/trainings/my', {
       params: buildFilterParams(filters),
     });
     return response.data;

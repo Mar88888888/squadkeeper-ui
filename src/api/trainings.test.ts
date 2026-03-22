@@ -17,9 +17,12 @@ describe('trainingsApi', () => {
 
   describe('getAll', () => {
     it('should call GET /trainings without filters', async () => {
-      const mockTrainings = [
+      const mockTrainings = {
+        items: [
         { id: '1', startTime: '2024-01-01T10:00:00Z', durationMinutes: 120, location: 'Field A', group: { id: 'g1', name: 'U12' } },
-      ];
+        ],
+        total: 1,
+      };
       mockApiClient.get.mockResolvedValue({ data: mockTrainings });
 
       const result = await trainingsApi.getAll();
@@ -31,7 +34,7 @@ describe('trainingsApi', () => {
     });
 
     it('should call GET /trainings with date filters', async () => {
-      mockApiClient.get.mockResolvedValue({ data: [] });
+      mockApiClient.get.mockResolvedValue({ data: { items: [], total: 0 } });
 
       await trainingsApi.getAll({ dateFrom: '2024-01-01', dateTo: '2024-01-31' });
 
@@ -41,7 +44,7 @@ describe('trainingsApi', () => {
     });
 
     it('should call GET /trainings with time filter', async () => {
-      mockApiClient.get.mockResolvedValue({ data: [] });
+      mockApiClient.get.mockResolvedValue({ data: { items: [], total: 0 } });
 
       await trainingsApi.getAll({ timeFilter: 'upcoming' });
 
@@ -51,7 +54,7 @@ describe('trainingsApi', () => {
     });
 
     it('should not add timeFilter=all to query params', async () => {
-      mockApiClient.get.mockResolvedValue({ data: [] });
+      mockApiClient.get.mockResolvedValue({ data: { items: [], total: 0 } });
 
       await trainingsApi.getAll({ timeFilter: 'all' });
 
@@ -59,11 +62,34 @@ describe('trainingsApi', () => {
         params: undefined,
       });
     });
+
+    it('should include pagination and search params', async () => {
+      mockApiClient.get.mockResolvedValue({ data: { items: [], total: 0 } });
+
+      await trainingsApi.getAll({
+        search: 'drill',
+        groupId: 'group-1',
+        skip: 20,
+        take: 10,
+      });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith('/trainings', {
+        params: {
+          search: 'drill',
+          groupId: 'group-1',
+          skip: '20',
+          take: '10',
+        },
+      });
+    });
   });
 
   describe('getMy', () => {
     it('should call GET /trainings/my', async () => {
-      const mockTrainings = [{ id: '1', startTime: '2024-01-01T10:00:00Z', durationMinutes: 120, location: 'Field A', group: { id: 'g1', name: 'U12' } }];
+      const mockTrainings = {
+        items: [{ id: '1', startTime: '2024-01-01T10:00:00Z', durationMinutes: 120, location: 'Field A', group: { id: 'g1', name: 'U12' } }],
+        total: 1,
+      };
       mockApiClient.get.mockResolvedValue({ data: mockTrainings });
 
       const result = await trainingsApi.getMy();
@@ -75,7 +101,7 @@ describe('trainingsApi', () => {
     });
 
     it('should call GET /trainings/my with filters', async () => {
-      mockApiClient.get.mockResolvedValue({ data: [] });
+      mockApiClient.get.mockResolvedValue({ data: { items: [], total: 0 } });
 
       await trainingsApi.getMy({ timeFilter: 'this_week' });
 

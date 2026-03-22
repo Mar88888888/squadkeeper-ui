@@ -89,6 +89,9 @@ export function MatchesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [resultFilter, setResultFilter] = useState<string>('');
   const [activeTab, setActiveTab] = useState<ViewTab>('upcoming');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [totalMatches, setTotalMatches] = useState(0);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -107,18 +110,35 @@ export function MatchesPage() {
     setError('');
     try {
       const isAdmin = user?.role === UserRole.ADMIN;
+      const isCompleted = activeTab === 'completed';
+      const effectiveTimeFilter = isCompleted ? 'past' : 'upcoming';
       const [matchesData, groupsData] = await Promise.all([
-        isAdmin ? matchesApi.getAll() : matchesApi.getMy(),
+        isAdmin
+          ? matchesApi.getAll({
+              groupId: filterGroupId || undefined,
+              search: searchQuery || undefined,
+              timeFilter: effectiveTimeFilter,
+              skip: (currentPage - 1) * itemsPerPage,
+              take: itemsPerPage,
+            })
+          : matchesApi.getMy({
+              groupId: filterGroupId || undefined,
+              search: searchQuery || undefined,
+              timeFilter: effectiveTimeFilter,
+              skip: (currentPage - 1) * itemsPerPage,
+              take: itemsPerPage,
+            }),
         isAdmin ? groupsApi.getAll() : groupsApi.getMy(),
       ]);
-      setMatches(matchesData);
+      setMatches(matchesData.items);
+      setTotalMatches(matchesData.total);
       setGroups(groupsData);
     } catch {
       setError('Failed to load data');
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, activeTab, filterGroupId, searchQuery, currentPage]);
 
   useEffect(() => {
     if (user) {
@@ -142,24 +162,9 @@ export function MatchesPage() {
     return result;
   }, [matches]);
 
-  // Filtered and sorted matches
+  // Client-side extra filtering (result only) on current page
   const filteredMatches = useMemo(() => {
     let result = [...matches];
-
-    // Filter by group
-    if (filterGroupId) {
-      result = result.filter(m => m.group.id === filterGroupId);
-    }
-
-    // Filter by search
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(m =>
-        m.opponent.toLowerCase().includes(query) ||
-        m.group.name.toLowerCase().includes(query) ||
-        m.location.toLowerCase().includes(query)
-      );
-    }
 
     // Filter by result
     if (resultFilter) {
@@ -175,22 +180,16 @@ export function MatchesPage() {
         return true;
       });
     }
+    return result;
+  }, [matches, resultFilter]);
 
-    // Split by upcoming/completed
-    const now = new Date();
-    if (activeTab === 'upcoming') {
-      result = result.filter(m => new Date(m.startTime) > now || (m.homeGoals === null && m.awayGoals === null));
-    } else {
-      result = result.filter(m => m.homeGoals !== null && m.awayGoals !== null);
-    }
+  const totalPages = resultFilter
+    ? 1
+    : Math.ceil(totalMatches / itemsPerPage);
 
-    // Sort
-    return result.sort((a, b) => {
-      const dateA = new Date(a.startTime).getTime();
-      const dateB = new Date(b.startTime).getTime();
-      return activeTab === 'upcoming' ? dateA - dateB : dateB - dateA;
-    });
-  }, [matches, filterGroupId, searchQuery, resultFilter, activeTab]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterGroupId, searchQuery, resultFilter, activeTab]);
 
   const openCreateModal = () => {
     const now = new Date();
@@ -243,8 +242,10 @@ export function MatchesPage() {
         opponent: formData.opponent,
         isHome: formData.isHome,
       });
-      setMatches(prev => [...prev, newMatch]);
+      setMatches(prev => [newMatch, ...prev]);
+      setTotalMatches((prev) => prev + 1);
       closeModal();
+      loadData();
     } catch {
       setError('Failed to create match');
     }
@@ -372,11 +373,14 @@ export function MatchesPage() {
           <div className="flex items-center gap-4 flex-wrap">
             <div className="flex-1 min-w-[200px]">
               <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search matches..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  <input
+                    type="text"
+                    placeholder="Search matches..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
                   className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 text-gray-900 dark:text-white"
                 />
                 <div className="absolute left-3 top-1/2 -translate-y-1/2">
@@ -386,7 +390,10 @@ export function MatchesPage() {
             </div>
             <select
               value={filterGroupId}
-              onChange={(e) => setFilterGroupId(e.target.value)}
+              onChange={(e) => {
+                setFilterGroupId(e.target.value);
+                setCurrentPage(1);
+              }}
               className="px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 text-gray-900 dark:text-white"
             >
               <option value="">All groups</option>
@@ -398,7 +405,10 @@ export function MatchesPage() {
             </select>
             <select
               value={resultFilter}
-              onChange={(e) => setResultFilter(e.target.value)}
+              onChange={(e) => {
+                setResultFilter(e.target.value);
+                setCurrentPage(1);
+              }}
               className="px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 text-gray-900 dark:text-white"
             >
               <option value="">All results</option>
@@ -415,7 +425,10 @@ export function MatchesPage() {
           <Tabs
             tabs={tabs}
             activeTab={activeTab}
-            onChange={(id) => setActiveTab(id as ViewTab)}
+            onChange={(id) => {
+              setActiveTab(id as ViewTab);
+              setCurrentPage(1);
+            }}
           />
         </div>
 
@@ -563,6 +576,59 @@ export function MatchesPage() {
                 </button>
               );
             })}
+
+            {totalPages > 1 && (
+              <Card>
+                <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {resultFilter
+                      ? `Showing ${filteredMatches.length} of ${filteredMatches.length} matches`
+                      : `Showing ${(currentPage - 1) * itemsPerPage + 1}-${Math.min(currentPage * itemsPerPage, totalMatches)} of ${totalMatches} matches`}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      Previous
+                    </button>
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum: number;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                            currentPage === pageNum
+                              ? 'bg-green-500 text-white'
+                              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </Card>
+            )}
           </div>
         )}
       </PageContent>

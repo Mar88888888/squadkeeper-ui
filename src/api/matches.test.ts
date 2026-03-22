@@ -19,7 +19,8 @@ describe('matchesApi', () => {
 
   describe('getAll', () => {
     it('should call GET /matches without filters', async () => {
-      const mockMatches = [
+      const mockMatches = {
+        items: [
         {
           id: '1',
           startTime: '2024-01-01T15:00:00Z',
@@ -31,7 +32,9 @@ describe('matchesApi', () => {
           awayGoals: null,
           group: { id: 'g1', name: 'U12' },
         },
-      ];
+        ],
+        total: 1,
+      };
       mockApiClient.get.mockResolvedValue({ data: mockMatches });
 
       const result = await matchesApi.getAll();
@@ -43,7 +46,7 @@ describe('matchesApi', () => {
     });
 
     it('should call GET /matches with filters', async () => {
-      mockApiClient.get.mockResolvedValue({ data: [] });
+      mockApiClient.get.mockResolvedValue({ data: { items: [], total: 0 } });
 
       await matchesApi.getAll({
         timeFilter: 'upcoming',
@@ -54,11 +57,31 @@ describe('matchesApi', () => {
         params: { dateFrom: '2024-01-01', timeFilter: 'upcoming' },
       });
     });
+
+    it('should include pagination and search params', async () => {
+      mockApiClient.get.mockResolvedValue({ data: { items: [], total: 0 } });
+
+      await matchesApi.getAll({
+        search: 'city',
+        groupId: 'group-2',
+        skip: 10,
+        take: 10,
+      });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith('/matches', {
+        params: {
+          search: 'city',
+          groupId: 'group-2',
+          skip: '10',
+          take: '10',
+        },
+      });
+    });
   });
 
   describe('getMy', () => {
     it('should call GET /matches/my', async () => {
-      mockApiClient.get.mockResolvedValue({ data: [] });
+      mockApiClient.get.mockResolvedValue({ data: { items: [], total: 0 } });
 
       await matchesApi.getMy();
 
@@ -68,7 +91,7 @@ describe('matchesApi', () => {
     });
 
     it('should call GET /matches/my with filters', async () => {
-      mockApiClient.get.mockResolvedValue({ data: [] });
+      mockApiClient.get.mockResolvedValue({ data: { items: [], total: 0 } });
 
       await matchesApi.getMy({ timeFilter: 'past' });
 
