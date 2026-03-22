@@ -58,7 +58,7 @@ function isSameDay(date1: Date, date2: Date): boolean {
   );
 }
 
-export function CalendarPage() {
+function CalendarPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [trainings, setTrainings] = useState<Training[]>([]);
@@ -79,12 +79,14 @@ export function CalendarPage() {
     try {
       const isAdmin = user?.role === UserRole.ADMIN;
       const [trainingsData, matchesData, groupsData] = await Promise.all([
-        isAdmin ? trainingsApi.getAll() : trainingsApi.getMy(),
-        isAdmin ? matchesApi.getAll() : matchesApi.getMy(),
+        isAdmin
+          ? trainingsApi.getAll({ take: 100 })
+          : trainingsApi.getMy({ take: 100 }),
+        isAdmin ? matchesApi.getAll({ take: 100 }) : matchesApi.getMy({ take: 100 }),
         isAdmin ? groupsApi.getAll() : groupsApi.getMy(),
       ]);
-      setTrainings(trainingsData);
-      setMatches(matchesData);
+      setTrainings(trainingsData.items);
+      setMatches(matchesData.items);
       setGroups(groupsData);
     } catch {
       setError('Failed to load data');
@@ -362,3 +364,6 @@ export function CalendarPage() {
     </>
   );
 }
+
+export { CalendarPage };
+export default CalendarPage;

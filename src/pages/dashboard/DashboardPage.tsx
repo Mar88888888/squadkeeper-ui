@@ -174,13 +174,19 @@ export function DashboardPage() {
       setLoading(true);
       try {
         if (user?.role === UserRole.PLAYER) {
-          const [trainings, matches, stats, attendance, ratings] = await Promise.all([
-            trainingsApi.getMy({ timeFilter: 'upcoming' }).catch(() => []),
-            matchesApi.getMy({ timeFilter: 'upcoming' }).catch(() => []),
+          const [trainingsRes, matchesRes, stats, attendance, ratings] = await Promise.all([
+            trainingsApi
+              .getMy({ timeFilter: 'upcoming', take: 10 })
+              .catch(() => ({ items: [], total: 0 })),
+            matchesApi
+              .getMy({ timeFilter: 'upcoming', take: 10 })
+              .catch(() => ({ items: [], total: 0 })),
             statsApi.getMyStats().catch(() => null),
             attendanceApi.getMyStats().catch(() => null),
             evaluationsApi.getMyRatingStats().catch(() => null),
           ]);
+          const trainings = trainingsRes.items;
+          const matches = matchesRes.items;
 
           setUpcomingEvent(findNextEvent(trainings, matches));
           setPlayerStats(stats);
@@ -194,12 +200,18 @@ export function DashboardPage() {
           ].sort((a, b) => new Date(a.data.startTime).getTime() - new Date(b.data.startTime).getTime()).slice(0, 3);
           setUpcomingEvents(events);
         } else if (user?.role === UserRole.PARENT) {
-          const [trainings, matches, attendanceStats, childrenData] = await Promise.all([
-            trainingsApi.getMy({ timeFilter: 'upcoming' }).catch(() => []),
-            matchesApi.getMy({ timeFilter: 'upcoming' }).catch(() => []),
+          const [trainingsRes, matchesRes, attendanceStats, childrenData] = await Promise.all([
+            trainingsApi
+              .getMy({ timeFilter: 'upcoming', take: 10 })
+              .catch(() => ({ items: [], total: 0 })),
+            matchesApi
+              .getMy({ timeFilter: 'upcoming', take: 10 })
+              .catch(() => ({ items: [], total: 0 })),
             attendanceApi.getMyChildrenStats().catch((): PlayerAttendanceStats[] => []),
             statsApi.getChildrenStats().catch((): ChildrenStats => ({ children: [] })),
           ]);
+          const trainings = trainingsRes.items;
+          const matches = matchesRes.items;
 
           if (childrenData.children.length > 0) {
             setChildrenWithGroups(childrenData.children);
@@ -214,10 +226,16 @@ export function DashboardPage() {
           ].sort((a, b) => new Date(a.data.startTime).getTime() - new Date(b.data.startTime).getTime()).slice(0, 3);
           setUpcomingEvents(events);
         } else if (user?.role === UserRole.COACH || user?.role === UserRole.ADMIN) {
-          const [trainings, matches] = await Promise.all([
-            trainingsApi.getMy({ timeFilter: 'upcoming' }).catch(() => []),
-            matchesApi.getMy({ timeFilter: 'upcoming' }).catch(() => []),
+          const [trainingsRes, matchesRes] = await Promise.all([
+            trainingsApi
+              .getMy({ timeFilter: 'upcoming', take: 10 })
+              .catch(() => ({ items: [], total: 0 })),
+            matchesApi
+              .getMy({ timeFilter: 'upcoming', take: 10 })
+              .catch(() => ({ items: [], total: 0 })),
           ]);
+          const trainings = trainingsRes.items;
+          const matches = matchesRes.items;
           setUpcomingEvent(findNextEvent(trainings, matches));
 
           const events: UpcomingEvent[] = [
@@ -238,10 +256,10 @@ export function DashboardPage() {
     if (!ratingStats?.byCategory) return undefined;
     const { technical, tactical, physical, psychological } = ratingStats.byCategory;
     return [
-      { label: 'Technical', value: technical ?? 0, maxValue: 10, color: '#10b981' },
-      { label: 'Tactical', value: tactical ?? 0, maxValue: 10, color: '#3b82f6' },
-      { label: 'Physical', value: physical ?? 0, maxValue: 10, color: '#8b5cf6' },
-      { label: 'Mental', value: psychological ?? 0, maxValue: 10, color: '#f59e0b' },
+      { label: 'Technical', value: technical ?? 0, maxValue: 10, color: 'bg-blue-500' },
+      { label: 'Tactical', value: tactical ?? 0, maxValue: 10, color: 'bg-green-500' },
+      { label: 'Physical', value: physical ?? 0, maxValue: 10, color: 'bg-red-500' },
+      { label: 'Mental', value: psychological ?? 0, maxValue: 10, color: 'bg-purple-500' },
     ];
   };
 
