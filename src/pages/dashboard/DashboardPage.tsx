@@ -18,6 +18,7 @@ import {
   type PlayerStats,
 } from '../../api/stats';
 import { evaluationsApi, type RatingStats } from '../../api/evaluations';
+import { objectivesApi, objectiveMetricLabels, type Objective } from '../../api/objectives';
 import { PerformanceScoreRing } from '../../components/dashboard/PerformanceScoreRing';
 import { RatingTrendChart } from '../../components/dashboard/RatingTrendChart';
 
@@ -168,13 +169,14 @@ export function DashboardPage() {
   const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
   const [ratingStats, setRatingStats] = useState<RatingStats | null>(null);
   const [childrenWithGroups, setChildrenWithGroups] = useState<ChildInfo[]>([]);
+  const [myObjectives, setMyObjectives] = useState<Objective[]>([]);
 
   useEffect(() => {
     const loadDashboardData = async () => {
       setLoading(true);
       try {
         if (user?.role === UserRole.PLAYER) {
-          const [trainingsRes, matchesRes, stats, attendance, ratings] = await Promise.all([
+          const [trainingsRes, matchesRes, stats, attendance, ratings, objectives] = await Promise.all([
             trainingsApi
               .getMy({ timeFilter: 'upcoming', take: 10 })
               .catch(() => ({ items: [], total: 0 })),
@@ -184,6 +186,7 @@ export function DashboardPage() {
             statsApi.getMyStats().catch(() => null),
             attendanceApi.getMyStats().catch(() => null),
             evaluationsApi.getMyRatingStats().catch(() => null),
+            objectivesApi.getMy().catch((): Objective[] => []),
           ]);
           const trainings = trainingsRes.items;
           const matches = matchesRes.items;
@@ -192,6 +195,7 @@ export function DashboardPage() {
           setPlayerStats(stats);
           setAttendanceStats(attendance);
           setRatingStats(ratings);
+          setMyObjectives(objectives);
 
           // Build upcoming events list
           const events: UpcomingEvent[] = [
@@ -276,21 +280,21 @@ export function DashboardPage() {
           { to: '/trainings', label: 'New Training', icon: <PlusIcon />, color: 'green' },
           { to: '/matches', label: 'New Match', icon: <PlusIcon />, color: 'blue' },
           { to: '/squads', label: 'Create Squad', icon: <SquadsIcon />, color: 'purple' },
-          { to: '/stats/team', label: 'Team Statistics', icon: <StatsIcon />, color: 'amber' },
+          { to: '/objectives/manage', label: 'Set Objectives', icon: <GoalsIcon />, color: 'amber' },
         ];
       case UserRole.ADMIN:
         return [
           { to: '/admin/users', label: 'Create User', icon: <PlusIcon />, color: 'green' },
           { to: '/admin/groups', label: 'Manage Groups', icon: <TeamIcon />, color: 'blue' },
           { to: '/trainings', label: 'View Trainings', icon: <TrainingsIcon />, color: 'purple' },
-          { to: '/matches', label: 'View Matches', icon: <MatchesIcon />, color: 'amber' },
+          { to: '/objectives/manage', label: 'Objectives', icon: <GoalsIcon />, color: 'amber' },
         ];
       case UserRole.PLAYER:
         return [
           { to: '/trainings', label: 'My Trainings', icon: <TrainingsIcon />, color: 'green' },
           { to: '/matches', label: 'My Matches', icon: <MatchesIcon />, color: 'blue' },
           { to: '/stats/my', label: 'My Statistics', icon: <StatsIcon />, color: 'purple' },
-          { to: '/calendar', label: 'Calendar', icon: <ClockIcon />, color: 'amber' },
+          { to: '/objectives/my', label: 'My Objectives', icon: <GoalsIcon />, color: 'amber' },
         ];
       case UserRole.PARENT:
         return [
@@ -382,7 +386,7 @@ export function DashboardPage() {
         )}
 
         {/* Performance Charts - Player */}
-        {user?.role === UserRole.PLAYER && ratingStats && (
+      {user?.role === UserRole.PLAYER && ratingStats && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <PerformanceScoreRing
               score={Math.round((ratingStats?.averageRating ?? 0) * 10)}
@@ -392,6 +396,46 @@ export function DashboardPage() {
             />
             <RatingTrendChart data={getRatingTrendData()} loading={loading} />
           </div>
+        )}
+
+        {user?.role === UserRole.PLAYER && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Completed Objectives</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {myObjectives.filter((objective) => objective.status === 'achieved').length === 0 ? (
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  No completed objectives yet.
+                </p>
+              ) : (
+                <>
+                  {myObjectives
+                    .filter((objective) => objective.status === 'achieved')
+                    .sort((a, b) => {
+                      const aTime = a.achievedAt ? new Date(a.achievedAt).getTime() : 0;
+                      const bTime = b.achievedAt ? new Date(b.achievedAt).getTime() : 0;
+                      return bTime - aTime;
+                    })
+                    .slice(0, 3)
+                    .map((objective) => (
+                      <div key={objective.id} className="border border-gray-100 dark:border-gray-800 rounded-xl p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="font-medium text-gray-900 dark:text-white">{objective.title}</p>
+                          <Badge variant="success">COMPLETED</Badge>
+                        </div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                          {objectiveMetricLabels[objective.metric]} target: {objective.targetValue.toFixed(2)}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                          Completed: {objective.achievedAt ? new Date(objective.achievedAt).toLocaleDateString() : '-'}
+                        </p>
+                      </div>
+                    ))}
+                </>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         {/* Children Attendance - Parent */}

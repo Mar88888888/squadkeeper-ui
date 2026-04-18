@@ -15,6 +15,7 @@ import { MyStatsPage, TeamStatsPage, ChildStatsPage, PlayerStatsPage, TeamOfMont
 import { MyGroupsPage } from './pages/groups';
 import { ContactsPage } from './pages/contacts';
 import { SquadListPage, SquadBuilderPage } from './pages/squads';
+import { ObjectiveManagementPage, MyObjectivesPage } from './pages/objectives';
 import { UserRole } from './types';
 
 function LayoutWrapper({ children }: { children: React.ReactNode }) {
@@ -97,6 +98,22 @@ function App() {
             element={
               <RoleRoute allowedRoles={[UserRole.PLAYER]}>
                 <LayoutWrapper><MyStatsPage /></LayoutWrapper>
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/objectives/my"
+            element={
+              <RoleRoute allowedRoles={[UserRole.PLAYER]}>
+                <LayoutWrapper><MyObjectivesPage /></LayoutWrapper>
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/objectives/manage"
+            element={
+              <RoleRoute allowedRoles={[UserRole.COACH, UserRole.ADMIN]}>
+                <LayoutWrapper><ObjectiveManagementPage /></LayoutWrapper>
               </RoleRoute>
             }
           />

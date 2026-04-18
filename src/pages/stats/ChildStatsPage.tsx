@@ -5,10 +5,11 @@ import {
   type StatsPeriod,
 } from '../../api/stats';
 import { evaluationsApi, type RatingStats } from '../../api/evaluations';
+import { objectivesApi, objectiveMetricLabels, type Objective } from '../../api/objectives';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { PageContent } from '../../components/layout/PageContent';
 import { PlayerStatsView } from '../../components/PlayerStatsView';
-import { Card, EmptyState } from '../../components/ui';
+import { Badge, Card, CardContent, CardHeader, CardTitle, EmptyState } from '../../components/ui';
 
 const PERIOD_OPTIONS: { value: StatsPeriod; label: string }[] = [
   { value: 'all_time', label: 'All Time' },
@@ -20,6 +21,7 @@ const PERIOD_OPTIONS: { value: StatsPeriod; label: string }[] = [
 export function ChildStatsPage() {
   const [data, setData] = useState<ChildrenStats | null>(null);
   const [ratingStats, setRatingStats] = useState<RatingStats | null>(null);
+  const [objectives, setObjectives] = useState<Objective[]>([]);
 
   const [period, setPeriod] = useState<StatsPeriod>('all_time');
   const [selectedChildId, setSelectedChildId] = useState<string>('');
@@ -54,13 +56,20 @@ export function ChildStatsPage() {
       setError('');
       try {
         if (data && selectedChildId) {
-          const ratings = await evaluationsApi
-            .getPlayerRatingStats(selectedChildId, period)
-            .catch((error) => {
-              console.error('Failed to load rating stats:', error);
-              return null;
-            });
+          const [ratings, objectiveItems] = await Promise.all([
+            evaluationsApi
+              .getPlayerRatingStats(selectedChildId, period)
+              .catch((error) => {
+                console.error('Failed to load rating stats:', error);
+                return null;
+              }),
+            objectivesApi.getByPlayer(selectedChildId).catch((error) => {
+              console.error('Failed to load objectives:', error);
+              return [];
+            }),
+          ]);
           setRatingStats(ratings);
+          setObjectives(objectiveItems);
         }
       } catch {
         setError('Failed to load statistics');
@@ -131,14 +140,54 @@ export function ChildStatsPage() {
             />
           </Card>
         ) : currentChild?.stats ? (
-          <PlayerStatsView
-            stats={currentChild?.stats || null}
-            ratingStats={ratingStats}
-            period={period}
-            playerName={
-              children.length > 1 ? currentChild?.stats.playerName : undefined
-            }
-          />
+          <div className="space-y-6">
+            <PlayerStatsView
+              stats={currentChild?.stats || null}
+              ratingStats={ratingStats}
+              period={period}
+              playerName={
+                children.length > 1 ? currentChild?.stats.playerName : undefined
+              }
+            />
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Child Objectives</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {objectives.length === 0 ? (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    No objectives assigned yet.
+                  </p>
+                ) : (
+                  objectives.map((objective) => (
+                    <div
+                      key={objective.id}
+                      className="border border-gray-100 dark:border-gray-800 rounded-xl p-4"
+                    >
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">{objective.title}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {objectiveMetricLabels[objective.metric]}: {objective.currentValue.toFixed(2)} / {objective.targetValue.toFixed(2)}
+                          </p>
+                        </div>
+                        <Badge variant={objective.status === 'achieved' ? 'success' : 'info'}>
+                          {objective.status.toUpperCase()}
+                        </Badge>
+                      </div>
+                      <div className="mt-3 h-2 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                        <div
+                          className="h-full bg-green-500"
+                          style={{ width: `${Math.min(objective.progressPercent, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          </div>
         ) : null}
       </PageContent>
     </>

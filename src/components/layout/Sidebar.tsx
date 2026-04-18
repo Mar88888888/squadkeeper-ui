@@ -128,6 +128,22 @@ const TeamOfMonthIcon = () => (
   </svg>
 );
 
+const ObjectivesIcon = () => (
+  <svg
+    className="w-5 h-5 flex-shrink-0"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 3l2.3 4.66L19.5 8.4l-3.75 3.65.88 5.15L12 14.77 7.37 17.2l.88-5.15L4.5 8.4l5.2-.74L12 3z"
+    />
+  </svg>
+);
+
 const SquadsIcon = () => (
   <svg
     className="w-5 h-5 flex-shrink-0"
@@ -231,6 +247,11 @@ function getNavSections(role: UserRole): NavSection[] {
       label: 'My Statistics',
       icon: <StatsIcon />,
     });
+    sections[0].items.push({
+      to: '/objectives/my',
+      label: 'My Objectives',
+      icon: <ObjectivesIcon />,
+    });
   } else if (role === UserRole.PARENT) {
     sections[0].items.push({
       to: '/stats/children',
@@ -242,6 +263,11 @@ function getNavSections(role: UserRole): NavSection[] {
       to: '/stats/team',
       label: 'Statistics',
       icon: <StatsIcon />,
+    });
+    sections[0].items.push({
+      to: '/objectives/manage',
+      label: 'Objectives',
+      icon: <ObjectivesIcon />,
     });
   }
 
@@ -316,16 +342,12 @@ export function Sidebar() {
     >
       {/* Logo Section */}
       <div className="px-5 py-5 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3 overflow-hidden">
-        <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-          <svg
-            className="w-6 h-6 text-white"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <circle cx="12" cy="12" r="10" strokeWidth="2" />
-            <path strokeWidth="2" d="M12 6v12M6 12h12" />
-          </svg>
+        <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg flex-shrink-0 bg-white dark:bg-gray-800">
+          <img
+            src="/logo.png"
+            alt="SquadKeeper logo"
+            className="w-full h-full object-cover"
+          />
         </div>
         {/* Hide text when collapsed to prevent awkward wrapping */}
         <div
