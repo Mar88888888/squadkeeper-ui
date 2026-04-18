@@ -112,6 +112,22 @@ const StatsIcon = () => (
   </svg>
 );
 
+const TeamOfMonthIcon = () => (
+  <svg
+    className="w-5 h-5 flex-shrink-0"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 3l2.3 4.66L19.5 8.4l-3.75 3.65.88 5.15L12 14.77 7.37 17.2l.88-5.15L4.5 8.4l5.2-.74L12 3z"
+    />
+  </svg>
+);
+
 const SquadsIcon = () => (
   <svg
     className="w-5 h-5 flex-shrink-0"
@@ -221,13 +237,19 @@ function getNavSections(role: UserRole): NavSection[] {
       label: 'Children Stats',
       icon: <StatsIcon />,
     });
-  } else if (role === UserRole.COACH) {
+  } else if (role === UserRole.COACH || role === UserRole.ADMIN) {
     sections[0].items.push({
       to: '/stats/team',
       label: 'Statistics',
       icon: <StatsIcon />,
     });
   }
+
+  sections[0].items.push({
+    to: '/stats/team-of-month',
+    label: 'Team of the Month',
+    icon: <TeamOfMonthIcon />,
+  });
 
   // Coach features
   if (role === UserRole.COACH) {
@@ -331,6 +353,7 @@ export function Sidebar() {
               const isActive =
                 location.pathname === item.to ||
                 (item.to !== '/dashboard' &&
+                  item.to !== '/stats/team' &&
                   location.pathname.startsWith(item.to));
 
               return (

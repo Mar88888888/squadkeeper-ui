@@ -11,7 +11,7 @@ import { UserManagementPage, UserListPage, GroupManagementPage } from './pages/a
 import { TrainingsPage, TrainingDetailsPage } from './pages/trainings';
 import { MatchesPage, MatchDetailsPage } from './pages/matches';
 import { CalendarPage } from './pages/calendar';
-import { MyStatsPage, TeamStatsPage, ChildStatsPage, PlayerStatsPage } from './pages/stats';
+import { MyStatsPage, TeamStatsPage, ChildStatsPage, PlayerStatsPage, TeamOfMonthPage } from './pages/stats';
 import { MyGroupsPage } from './pages/groups';
 import { ContactsPage } from './pages/contacts';
 import { SquadListPage, SquadBuilderPage } from './pages/squads';
@@ -121,6 +121,14 @@ function App() {
             element={
               <RoleRoute allowedRoles={[UserRole.PARENT]}>
                 <LayoutWrapper><ChildStatsPage /></LayoutWrapper>
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/stats/team-of-month"
+            element={
+              <RoleRoute allowedRoles={[UserRole.ADMIN, UserRole.COACH, UserRole.PLAYER, UserRole.PARENT]}>
+                <LayoutWrapper><TeamOfMonthPage /></LayoutWrapper>
               </RoleRoute>
             }
           />

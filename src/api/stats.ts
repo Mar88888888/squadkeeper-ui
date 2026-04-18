@@ -39,6 +39,50 @@ export interface ChildrenStats {
   children: ChildInfo[];
 }
 
+export type TeamOfMonthLine = 'GK' | 'DEF' | 'MID' | 'FWD';
+
+export interface TeamOfMonthPlayerMetrics {
+  averageRating: number;
+  technical: number;
+  tactical: number;
+  physical: number;
+  psychological: number;
+  matchesPlayed: number;
+  goals: number;
+  assists: number;
+  cleanSheets: number;
+  goalsPerMatch: number;
+  assistsPerMatch: number;
+  cleanSheetsPerMatch: number;
+  attendanceRate: number;
+  totalEvents: number;
+}
+
+export interface TeamOfMonthPlayer {
+  playerId: string;
+  playerName: string;
+  position: Position;
+  line: TeamOfMonthLine;
+  topsisScore: number;
+  eligibleByEventsThreshold: boolean;
+  metrics: TeamOfMonthPlayerMetrics;
+}
+
+export interface TeamOfMonth {
+  formation: '4-3-3';
+  period: 'this_month';
+  month: string;
+  groupIds: string[];
+  groupTotalEvents: number;
+  minRequiredEvents: number;
+  players: {
+    goalkeeper: TeamOfMonthPlayer | null;
+    defenders: TeamOfMonthPlayer[];
+    midfielders: TeamOfMonthPlayer[];
+    forwards: TeamOfMonthPlayer[];
+  };
+}
+
 export const statsApi = {
   getMyStats: async (
     period: StatsPeriod = 'all_time',
@@ -74,6 +118,13 @@ export const statsApi = {
   ): Promise<ChildrenStats> => {
     const response = await apiClient.get<ChildrenStats>('/players/stats/children', {
       params: { period },
+    });
+    return response.data;
+  },
+
+  getTeamOfMonth: async (month?: string): Promise<TeamOfMonth> => {
+    const response = await apiClient.get<TeamOfMonth>('/players/stats/team-of-month', {
+      params: month ? { month } : undefined,
     });
     return response.data;
   },
