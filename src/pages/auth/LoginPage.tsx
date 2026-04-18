@@ -40,19 +40,6 @@ const LogoIcon = () => (
   </svg>
 );
 
-interface DemoAccount {
-  role: string;
-  label: string;
-  email: string;
-}
-
-const demoAccounts: DemoAccount[] = [
-  { role: 'admin', label: 'Administrator', email: 'admin@squadkeeper.com' },
-  { role: 'coach', label: 'Coach', email: 'coach@squadkeeper.com' },
-  { role: 'player', label: 'Player', email: 'player@squadkeeper.com' },
-  { role: 'parent', label: 'Parent', email: 'parent@squadkeeper.com' },
-];
-
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -79,11 +66,6 @@ export function LoginPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const fillDemoAccount = (account: DemoAccount) => {
-    setEmail(account.email);
-    setPassword('password123');
   };
 
   return (
@@ -185,30 +167,6 @@ export function LoginPage() {
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="my-6 flex items-center gap-4">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-sm text-gray-400">or</span>
-            <div className="flex-1 h-px bg-gray-200" />
-          </div>
-
-          {/* Demo Accounts */}
-          <div className="space-y-3">
-            <p className="text-sm text-gray-500 text-center mb-3">Demo accounts for testing:</p>
-            <div className="grid grid-cols-2 gap-3">
-              {demoAccounts.map((account) => (
-                <button
-                  key={account.role}
-                  type="button"
-                  onClick={() => fillDemoAccount(account)}
-                  className="p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors text-left"
-                >
-                  <p className="text-sm font-semibold text-gray-900">{account.label}</p>
-                  <p className="text-xs text-gray-500">{account.email}</p>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
 
         {/* Footer */}
