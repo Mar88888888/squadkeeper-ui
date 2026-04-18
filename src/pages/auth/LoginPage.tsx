@@ -33,13 +33,6 @@ const ArrowIcon = () => (
   </svg>
 );
 
-const LogoIcon = () => (
-  <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <circle cx="12" cy="12" r="10" strokeWidth="2"/>
-    <path strokeWidth="2" d="M12 6v12M6 12h12"/>
-  </svg>
-);
-
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -81,11 +74,15 @@ export function LoginPage() {
       <div className="relative w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-xl mb-4">
-            <LogoIcon />
+          <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-xl mb-4 overflow-hidden">
+            <img
+              src="/logo.png"
+              alt="SquadKeeper logo"
+              className="w-full h-full object-cover"
+            />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">SquadKeeper</h1>
-          <p className="text-green-100">Squad Management System</p>
+          <p className="text-green-100">Academy Management System</p>
         </div>
 
         {/* Form Card */}
