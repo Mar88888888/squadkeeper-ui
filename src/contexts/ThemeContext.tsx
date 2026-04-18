@@ -11,7 +11,7 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'f-academy-theme';
+const STORAGE_KEY = 'squadkeeper-theme';
 
 function getSystemTheme(): 'light' | 'dark' {
   if (typeof window !== 'undefined') {

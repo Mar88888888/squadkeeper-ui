@@ -1,7 +1,7 @@
 import { UserRole } from '../types';
 
 /**
- * Centralized color system for the Football Academy app.
+ * Centralized color system for the SquadKeeper app.
  *
  * Color Philosophy:
  * - Primary (Green): Main brand color, represents football/pitch

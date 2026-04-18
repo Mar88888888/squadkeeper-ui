@@ -332,7 +332,7 @@ export function Sidebar() {
           className={`logo-text transition-opacity duration-300 ${isExpanded ? 'opacity-100' : 'opacity-0'}`}
         >
           <h1 className="text-base font-bold text-gray-900 dark:text-white whitespace-nowrap">
-            FC Academy
+            SquadKeeper
           </h1>
           <p className="text-xs text-gray-400">Management</p>
         </div>

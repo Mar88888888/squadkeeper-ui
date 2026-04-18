@@ -47,10 +47,10 @@ interface DemoAccount {
 }
 
 const demoAccounts: DemoAccount[] = [
-  { role: 'admin', label: 'Administrator', email: 'admin@academy.com' },
-  { role: 'coach', label: 'Coach', email: 'coach@academy.com' },
-  { role: 'player', label: 'Player', email: 'player@academy.com' },
-  { role: 'parent', label: 'Parent', email: 'parent@academy.com' },
+  { role: 'admin', label: 'Administrator', email: 'admin@squadkeeper.com' },
+  { role: 'coach', label: 'Coach', email: 'coach@squadkeeper.com' },
+  { role: 'player', label: 'Player', email: 'player@squadkeeper.com' },
+  { role: 'parent', label: 'Parent', email: 'parent@squadkeeper.com' },
 ];
 
 export function LoginPage() {
@@ -102,8 +102,8 @@ export function LoginPage() {
           <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-xl mb-4">
             <LogoIcon />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">FC Academy</h1>
-          <p className="text-green-100">Football Academy Management System</p>
+          <h1 className="text-3xl font-bold text-white mb-2">SquadKeeper</h1>
+          <p className="text-green-100">Squad Management System</p>
         </div>
 
         {/* Form Card */}
@@ -126,7 +126,7 @@ export function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@academy.com"
+                  placeholder="name@squadkeeper.com"
                   required
                   className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all placeholder:text-gray-400"
                 />
@@ -213,7 +213,7 @@ export function LoginPage() {
 
         {/* Footer */}
         <p className="text-center text-green-100 text-sm mt-6">
-          &copy; {new Date().getFullYear()} FC Academy. All rights reserved.
+          &copy; {new Date().getFullYear()} SquadKeeper. All rights reserved.
         </p>
       </div>
     </div>
