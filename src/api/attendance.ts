@@ -30,6 +30,10 @@ export interface AttendanceStats {
   rate: number;
   totalTrainings: number;
   totalMatches: number;
+  streaks?: {
+    trainings: number;
+    matches: number;
+  };
 }
 
 export interface PlayerAttendanceStats extends AttendanceStats {

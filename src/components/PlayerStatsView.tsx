@@ -103,6 +103,52 @@ const PERIOD_LABELS: Record<StatsPeriod, string> = {
   this_month: 'This Month',
 };
 
+const FireIcon = () => (
+  <svg
+    className="w-4 h-4 text-orange-500 dark:text-orange-400"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <path d="M12.1 2.25c.39 1.42 1.45 2.8 2.47 4.14 1.9 2.5 3.86 5.08 3.86 8.36 0 3.57-2.9 6.5-6.47 6.5s-6.47-2.93-6.47-6.5c0-2.66 1.44-4.73 2.95-6.92.69-1 1.41-2.04 1.95-3.2l.69-1.48 1.02 1.1zm-.2 8.55c-.66 1.15-1.54 2.26-1.54 3.65 0 1.01.79 1.8 1.8 1.8s1.8-.79 1.8-1.8c0-1.17-.71-2.24-1.4-3.28l-.66-1.01z" />
+  </svg>
+);
+
+const ConeIcon = () => (
+  <svg
+    className="w-4 h-4 text-amber-500 dark:text-amber-300"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    aria-hidden="true"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.9}
+      d="M12 3l4.8 13H7.2L12 3zM9 11.5h6M8 15h8M6.2 17.8h11.6v2.6H6.2z"
+    />
+  </svg>
+);
+
+const BallIcon = () => (
+  <svg
+    className="w-4 h-4 text-amber-500 dark:text-amber-300"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="12" r="8" strokeWidth={1.9} />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.9}
+      d="M12 8.1l2.35 1.7-.9 2.7h-2.9l-.9-2.7L12 8.1zm-2.55 1.7-2.35-.9L5.8 11l1.3 2.1m10.85-3.2 1.25 1.1-1.2 2.1-2.35.1m-8.55-.1-1.3 2.1 1.3 2 2.35-.9m8.55-3.2 1.2 2.1-1.25 1.1-2.35-.9m-1.4-2.3-.45 2.5 2 1.5m-7.5 0 2-1.5-.45-2.5m3.95 0h-3.9"
+    />
+  </svg>
+);
+
 interface PlayerStatsViewProps {
   stats: PlayerStats;
   ratingStats: RatingStats | null;
@@ -114,6 +160,8 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
   const displayName = playerName || stats.playerName;
   const isDefensive = isDefensivePosition(stats.position);
   const chartColors = useChartColors();
+  const trainingStreak = stats.attendance.streaks?.trainings ?? 0;
+  const matchStreak = stats.attendance.streaks?.matches ?? 0;
 
   const [visibleCategories, setVisibleCategories] = useState<Set<string>>(
     new Set(['average'])
@@ -288,6 +336,29 @@ export function PlayerStatsView({ stats, ratingStats, period, playerName }: Play
             <div className="text-center p-3 bg-red-50 dark:bg-red-900/30 rounded-lg">
               <p className="text-xl font-bold text-red-600 dark:text-red-400">{stats.attendance.absent}</p>
               <p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">Absent</p>
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="flex items-center justify-center gap-2 p-3 bg-amber-50 dark:bg-amber-900/25 rounded-lg border border-amber-200/70 dark:border-amber-700/50 select-none">
+              <FireIcon />
+              <ConeIcon />
+              <span className="text-lg font-bold text-amber-800 dark:text-amber-200">
+                {trainingStreak}
+              </span>
+              <span className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                Training streak
+              </span>
+            </div>
+            <div className="flex items-center justify-center gap-2 p-3 bg-amber-50 dark:bg-amber-900/25 rounded-lg border border-amber-200/70 dark:border-amber-700/50 select-none">
+              <FireIcon />
+              <BallIcon />
+              <span className="text-lg font-bold text-amber-800 dark:text-amber-200">
+                {matchStreak}
+              </span>
+              <span className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                Match streak
+              </span>
             </div>
           </div>
 
