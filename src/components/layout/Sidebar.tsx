@@ -1,7 +1,8 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { UserRole } from '../../types';
 import { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { useI18n } from '../../contexts/I18nContext';
+import { UserRole } from '../../types';
 
 interface NavItem {
   to: string;
@@ -208,10 +209,10 @@ const LogoutIcon = () => (
   </svg>
 );
 
-function getNavSections(role: UserRole): NavSection[] {
+function getNavSections(role: UserRole, t: (key: string) => string): NavSection[] {
   const sections: NavSection[] = [
     {
-      items: [{ to: '/dashboard', label: 'Dashboard', icon: <HomeIcon /> }],
+      items: [{ to: '/dashboard', label: t('nav.dashboard'), icon: <HomeIcon /> }],
     },
   ];
 
@@ -219,7 +220,7 @@ function getNavSections(role: UserRole): NavSection[] {
   if (role === UserRole.ADMIN) {
     sections[0].items.push({
       to: '/admin/groups',
-      label: 'Groups',
+      label: t('nav.groups'),
       icon: <GroupsIcon />,
     });
   }
@@ -228,72 +229,72 @@ function getNavSections(role: UserRole): NavSection[] {
   if (role === UserRole.COACH) {
     sections[0].items.push({
       to: '/my-groups',
-      label: 'My Groups',
+      label: t('nav.myGroups'),
       icon: <GroupsIcon />,
     });
   }
 
   // Common items for all roles
   sections[0].items.push(
-    { to: '/calendar', label: 'Calendar', icon: <CalendarIcon /> },
-    { to: '/trainings', label: 'Trainings', icon: <TrainingsIcon /> },
-    { to: '/matches', label: 'Matches', icon: <MatchesIcon /> },
+    { to: '/calendar', label: t('nav.calendar'), icon: <CalendarIcon /> },
+    { to: '/trainings', label: t('nav.trainings'), icon: <TrainingsIcon /> },
+    { to: '/matches', label: t('nav.matches'), icon: <MatchesIcon /> },
   );
 
   // Stats - different routes per role
   if (role === UserRole.PLAYER) {
     sections[0].items.push({
       to: '/stats/my',
-      label: 'My Statistics',
+      label: t('nav.myStatistics'),
       icon: <StatsIcon />,
     });
     sections[0].items.push({
       to: '/objectives/my',
-      label: 'My Objectives',
+      label: t('nav.myObjectives'),
       icon: <ObjectivesIcon />,
     });
   } else if (role === UserRole.PARENT) {
     sections[0].items.push({
       to: '/stats/children',
-      label: 'Children Stats',
+      label: t('nav.childrenStats'),
       icon: <StatsIcon />,
     });
   } else if (role === UserRole.COACH || role === UserRole.ADMIN) {
     sections[0].items.push({
       to: '/stats/team',
-      label: 'Statistics',
+      label: t('nav.statistics'),
       icon: <StatsIcon />,
     });
     sections[0].items.push({
       to: '/objectives/manage',
-      label: 'Objectives',
+      label: t('nav.objectives'),
       icon: <ObjectivesIcon />,
     });
   }
 
   sections[0].items.push({
     to: '/stats/team-of-month',
-    label: 'Team of the Month',
+    label: t('nav.teamOfMonth'),
     icon: <TeamOfMonthIcon />,
   });
 
   // Coach features
   if (role === UserRole.COACH) {
-    sections[0].items.push({ to: '/squads', label: 'Squads', icon: <SquadsIcon /> });
+    sections[0].items.push({ to: '/squads', label: t('nav.squads'), icon: <SquadsIcon /> });
   }
 
   // Contacts for all
   sections[0].items.push({
     to: '/contacts',
-    label: 'Contacts',
+    label: t('nav.contacts'),
     icon: <ContactsIcon />,
   });
 
   // Admin section
   if (role === UserRole.ADMIN) {
     sections.push({
-      label: 'Admin',
-      items: [{ to: '/admin/users', label: 'Users', icon: <UsersIcon /> }],
+      label: t('nav.admin'),
+      items: [{ to: '/admin/users', label: t('nav.users'), icon: <UsersIcon /> }],
     });
   }
 
@@ -306,23 +307,24 @@ function getUserInitials(firstName: string, lastName: string): string {
   return (first + last).toUpperCase() || 'U';
 }
 
-function getRoleLabel(role: UserRole): string {
+function getRoleLabel(role: UserRole, t: (key: string) => string): string {
   const labels: Record<UserRole, string> = {
-    [UserRole.ADMIN]: 'Administrator',
-    [UserRole.COACH]: 'Coach',
-    [UserRole.PLAYER]: 'Player',
-    [UserRole.PARENT]: 'Parent',
+    [UserRole.ADMIN]: t('roles.admin'),
+    [UserRole.COACH]: t('roles.coach'),
+    [UserRole.PLAYER]: t('roles.player'),
+    [UserRole.PARENT]: t('roles.parent'),
   };
-  return labels[role] || role;
+  return labels[role] || t('roles.user');
 }
 export function Sidebar() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [isExpanded, setIsExpanded] = useState(false);
+  const { t } = useI18n();
 
   if (!user) return null;
 
-  const sections = getNavSections(user.role);
+  const sections = getNavSections(user.role, t);
   const initials = getUserInitials(user.firstName, user.lastName);
   const displayName = user.firstName
     ? `${user.firstName} ${user.lastName?.[0] || ''}.`.trim()
@@ -354,9 +356,9 @@ export function Sidebar() {
           className={`logo-text transition-opacity duration-300 ${isExpanded ? 'opacity-100' : 'opacity-0'}`}
         >
           <h1 className="text-base font-bold text-gray-900 dark:text-white whitespace-nowrap">
-            SquadKeeper
+            {t('common.appName')}
           </h1>
-          <p className="text-xs text-gray-400">Management</p>
+          <p className="text-xs text-gray-400">{t('common.management')}</p>
         </div>
       </div>
 
@@ -414,7 +416,7 @@ export function Sidebar() {
               {displayName}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-              {getRoleLabel(user.role)}
+              {getRoleLabel(user.role, t)}
             </p>
           </div>
           {isExpanded && (

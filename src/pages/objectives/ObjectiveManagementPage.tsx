@@ -10,6 +10,7 @@ import {
 import { groupsApi, type GroupInfo } from '../../api/groups';
 import { PageContent, PageHeader } from '../../components/layout';
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from '../../components/ui';
+import { useI18n } from '../../contexts/I18nContext';
 
 const METRIC_OPTIONS: ObjectiveMetric[] = [
   'attendance_rate',
@@ -43,6 +44,7 @@ function getInitialFormState() {
 }
 
 export function ObjectiveManagementPage() {
+  const { t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -86,7 +88,7 @@ export function ObjectiveManagementPage() {
           }
         }
       } catch {
-        setError('Failed to load objective management data');
+        setError(t('objectives.management.errors.loadFailed'));
       } finally {
         setLoading(false);
       }
@@ -97,11 +99,11 @@ export function ObjectiveManagementPage() {
 
   const handleSubmit = async () => {
     if (!selectedGroupId) {
-      setError('Select a group first');
+      setError(t('objectives.management.errors.selectGroup'));
       return;
     }
     if (mode === 'player' && !selectedPlayerId) {
-      setError('Select a player for personal objective');
+      setError(t('objectives.management.errors.selectPlayer'));
       return;
     }
 
@@ -131,7 +133,7 @@ export function ObjectiveManagementPage() {
       setForm(getInitialFormState());
       await reloadObjectives();
     } catch {
-      setError('Failed to save objective');
+      setError(t('objectives.management.errors.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -140,8 +142,8 @@ export function ObjectiveManagementPage() {
   return (
     <>
       <PageHeader
-        title="Objective Management"
-        subtitle="Set and monitor player and team objectives"
+        title={t('objectives.management.title')}
+        subtitle={t('objectives.management.subtitle')}
       />
 
       <PageContent>
@@ -159,16 +161,16 @@ export function ObjectiveManagementPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Create Objective</CardTitle>
+                <CardTitle>{t('objectives.management.createTitle')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Fill in all fields below. Choose whether this objective is for one player or for the whole group.
+                  {t('objectives.management.createDescription')}
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                   <div className="space-y-1">
                     <label className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                      Group
+                      {t('objectives.management.labels.group')}
                     </label>
                     <select
                       value={selectedGroupId}
@@ -190,7 +192,7 @@ export function ObjectiveManagementPage() {
 
                   <div className="space-y-1">
                     <label className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                      Objective Type
+                      {t('objectives.management.labels.type')}
                     </label>
                     <select
                       value={mode}
@@ -199,14 +201,14 @@ export function ObjectiveManagementPage() {
                       }
                       className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-white"
                     >
-                      <option value="player">Personal objective</option>
-                      <option value="group">Group objective</option>
+                      <option value="player">{t('objectives.management.types.player')}</option>
+                      <option value="group">{t('objectives.management.types.group')}</option>
                     </select>
                   </div>
 
                   <div className="space-y-1">
                     <label className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                      Player
+                      {t('objectives.management.labels.player')}
                     </label>
                     <select
                       value={selectedPlayerId}
@@ -224,7 +226,7 @@ export function ObjectiveManagementPage() {
 
                   <div className="space-y-1">
                     <label className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                      Metric
+                      {t('objectives.management.labels.metric')}
                     </label>
                     <select
                       value={form.metric}
@@ -238,7 +240,7 @@ export function ObjectiveManagementPage() {
                     >
                       {METRIC_OPTIONS.map((metric) => (
                         <option key={metric} value={metric}>
-                          {objectiveMetricLabels[metric]}
+                          {t(`objectives.metrics.${metric}`)}
                         </option>
                       ))}
                     </select>
@@ -248,7 +250,7 @@ export function ObjectiveManagementPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                      Objective Title
+                      {t('objectives.management.labels.title')}
                     </label>
                     <input
                       type="text"
@@ -256,13 +258,13 @@ export function ObjectiveManagementPage() {
                       onChange={(event) =>
                         setForm((prev) => ({ ...prev, title: event.target.value }))
                       }
-                      placeholder="e.g. Club goals"
+                      placeholder={t('objectives.management.placeholders.title')}
                       className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-white"
                     />
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                      Badge Label (optional)
+                      {t('objectives.management.labels.badge')}
                     </label>
                     <input
                       type="text"
@@ -270,7 +272,7 @@ export function ObjectiveManagementPage() {
                       onChange={(event) =>
                         setForm((prev) => ({ ...prev, badgeLabel: event.target.value }))
                       }
-                      placeholder="e.g. Scoring Machine"
+                      placeholder={t('objectives.management.placeholders.badge')}
                       className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-white"
                     />
                   </div>
@@ -278,14 +280,14 @@ export function ObjectiveManagementPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                    Description (optional)
+                    {t('objectives.management.labels.description')}
                   </label>
                   <textarea
                     value={form.description}
                     onChange={(event) =>
                       setForm((prev) => ({ ...prev, description: event.target.value }))
                     }
-                    placeholder="Add coaching context or success criteria"
+                    placeholder={t('objectives.management.placeholders.description')}
                     rows={3}
                     className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm dark:text-white"
                   />
@@ -294,7 +296,7 @@ export function ObjectiveManagementPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div className="space-y-1">
                     <label className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                      Target Value
+                      {t('objectives.management.labels.target')}
                     </label>
                     <input
                       type="number"
@@ -312,7 +314,7 @@ export function ObjectiveManagementPage() {
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                      Start Date
+                      {t('objectives.management.labels.startDate')}
                     </label>
                     <input
                       type="date"
@@ -325,7 +327,7 @@ export function ObjectiveManagementPage() {
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                      End Date
+                      {t('objectives.management.labels.endDate')}
                     </label>
                     <input
                       type="date"
@@ -340,7 +342,11 @@ export function ObjectiveManagementPage() {
 
                 <div className="flex justify-end">
                   <Button onClick={handleSubmit} disabled={saving}>
-                    {saving ? 'Saving...' : mode === 'group' ? 'Assign to Group' : 'Assign to Player'}
+                    {saving
+                      ? t('objectives.management.saving')
+                      : mode === 'group'
+                        ? t('objectives.management.assignGroup')
+                        : t('objectives.management.assignPlayer')}
                   </Button>
                 </div>
               </CardContent>
@@ -348,11 +354,11 @@ export function ObjectiveManagementPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Current Objectives</CardTitle>
+                <CardTitle>{t('objectives.management.currentTitle')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {objectives.length === 0 ? (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">No objectives yet.</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{t('objectives.management.empty')}</p>
                 ) : (
                   objectives.map((objective) => (
                     <div
@@ -366,17 +372,17 @@ export function ObjectiveManagementPage() {
                           </p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
                             {objective.scope === 'group'
-                              ? `Team objective${objective.group ? ` • ${objective.group.name}` : ''}`
+                              ? `${t('objectives.management.scope.group')}${objective.group ? ` • ${objective.group.name}` : ''}`
                               : objective.player
                                 ? `${objective.player.firstName} ${objective.player.lastName}${objective.player.group ? ` • ${objective.player.group.name}` : ''}`
-                                : 'Personal objective'}
+                                : t('objectives.management.scope.player')}
                           </p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {objectiveMetricLabels[objective.metric]}: {objective.currentValue.toFixed(2)} / {objective.targetValue.toFixed(2)}
+                            {t(`objectives.metrics.${objective.metric}`)}: {objective.currentValue.toFixed(2)} / {objective.targetValue.toFixed(2)}
                           </p>
                         </div>
                         <Badge variant={getStatusVariant(objective.status)}>
-                          {objective.status.toUpperCase()}
+                          {t(`objectives.status.${objective.status}`)}
                         </Badge>
                       </div>
                       <div className="mt-3 h-2 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
@@ -396,4 +402,3 @@ export function ObjectiveManagementPage() {
     </>
   );
 }
-

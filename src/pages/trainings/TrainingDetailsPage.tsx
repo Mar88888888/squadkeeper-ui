@@ -7,6 +7,7 @@ import {
   type UpdateTrainingRequest,
 } from '../../api/trainings';
 import { useAuth } from '../../contexts/AuthContext';
+import { getLocaleCode, useI18n } from '../../contexts/I18nContext';
 import { UserRole } from '../../types';
 import {
   attendanceApi,
@@ -23,14 +24,9 @@ import { PageHeader, PageContent } from '../../components/layout';
 import { Card, CardContent, Modal, Button, Avatar } from '../../components/ui';
 import { useParams, useNavigate } from 'react-router-dom';
 
-const EVAL_CATEGORIES = [
-  { key: 'technical', label: 'Technical' },
-  { key: 'tactical', label: 'Tactical' },
-  { key: 'physical', label: 'Physical' },
-  { key: 'psychological', label: 'Psychological' },
-] as const;
+const EVAL_CATEGORY_KEYS = ['technical', 'tactical', 'physical', 'psychological'] as const;
 
-type EvalCategory = (typeof EVAL_CATEGORIES)[number]['key'];
+type EvalCategory = (typeof EVAL_CATEGORY_KEYS)[number];
 
 // Icons
 const CalendarIcon = () => (
@@ -171,6 +167,8 @@ export function TrainingDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t, locale } = useI18n();
+  const localeCode = getLocaleCode(locale);
 
   const canEdit =
     user?.role === UserRole.ADMIN || user?.role === UserRole.COACH;
@@ -235,7 +233,7 @@ export function TrainingDetailsPage() {
       });
       setAttendanceRecords(records);
     } catch {
-      setError('Failed to load training details');
+      setError(t('trainingDetails.errors.loadFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -284,7 +282,7 @@ export function TrainingDetailsPage() {
       const evaluationsData = await evaluationsApi.getByTraining(id);
       setEvaluations(evaluationsData);
     } catch {
-      setError('Failed to save attendance');
+      setError(t('trainingDetails.errors.saveAttendanceFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -322,7 +320,7 @@ export function TrainingDetailsPage() {
       setSelectedPlayer(null);
       setEvalComment('');
     } catch {
-      setError('Failed to save evaluation');
+      setError(t('trainingDetails.errors.saveEvaluationFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -366,7 +364,7 @@ export function TrainingDetailsPage() {
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-US', {
+    return new Date(dateStr).toLocaleDateString(localeCode, {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
@@ -378,12 +376,12 @@ export function TrainingDetailsPage() {
     startTime: string;
     durationMinutes: number;
   }) => {
-    const start = new Date(training.startTime).toLocaleTimeString('en-US', {
+    const start = new Date(training.startTime).toLocaleTimeString(localeCode, {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
     });
-    const end = getTrainingEndTime(training).toLocaleTimeString('en-US', {
+    const end = getTrainingEndTime(training).toLocaleTimeString(localeCode, {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
@@ -418,7 +416,7 @@ export function TrainingDetailsPage() {
       setIsEditModalOpen(false);
       loadData();
     } catch {
-      setError('Failed to update training');
+      setError(t('trainingDetails.errors.updateFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -432,7 +430,7 @@ export function TrainingDetailsPage() {
       await trainingsApi.delete(id);
       navigate('/trainings');
     } catch {
-      setError('Failed to delete training');
+      setError(t('trainingDetails.errors.deleteFailed'));
       setIsDeleting(false);
     }
   };
@@ -463,7 +461,7 @@ export function TrainingDetailsPage() {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-gray-500 dark:text-gray-400">
-          Training not found
+          {t('trainingDetails.notFound')}
         </div>
       </div>
     );
@@ -477,7 +475,7 @@ export function TrainingDetailsPage() {
   return (
     <>
       <PageHeader
-        title={training.topic || 'Training Session'}
+        title={training.topic || t('trainingDetails.trainingSession')}
         subtitle={training.group.name}
         actions={
           canEdit && (
@@ -492,7 +490,7 @@ export function TrainingDetailsPage() {
                 <TrashIcon />
               </Button>
               <Button onClick={saveAttendance} disabled={isSaving}>
-                {isSaving ? 'Saving...' : 'Save'}
+                {isSaving ? t('trainingDetails.saving') : t('common.save')}
               </Button>
             </div>
           )
@@ -525,8 +523,8 @@ export function TrainingDetailsPage() {
               </div>
               <span className="px-4 py-2 bg-white/20 text-white text-sm font-semibold rounded-xl">
                 {new Date(training.startTime) > new Date()
-                  ? 'Planned'
-                  : 'Completed'}
+                  ? t('trainings.status.planned')
+                  : t('trainings.status.completed')}
               </span>
             </div>
             <div className="flex items-center gap-8 mt-6 flex-wrap">
@@ -562,10 +560,13 @@ export function TrainingDetailsPage() {
               <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Attendance
+                    {t('trainingDetails.attendance.title')}
                   </h3>
                   <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-semibold rounded-full">
-                    {stats.present}/{totalPlayers} present
+                    {t('trainingDetails.attendance.presentCount', {
+                      present: stats.present,
+                      total: totalPlayers,
+                    })}
                   </span>
                 </div>
                 {canEdit && (
@@ -573,7 +574,7 @@ export function TrainingDetailsPage() {
                     onClick={markAllPresent}
                     className="text-sm text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium"
                   >
-                    Mark all present
+                    {t('trainingDetails.attendance.markAll')}
                   </button>
                 )}
               </div>
@@ -625,7 +626,7 @@ export function TrainingDetailsPage() {
                               }`}
                             >
                               {isPresent ? <CheckIcon /> : <XIcon />}
-                              {isPresent ? 'Present' : 'Absent'}
+                              {isPresent ? t('trainingDetails.attendance.present') : t('trainingDetails.attendance.absent')}
                             </button>
                           ) : (
                             <span
@@ -636,7 +637,7 @@ export function TrainingDetailsPage() {
                               }`}
                             >
                               {isPresent ? <CheckIcon /> : <XIcon />}
-                              {isPresent ? 'Present' : 'Absent'}
+                              {isPresent ? t('trainingDetails.attendance.present') : t('trainingDetails.attendance.absent')}
                             </span>
                           )}
                           {canEdit && (
@@ -652,8 +653,8 @@ export function TrainingDetailsPage() {
                               }`}
                               title={
                                 playerCanEvaluate
-                                  ? 'Rate player'
-                                  : 'Player must be present to rate'
+                                  ? t('trainingDetails.evaluations.ratePlayer')
+                                  : t('trainingDetails.evaluations.presentRequired')
                               }
                               disabled={!playerCanEvaluate}
                             >
@@ -673,7 +674,7 @@ export function TrainingDetailsPage() {
               <Card>
                 <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Evaluations
+                    {t('trainingDetails.evaluations.title')}
                   </h3>
                 </div>
                 <CardContent>
@@ -703,19 +704,19 @@ export function TrainingDetailsPage() {
                                   {avgRating}
                                 </p>
                                 <p className="text-xs text-amber-600 dark:text-amber-500">
-                                  Avg
+                                  {t('trainingDetails.evaluations.average')}
                                 </p>
                               </div>
                             )}
                           </div>
                           <div className="grid grid-cols-4 gap-2">
-                            {EVAL_CATEGORIES.map(({ key, label }) => (
+                            {EVAL_CATEGORY_KEYS.map((key) => (
                               <div
                                 key={key}
                                 className="text-center p-2 bg-white dark:bg-gray-900 rounded-lg"
                               >
                                 <p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
-                                  {label}
+                                  {t(`trainingDetails.evaluations.categories.${key}`)}
                                 </p>
                                 <p className="text-lg font-bold text-gray-900 dark:text-white">
                                   {playerEval[key] ?? '-'}
@@ -742,12 +743,12 @@ export function TrainingDetailsPage() {
             {/* Quick Stats */}
             <Card className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Statistics
+                {t('trainingDetails.stats.title')}
               </h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Attendance
+                    {t('trainingDetails.stats.attendance')}
                   </span>
                   <span className="text-lg font-bold text-green-600 dark:text-green-400">
                     {attendancePercent}%
@@ -767,7 +768,7 @@ export function TrainingDetailsPage() {
                         {stats.present}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Present
+                        {t('trainingDetails.attendance.present')}
                       </p>
                     </div>
                     <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
@@ -775,7 +776,7 @@ export function TrainingDetailsPage() {
                         {stats.absent}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Absent
+                        {t('trainingDetails.attendance.absent')}
                       </p>
                     </div>
                   </div>
@@ -823,7 +824,7 @@ export function TrainingDetailsPage() {
       <Modal
         isOpen={!!selectedPlayer}
         onClose={() => setSelectedPlayer(null)}
-        title="Player Evaluation"
+        title={t('trainingDetails.evaluations.playerEvaluation')}
       >
         {selectedPlayer && (
           <div>
@@ -837,16 +838,16 @@ export function TrainingDetailsPage() {
                   {selectedPlayer.firstName} {selectedPlayer.lastName}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Training evaluation
+                  {t('trainingDetails.evaluations.trainingEvaluation')}
                 </p>
               </div>
             </div>
 
             <div className="space-y-5">
-              {EVAL_CATEGORIES.map(({ key, label }) => (
+              {EVAL_CATEGORY_KEYS.map((key) => (
                 <div key={key}>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                    {label}
+                    {t(`trainingDetails.evaluations.categories.${key}`)}
                   </label>
                   <div className="flex items-center gap-2">
                     <input
@@ -871,13 +872,13 @@ export function TrainingDetailsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Comment
+                  {t('trainingDetails.evaluations.comment')}
                 </label>
                 <textarea
                   value={evalComment}
                   onChange={(e) => setEvalComment(e.target.value)}
                   rows={3}
-                  placeholder="Add a comment about the player..."
+                  placeholder={t('trainingDetails.evaluations.commentPlaceholder')}
                   className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 />
               </div>
@@ -889,14 +890,14 @@ export function TrainingDetailsPage() {
                 onClick={() => setSelectedPlayer(null)}
                 className="flex-1"
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
               <button
                 onClick={saveEvaluations}
                 disabled={isSaving}
                 className="flex-1 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold rounded-xl shadow-lg shadow-amber-500/30 transition-all disabled:opacity-50"
               >
-                {isSaving ? 'Saving...' : 'Save Evaluation'}
+                {isSaving ? t('trainingDetails.saving') : t('trainingDetails.evaluations.save')}
               </button>
             </div>
           </div>
@@ -907,12 +908,12 @@ export function TrainingDetailsPage() {
       <Modal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        title="Edit Training"
+        title={t('trainingDetails.edit.title')}
       >
         <div className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Topic (optional)
+              {t('trainings.form.topicOptional')}
             </label>
             <input
               type="text"
@@ -920,7 +921,7 @@ export function TrainingDetailsPage() {
               onChange={(e) =>
                 setEditForm((prev) => ({ ...prev, topic: e.target.value }))
               }
-              placeholder="e.g., Ball control & passing drills"
+              placeholder={t('trainings.form.topicPlaceholder')}
               className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
             />
           </div>
@@ -928,7 +929,7 @@ export function TrainingDetailsPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Date & Time
+                {t('trainings.form.dateTime')}
               </label>
               <input
                 type="datetime-local"
@@ -945,7 +946,7 @@ export function TrainingDetailsPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Duration
+                {t('trainings.form.duration')}
               </label>
               <select
                 value={editForm.durationMinutes}
@@ -957,18 +958,18 @@ export function TrainingDetailsPage() {
                 }
                 className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
               >
-                <option value={60}>1 hour</option>
-                <option value={90}>1.5 hours</option>
-                <option value={120}>2 hours</option>
-                <option value={150}>2.5 hours</option>
-                <option value={180}>3 hours</option>
+                <option value={60}>{t('trainings.form.durationOptions.oneHour')}</option>
+                <option value={90}>{t('trainings.form.durationOptions.oneHalfHours')}</option>
+                <option value={120}>{t('trainings.form.durationOptions.twoHours')}</option>
+                <option value={150}>{t('trainings.form.durationOptions.twoHalfHours')}</option>
+                <option value={180}>{t('trainings.form.durationOptions.threeHours')}</option>
               </select>
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Location
+              {t('trainings.form.location')}
             </label>
             <select
               value={editForm.location}
@@ -977,10 +978,10 @@ export function TrainingDetailsPage() {
               }
               className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
             >
-              <option value="Main Field">Main Field</option>
-              <option value="Training Field 2">Training Field 2</option>
-              <option value="Gym">Gym</option>
-              <option value="Indoor Arena">Indoor Arena</option>
+              <option value="Main Field">{t('trainings.locations.mainField')}</option>
+              <option value="Training Field 2">{t('trainings.locations.trainingField2')}</option>
+              <option value="Gym">{t('trainings.locations.gym')}</option>
+              <option value="Indoor Arena">{t('trainings.locations.indoorArena')}</option>
             </select>
           </div>
 
@@ -996,14 +997,14 @@ export function TrainingDetailsPage() {
               onClick={() => setIsEditModalOpen(false)}
               className="flex-1"
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={handleUpdate}
               disabled={isSaving}
               className="flex-1"
             >
-              {isSaving ? 'Saving...' : 'Save Changes'}
+              {isSaving ? t('trainingDetails.saving') : t('trainingDetails.edit.saveChanges')}
             </Button>
           </div>
         </div>
@@ -1013,16 +1014,14 @@ export function TrainingDetailsPage() {
       <Modal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
-        title="Delete Training"
+        title={t('trainingDetails.delete.title')}
       >
         <div className="space-y-4">
           <p className="text-gray-600 dark:text-gray-400">
-            Are you sure you want to delete this training? This action cannot be
-            undone.
+            {t('trainingDetails.delete.confirm')}
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-500">
-            All attendance records and evaluations for this training will also
-            be deleted.
+            {t('trainingDetails.delete.warning')}
           </p>
 
           {error && (
@@ -1037,7 +1036,7 @@ export function TrainingDetailsPage() {
               onClick={() => setIsDeleteModalOpen(false)}
               className="flex-1"
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               variant="danger"
@@ -1045,7 +1044,7 @@ export function TrainingDetailsPage() {
               disabled={isDeleting}
               className="flex-1"
             >
-              {isDeleting ? 'Deleting...' : 'Delete Training'}
+              {isDeleting ? t('trainingDetails.deleting') : t('trainingDetails.delete.action')}
             </Button>
           </div>
         </div>

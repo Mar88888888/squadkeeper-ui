@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { objectivesApi, objectiveMetricLabels, type Objective } from '../../api/objectives';
+import { objectivesApi, type Objective } from '../../api/objectives';
 import { PageContent, PageHeader } from '../../components/layout';
 import { Badge, Card, CardContent, CardHeader, CardTitle } from '../../components/ui';
+import { getLocaleCode, useI18n } from '../../contexts/I18nContext';
 
 function getStatusVariant(status: Objective['status']): 'default' | 'success' | 'warning' | 'info' {
   if (status === 'achieved') return 'success';
@@ -11,6 +12,8 @@ function getStatusVariant(status: Objective['status']): 'default' | 'success' | 
 }
 
 export function MyObjectivesPage() {
+  const { t, locale } = useI18n();
+  const localeCode = getLocaleCode(locale);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [objectives, setObjectives] = useState<Objective[]>([]);
@@ -23,7 +26,7 @@ export function MyObjectivesPage() {
         const items = await objectivesApi.getMy();
         setObjectives(items);
       } catch {
-        setError('Failed to load objectives');
+        setError(t('objectives.my.errors.loadFailed'));
       } finally {
         setLoading(false);
       }
@@ -47,8 +50,8 @@ export function MyObjectivesPage() {
   return (
     <>
       <PageHeader
-        title="My Completed Objectives"
-        subtitle="Your achieved goals"
+        title={t('objectives.my.title')}
+        subtitle={t('objectives.my.subtitle')}
       />
 
       <PageContent>
@@ -64,12 +67,12 @@ export function MyObjectivesPage() {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Completed Objectives</CardTitle>
+                <CardTitle>{t('objectives.my.completedTitle')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {completed.length === 0 ? (
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    No completed objectives yet.
+                    {t('objectives.my.empty')}
                   </p>
                 ) : (
                   completed.map((objective) => (
@@ -80,14 +83,14 @@ export function MyObjectivesPage() {
                       <div>
                         <p className="font-medium text-gray-900 dark:text-white">{objective.title}</p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {objectiveMetricLabels[objective.metric]} target: {objective.targetValue.toFixed(2)}
-                          {objective.badgeLabel ? ` • Badge: ${objective.badgeLabel}` : ''}
+                          {t(`objectives.metrics.${objective.metric}`)} {t('objectives.my.target')}: {objective.targetValue.toFixed(2)}
+                          {objective.badgeLabel ? ` • ${t('objectives.my.badge')}: ${objective.badgeLabel}` : ''}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Completed: {objective.achievedAt ? new Date(objective.achievedAt).toLocaleDateString() : '-'}
+                          {t('objectives.my.completedOn')}: {objective.achievedAt ? new Date(objective.achievedAt).toLocaleDateString(localeCode) : '-'}
                         </p>
                       </div>
-                      <Badge variant={getStatusVariant('achieved')}>COMPLETED</Badge>
+                      <Badge variant={getStatusVariant('achieved')}>{t('objectives.status.achieved')}</Badge>
                     </div>
                   ))
                 )}
@@ -99,4 +102,3 @@ export function MyObjectivesPage() {
     </>
   );
 }
-

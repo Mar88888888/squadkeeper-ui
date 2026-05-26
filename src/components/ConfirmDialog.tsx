@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useI18n } from '../contexts/I18nContext';
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -15,12 +16,13 @@ export function ConfirmDialog({
   isOpen,
   title,
   message,
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
+  confirmLabel,
+  cancelLabel,
   variant = 'warning',
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const { t } = useI18n();
   const dialogRef = useRef<HTMLDivElement>(null);
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -79,6 +81,8 @@ export function ConfirmDialog({
   };
 
   const styles = variantStyles[variant];
+  const resolvedConfirmLabel = confirmLabel ?? t('common.confirm');
+  const resolvedCancelLabel = cancelLabel ?? t('common.cancel');
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -115,7 +119,7 @@ export function ConfirmDialog({
               onClick={onCancel}
               className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 dark:focus:ring-gray-700 active:scale-95 transition-all"
             >
-              {cancelLabel}
+              {resolvedCancelLabel}
             </button>
             <button
               ref={confirmButtonRef}
@@ -123,7 +127,7 @@ export function ConfirmDialog({
               onClick={onConfirm}
               className={`px-4 py-2 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95 transition-all ${styles.confirmButton}`}
             >
-              {confirmLabel}
+              {resolvedConfirmLabel}
             </button>
           </div>
         </div>

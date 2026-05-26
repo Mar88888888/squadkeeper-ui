@@ -4,7 +4,8 @@ import { groupsApi, type GroupInfo } from '../../api/groups';
 import { squadsApi } from '../../api/squads';
 import { FootballPitch, FormatSelector, type PlayerData } from '../../components/squad-builder';
 import { GameFormat, DEFAULT_FORMATIONS } from '../../constants/squad.constants';
-import { Position, POSITION_LABELS } from '../../constants/player.constants';
+import { Position } from '../../constants/player.constants';
+import { useI18n } from '../../contexts/I18nContext';
 
 interface SquadPositionState {
   id: string;
@@ -19,6 +20,7 @@ export function SquadBuilderPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEditMode = !!id;
+  const { t } = useI18n();
 
   const [groups, setGroups] = useState<GroupInfo[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<string>('');
@@ -41,7 +43,7 @@ export function SquadBuilderPage() {
           setSelectedGroupId(data[0].id);
         }
       } catch {
-        setError('Failed to load groups');
+        setError(t('squadBuilder.errors.loadGroups'));
       }
     };
     loadGroups();
@@ -93,7 +95,7 @@ export function SquadBuilderPage() {
         setPositions(starterPos);
         setBenchPlayers(benchList);
       } catch {
-        setError('Failed to load squad');
+        setError(t('squadBuilder.errors.loadSquad'));
       } finally {
         setIsLoading(false);
       }
@@ -217,11 +219,11 @@ export function SquadBuilderPage() {
 
   const handleSave = async () => {
     if (!squadName.trim()) {
-      setError('Squad name is required');
+      setError(t('squadBuilder.errors.nameRequired'));
       return;
     }
     if (!selectedGroupId) {
-      setError('Please select a group');
+      setError(t('squadBuilder.errors.selectGroup'));
       return;
     }
 
@@ -258,7 +260,7 @@ export function SquadBuilderPage() {
 
       navigate('/squads');
     } catch {
-      setError('Failed to save squad');
+      setError(t('squadBuilder.errors.saveFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -306,7 +308,7 @@ export function SquadBuilderPage() {
       <header className="bg-white dark:bg-gray-900 shadow">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-            {isEditMode ? 'Edit Squad' : 'Create Squad'}
+            {isEditMode ? t('squadBuilder.editTitle') : t('squadBuilder.createTitle')}
           </h1>
           <div className="flex gap-3">
             <button
@@ -314,13 +316,13 @@ export function SquadBuilderPage() {
               disabled={isSaving}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 disabled:opacity-50 transition-all"
             >
-              {isSaving ? 'Saving...' : 'Save Squad'}
+              {isSaving ? t('squadBuilder.saving') : t('squadBuilder.save')}
             </button>
             <button
               onClick={() => navigate('/squads')}
               className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
           </div>
         </div>
@@ -336,10 +338,10 @@ export function SquadBuilderPage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1">
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 max-h-[calc(100vh-200px)] overflow-y-auto">
-              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Available Players</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">{t('squadBuilder.availablePlayers')}</h3>
 
               {availablePlayers.length === 0 ? (
-                <p className="text-gray-500 dark:text-gray-400 text-sm">All players assigned</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">{t('squadBuilder.allAssigned')}</p>
               ) : (
                 <div className="space-y-2">
                   {availablePlayers.map((player) => (
@@ -356,13 +358,13 @@ export function SquadBuilderPage() {
                         <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                           {player.firstName} {player.lastName}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{POSITION_LABELS[player.position]}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{t(`positions.${player.position}`)}</p>
                       </div>
                       <button
                         onClick={() => handleAddToBench(player)}
                         className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                       >
-                        + Bench
+                        {t('squadBuilder.addToBench')}
                       </button>
                     </div>
                   ))}
@@ -376,19 +378,19 @@ export function SquadBuilderPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Squad Name *
+                    {t('squadBuilder.labels.name')}
                   </label>
                   <input
                     type="text"
                     value={squadName}
                     onChange={(e) => setSquadName(e.target.value)}
-                    placeholder="e.g., Main XI, Cup Squad"
+                    placeholder={t('squadBuilder.placeholders.name')}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:text-gray-100"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Group
+                    {t('squadBuilder.labels.group')}
                   </label>
                   <select
                     value={selectedGroupId}
@@ -396,10 +398,10 @@ export function SquadBuilderPage() {
                     disabled={isEditMode}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-100 dark:disabled:bg-gray-700 dark:bg-gray-800 dark:text-gray-100"
                   >
-                    <option value="">Select group...</option>
+                    <option value="">{t('squadBuilder.selectGroup')}</option>
                     {groups.map((group) => (
                       <option key={group.id} value={group.id}>
-                        {group.name} ({group.players.length} players)
+                        {t('squads.groupOption', { name: group.name, count: group.players.length })}
                       </option>
                     ))}
                   </select>
@@ -408,20 +410,20 @@ export function SquadBuilderPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Game Format
+                  {t('squadBuilder.labels.format')}
                 </label>
                 <FormatSelector value={gameFormat} onChange={handleFormatChange} />
               </div>
 
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-500 dark:text-gray-400">
-                  Starters: {filledPositions} / {totalPositions}
+                  {t('squadBuilder.startersCount', { filled: filledPositions, total: totalPositions })}
                 </span>
                 <button
                   onClick={() => initializeFormation(gameFormat)}
                   className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                 >
-                  Reset Formation
+                  {t('squadBuilder.resetFormation')}
                 </button>
               </div>
             </div>
@@ -470,10 +472,10 @@ export function SquadBuilderPage() {
 
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4">
               <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-3">
-                Substitutes ({benchPlayers.length})
+                {t('squadBuilder.substitutesCount', { count: benchPlayers.length })}
               </h4>
               {benchPlayers.length === 0 ? (
-                <p className="text-gray-400 dark:text-gray-500 text-sm">No substitutes added</p>
+                <p className="text-gray-400 dark:text-gray-500 text-sm">{t('squadBuilder.noSubstitutes')}</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {benchPlayers.map((player) => (
@@ -504,29 +506,29 @@ export function SquadBuilderPage() {
 
           <div className="lg:col-span-1">
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4">
-              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Squad Summary</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('squadBuilder.summary.title')}</h3>
 
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500 dark:text-gray-400">Format</span>
+                  <span className="text-gray-500 dark:text-gray-400">{t('squadBuilder.summary.format')}</span>
                   <span className="font-medium text-gray-900 dark:text-gray-100">{gameFormat}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500 dark:text-gray-400">Starters</span>
+                  <span className="text-gray-500 dark:text-gray-400">{t('squadBuilder.summary.starters')}</span>
                   <span className="font-medium text-gray-900 dark:text-gray-100">{filledPositions}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500 dark:text-gray-400">Substitutes</span>
+                  <span className="text-gray-500 dark:text-gray-400">{t('squadBuilder.summary.substitutes')}</span>
                   <span className="font-medium text-gray-900 dark:text-gray-100">{benchPlayers.length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500 dark:text-gray-400">Empty Slots</span>
+                  <span className="text-gray-500 dark:text-gray-400">{t('squadBuilder.summary.emptySlots')}</span>
                   <span className="font-medium text-gray-900 dark:text-gray-100">{totalPositions - filledPositions}</span>
                 </div>
               </div>
 
               <div className="mt-6">
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Starting Lineup</h4>
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('squadBuilder.summary.startingLineup')}</h4>
                 <div className="space-y-1">
                   {positions
                     .filter((p) => p.player)
@@ -542,14 +544,14 @@ export function SquadBuilderPage() {
                       </div>
                     ))}
                   {filledPositions === 0 && (
-                    <p className="text-gray-400 dark:text-gray-500 text-sm">Click positions to assign players</p>
+                    <p className="text-gray-400 dark:text-gray-500 text-sm">{t('squadBuilder.summary.assignHint')}</p>
                   )}
                 </div>
               </div>
 
               {benchPlayers.length > 0 && (
                 <div className="mt-4">
-                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Substitutes</h4>
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('squadBuilder.summary.substitutes')}</h4>
                   <div className="space-y-1">
                     {benchPlayers.map((player) => (
                       <div key={player.id} className="text-sm py-1 text-gray-600 dark:text-gray-400">
@@ -568,7 +570,7 @@ export function SquadBuilderPage() {
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-md w-full mx-4 p-6 max-h-[80vh] overflow-hidden flex flex-col">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100">
-                  Select Player for {positions.find((p) => p.id === selectedPositionId)?.role}
+                  {t('squadBuilder.selectPlayerFor', { role: positions.find((p) => p.id === selectedPositionId)?.role })}
                 </h2>
                 <button
                   onClick={() => setSelectedPositionId(null)}
@@ -581,7 +583,7 @@ export function SquadBuilderPage() {
               <div className="flex-1 overflow-y-auto">
                 {availablePlayers.length === 0 ? (
                   <p className="text-gray-500 dark:text-gray-400 text-center py-8">
-                    No available players. Remove a player from another position first.
+                    {t('squadBuilder.noAvailablePlayers')}
                   </p>
                 ) : (
                   <div className="space-y-2">
@@ -600,7 +602,7 @@ export function SquadBuilderPage() {
                           <p className="font-medium text-gray-900 dark:text-gray-100">
                             {player.firstName} {player.lastName}
                           </p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">{POSITION_LABELS[player.position]}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">{t(`positions.${player.position}`)}</p>
                         </div>
                       </button>
                     ))}

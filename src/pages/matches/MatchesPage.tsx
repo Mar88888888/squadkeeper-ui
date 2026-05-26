@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { matchesApi, type Match } from '../../api/matches';
 import { groupsApi, type GroupInfo } from '../../api/groups';
 import { useAuth } from '../../contexts/AuthContext';
+import { getLocaleCode, useI18n } from '../../contexts/I18nContext';
 import { UserRole } from '../../types';
 import { PageHeader, PageContent } from '../../components/layout';
 import { Card, Button, Modal, Tabs, EmptyState } from '../../components/ui';
@@ -81,6 +82,8 @@ type ViewTab = 'upcoming' | 'completed';
 export function MatchesPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t, locale } = useI18n();
+  const localeCode = getLocaleCode(locale);
   const [matches, setMatches] = useState<Match[]>([]);
   const [groups, setGroups] = useState<GroupInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -134,7 +137,7 @@ export function MatchesPage() {
       setTotalMatches(matchesData.total);
       setGroups(groupsData);
     } catch {
-      setError('Failed to load data');
+      setError(t('matches.errors.loadFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -215,19 +218,19 @@ export function MatchesPage() {
 
   const handleCreate = async () => {
     if (!formData.groupId) {
-      setError('Please select a group');
+      setError(t('matches.errors.selectGroup'));
       return;
     }
     if (!formData.startTime) {
-      setError('Please set start time');
+      setError(t('matches.errors.selectStartTime'));
       return;
     }
     if (!formData.location.trim()) {
-      setError('Please enter a location');
+      setError(t('matches.errors.enterLocation'));
       return;
     }
     if (!formData.opponent.trim()) {
-      setError('Please enter opponent name');
+      setError(t('matches.errors.enterOpponent'));
       return;
     }
 
@@ -247,7 +250,7 @@ export function MatchesPage() {
       closeModal();
       loadData();
     } catch {
-      setError('Failed to create match');
+      setError(t('matches.errors.createFailed'));
     }
   };
 
@@ -263,20 +266,20 @@ export function MatchesPage() {
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     if (date.toDateString() === now.toDateString()) {
-      return `Today, ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+      return `${t('common.today')}, ${date.toLocaleTimeString(localeCode, { hour: '2-digit', minute: '2-digit' })}`;
     }
     if (date.toDateString() === tomorrow.toDateString()) {
-      return `Tomorrow, ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+      return `${t('common.tomorrow')}, ${date.toLocaleTimeString(localeCode, { hour: '2-digit', minute: '2-digit' })}`;
     }
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString(localeCode, {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
-    }) + ', ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    }) + ', ' + date.toLocaleTimeString(localeCode, { hour: '2-digit', minute: '2-digit' });
   };
 
   const formatTime = (dateStr: string) => {
-    return new Date(dateStr).toLocaleTimeString('en-US', {
+    return new Date(dateStr).toLocaleTimeString(localeCode, {
       hour: '2-digit',
       minute: '2-digit',
     });
@@ -304,16 +307,16 @@ export function MatchesPage() {
   };
 
   const tabs = [
-    { id: 'upcoming', label: 'Upcoming' },
-    { id: 'completed', label: 'Completed' },
+    { id: 'upcoming', label: t('matches.tabs.upcoming') },
+    { id: 'completed', label: t('matches.tabs.completed') },
   ];
 
   return (
     <>
       <PageHeader
-        title="Matches"
-        subtitle="Manage games and results"
-        actions={canCreate && <Button onClick={openCreateModal}>New Match</Button>}
+        title={t('matches.title')}
+        subtitle={t('matches.subtitle')}
+        actions={canCreate && <Button onClick={openCreateModal}>{t('matches.newMatch')}</Button>}
       />
 
       <PageContent>
@@ -326,7 +329,7 @@ export function MatchesPage() {
               </div>
               <div>
                 <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.wins}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Wins</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t('matches.stats.wins')}</p>
               </div>
             </div>
           </Card>
@@ -338,7 +341,7 @@ export function MatchesPage() {
               </div>
               <div>
                 <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.draws}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Draws</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t('matches.stats.draws')}</p>
               </div>
             </div>
           </Card>
@@ -350,7 +353,7 @@ export function MatchesPage() {
               </div>
               <div>
                 <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.losses}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Losses</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t('matches.stats.losses')}</p>
               </div>
             </div>
           </Card>
@@ -362,7 +365,7 @@ export function MatchesPage() {
               </div>
               <div>
                 <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.goalsFor}:{stats.goalsAgainst}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Goals (for:against)</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t('matches.stats.goals')}</p>
               </div>
             </div>
           </Card>
@@ -375,7 +378,7 @@ export function MatchesPage() {
               <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search matches..."
+                    placeholder={t('matches.searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => {
                       setSearchQuery(e.target.value);
@@ -396,7 +399,7 @@ export function MatchesPage() {
               }}
               className="px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 text-gray-900 dark:text-white"
             >
-              <option value="">All groups</option>
+              <option value="">{t('matches.filters.allGroups')}</option>
               {groups.map((group) => (
                 <option key={group.id} value={group.id}>
                   {group.name}
@@ -411,11 +414,11 @@ export function MatchesPage() {
               }}
               className="px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 text-gray-900 dark:text-white"
             >
-              <option value="">All results</option>
-              <option value="win">Wins</option>
-              <option value="draw">Draws</option>
-              <option value="loss">Losses</option>
-              <option value="upcoming">Upcoming</option>
+              <option value="">{t('matches.filters.allResults')}</option>
+              <option value="win">{t('matches.stats.wins')}</option>
+              <option value="draw">{t('matches.stats.draws')}</option>
+              <option value="loss">{t('matches.stats.losses')}</option>
+              <option value="upcoming">{t('matches.tabs.upcoming')}</option>
             </select>
           </div>
         </Card>
@@ -447,15 +450,19 @@ export function MatchesPage() {
         ) : filteredMatches.length === 0 ? (
           <Card>
             <EmptyState
-              title={activeTab === 'upcoming' ? 'No upcoming matches' : 'No completed matches'}
+              title={
+                activeTab === 'upcoming'
+                  ? t('matches.empty.upcomingTitle')
+                  : t('matches.empty.completedTitle')
+              }
               description={
                 activeTab === 'upcoming'
-                  ? 'Schedule your first match to get started.'
-                  : 'Completed matches will appear here.'
+                  ? t('matches.empty.upcomingDescription')
+                  : t('matches.empty.completedDescription')
               }
               action={
                 activeTab === 'upcoming' && canCreate ? (
-                  <Button onClick={openCreateModal}>Schedule Match</Button>
+                  <Button onClick={openCreateModal}>{t('matches.empty.scheduleAction')}</Button>
                 ) : undefined
               }
             />
@@ -492,7 +499,7 @@ export function MatchesPage() {
                               ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                               : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
                           }`}>
-                            {match.isHome ? 'Home' : 'Away'}
+                            {match.isHome ? t('matches.home') : t('matches.away')}
                           </span>
                           <span className="text-sm text-gray-500 dark:text-gray-400">
                             {formatMatchDate(match.startTime)}
@@ -503,7 +510,9 @@ export function MatchesPage() {
                             ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
                             : resultBadgeColors[result!]
                         }`}>
-                          {isUpcoming ? 'Scheduled' : result!.charAt(0).toUpperCase() + result!.slice(1)}
+                          {isUpcoming
+                            ? t('matches.status.scheduled')
+                            : t(`matches.results.${result!}`)}
                         </span>
                       </div>
 
@@ -516,7 +525,7 @@ export function MatchesPage() {
                           </div>
                           <div>
                             <p className="text-lg font-bold text-gray-900 dark:text-white">{ourTeam}</p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">{match.isHome ? 'Home' : 'Away'}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{match.isHome ? t('matches.home') : t('matches.away')}</p>
                           </div>
                         </div>
 
@@ -547,7 +556,7 @@ export function MatchesPage() {
                         <div className="flex items-center gap-4 flex-1 justify-end text-right">
                           <div>
                             <p className="text-lg font-bold text-gray-900 dark:text-white">{match.opponent}</p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">{match.isHome ? 'Away' : 'Home'}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{match.isHome ? t('matches.away') : t('matches.home')}</p>
                           </div>
                           <div className={`w-16 h-16 bg-gradient-to-br ${getTeamColor(match.opponent)} rounded-xl flex items-center justify-center shadow-lg`}>
                             <span className="text-lg font-bold text-white">{getTeamInitials(match.opponent)}</span>
@@ -568,7 +577,7 @@ export function MatchesPage() {
                           </span>
                         </div>
                         <span className="text-green-600 dark:text-green-400 font-medium group-hover:underline">
-                          View details
+                          {t('common.viewDetails')}
                         </span>
                       </div>
                     </div>
@@ -582,8 +591,14 @@ export function MatchesPage() {
                 <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     {resultFilter
-                      ? `Showing ${filteredMatches.length} of ${filteredMatches.length} matches`
-                      : `Showing ${(currentPage - 1) * itemsPerPage + 1}-${Math.min(currentPage * itemsPerPage, totalMatches)} of ${totalMatches} matches`}
+                      ? t('matches.pagination.filtered', {
+                        count: filteredMatches.length,
+                      })
+                      : t('matches.pagination.showing', {
+                        start: (currentPage - 1) * itemsPerPage + 1,
+                        end: Math.min(currentPage * itemsPerPage, totalMatches),
+                        total: totalMatches,
+                      })}
                   </p>
                   <div className="flex items-center gap-2">
                     <button
@@ -591,7 +606,7 @@ export function MatchesPage() {
                       disabled={currentPage === 1}
                       className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
                     >
-                      Previous
+                      {t('matches.pagination.previous')}
                     </button>
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                       let pageNum: number;
@@ -623,7 +638,7 @@ export function MatchesPage() {
                       disabled={currentPage === totalPages}
                       className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
                     >
-                      Next
+                      {t('matches.pagination.next')}
                     </button>
                   </div>
                 </div>
@@ -637,21 +652,21 @@ export function MatchesPage() {
       <Modal
         isOpen={isModalOpen}
         onClose={closeModal}
-        title="New Match"
+        title={t('matches.newMatch')}
         size="lg"
       >
         <div className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Our Team
+                {t('matches.form.ourTeam')}
               </label>
               <select
                 value={formData.groupId}
                 onChange={(e) => setFormData((prev) => ({ ...prev, groupId: e.target.value }))}
                 className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               >
-                <option value="">Select team</option>
+                <option value="">{t('matches.form.selectTeam')}</option>
                 {groups.map((group) => (
                   <option key={group.id} value={group.id}>
                     {group.name}
@@ -661,13 +676,13 @@ export function MatchesPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Opponent
+                {t('matches.form.opponent')}
               </label>
               <input
                 type="text"
                 value={formData.opponent}
                 onChange={(e) => setFormData((prev) => ({ ...prev, opponent: e.target.value }))}
-                placeholder="Opponent team name"
+                placeholder={t('matches.form.opponentPlaceholder')}
                 className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               />
             </div>
@@ -675,7 +690,7 @@ export function MatchesPage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Home / Away
+              {t('matches.form.homeAway')}
             </label>
             <div className="flex gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
@@ -686,7 +701,7 @@ export function MatchesPage() {
                   onChange={() => setFormData((prev) => ({ ...prev, isHome: true }))}
                   className="w-4 h-4 text-green-600 focus:ring-green-500"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">Home</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">{t('matches.home')}</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -696,7 +711,7 @@ export function MatchesPage() {
                   onChange={() => setFormData((prev) => ({ ...prev, isHome: false }))}
                   className="w-4 h-4 text-green-600 focus:ring-green-500"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">Away</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">{t('matches.away')}</span>
               </label>
             </div>
           </div>
@@ -704,7 +719,7 @@ export function MatchesPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Date & Time
+                {t('matches.form.dateTime')}
               </label>
               <input
                 type="datetime-local"
@@ -715,31 +730,31 @@ export function MatchesPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Duration
+                {t('matches.form.duration')}
               </label>
               <select
                 value={formData.duration}
                 onChange={(e) => setFormData((prev) => ({ ...prev, duration: Number(e.target.value) }))}
                 className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               >
-                <option value={60}>1 hour</option>
-                <option value={90}>1.5 hours</option>
-                <option value={120}>2 hours</option>
-                <option value={150}>2.5 hours</option>
-                <option value={180}>3 hours</option>
+                <option value={60}>{t('trainings.form.durationOptions.oneHour')}</option>
+                <option value={90}>{t('trainings.form.durationOptions.oneHalfHours')}</option>
+                <option value={120}>{t('trainings.form.durationOptions.twoHours')}</option>
+                <option value={150}>{t('trainings.form.durationOptions.twoHalfHours')}</option>
+                <option value={180}>{t('trainings.form.durationOptions.threeHours')}</option>
               </select>
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Location
+              {t('matches.form.location')}
             </label>
             <input
               type="text"
               value={formData.location}
               onChange={(e) => setFormData((prev) => ({ ...prev, location: e.target.value }))}
-              placeholder="Stadium or field name"
+              placeholder={t('matches.form.locationPlaceholder')}
               className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
             />
           </div>
@@ -752,10 +767,10 @@ export function MatchesPage() {
 
           <div className="flex items-center gap-3 pt-4">
             <Button variant="secondary" onClick={closeModal} className="flex-1">
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button onClick={handleCreate} className="flex-1">
-              Create Match
+              {t('matches.createMatch')}
             </Button>
           </div>
         </div>

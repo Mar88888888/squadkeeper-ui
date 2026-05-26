@@ -23,15 +23,11 @@ import {
 } from '../../api/evaluations';
 import { PageHeader, PageContent } from '../../components/layout';
 import { Card, CardContent, Modal, Button, Avatar } from '../../components/ui';
+import { getLocaleCode, useI18n } from '../../contexts/I18nContext';
 
-const EVAL_CATEGORIES = [
-  { key: 'technical', label: 'Technical' },
-  { key: 'tactical', label: 'Tactical' },
-  { key: 'physical', label: 'Physical' },
-  { key: 'psychological', label: 'Psychological' },
-] as const;
+const EVAL_CATEGORY_KEYS = ['technical', 'tactical', 'physical', 'psychological'] as const;
 
-type EvalCategory = (typeof EVAL_CATEGORIES)[number]['key'];
+type EvalCategory = (typeof EVAL_CATEGORY_KEYS)[number];
 
 // Icons
 const CalendarIcon = () => (
@@ -99,6 +95,8 @@ function getTeamInitials(name: string): string {
 export function MatchDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const { t, locale } = useI18n();
+  const localeCode = getLocaleCode(locale);
 
   const canEdit = user?.role === UserRole.ADMIN || user?.role === UserRole.COACH;
 
@@ -166,7 +164,7 @@ export function MatchDetailsPage() {
         });
       }
     } catch {
-      setError('Failed to load match details');
+      setError(t('matchDetails.errors.loadFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -213,7 +211,7 @@ export function MatchDetailsPage() {
       const evaluationsData = await evaluationsApi.getByMatch(id);
       setEvaluations(evaluationsData);
     } catch {
-      setError('Failed to save attendance');
+      setError(t('matchDetails.errors.saveAttendanceFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -251,7 +249,7 @@ export function MatchDetailsPage() {
       setSelectedPlayer(null);
       setEvalComment('');
     } catch {
-      setError('Failed to save evaluation');
+      setError(t('matchDetails.errors.saveEvaluationFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -290,7 +288,7 @@ export function MatchDetailsPage() {
 
   const handleAddGoal = async () => {
     if (!id || !goalForm.scorerId) {
-      setError('Please select a scorer');
+      setError(t('matchDetails.errors.selectScorer'));
       return;
     }
     setIsSaving(true);
@@ -304,7 +302,7 @@ export function MatchDetailsPage() {
       setIsAddGoalModalOpen(false);
       setGoalForm({ scorerId: '', assistId: '', minute: undefined, isOwnGoal: false });
     } catch {
-      setError('Failed to add goal');
+      setError(t('matchDetails.errors.addGoalFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -318,7 +316,7 @@ export function MatchDetailsPage() {
       await matchesApi.removeGoal(id, goalId);
       setGoals((prev) => prev.filter((g) => g.id !== goalId));
     } catch {
-      setError('Failed to remove goal');
+      setError(t('matchDetails.errors.removeGoalFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -335,14 +333,14 @@ export function MatchDetailsPage() {
       );
       setIsScoreModalOpen(false);
     } catch {
-      setError('Failed to update score');
+      setError(t('matchDetails.errors.updateScoreFailed'));
     } finally {
       setIsSaving(false);
     }
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-US', {
+    return new Date(dateStr).toLocaleDateString(localeCode, {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
@@ -351,7 +349,7 @@ export function MatchDetailsPage() {
   };
 
   const formatTime = (dateStr: string) => {
-    return new Date(dateStr).toLocaleTimeString('en-US', {
+    return new Date(dateStr).toLocaleTimeString(localeCode, {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
@@ -391,7 +389,7 @@ export function MatchDetailsPage() {
   if (!match) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-gray-500 dark:text-gray-400">Match not found</div>
+        <div className="text-gray-500 dark:text-gray-400">{t('matchDetails.notFound')}</div>
       </div>
     );
   }
@@ -410,21 +408,21 @@ export function MatchDetailsPage() {
   };
 
   const resultLabels = {
-    win: 'Victory',
-    draw: 'Draw',
-    loss: 'Defeat',
+    win: t('matchDetails.results.win'),
+    draw: t('matchDetails.results.draw'),
+    loss: t('matchDetails.results.loss'),
   };
 
   return (
     <>
       <PageHeader
-        title="Match Details"
+        title={t('matchDetails.title')}
         subtitle={match.group.name}
         backTo="/matches"
         actions={
           canEdit && (
             <Button onClick={saveAttendance} disabled={isSaving}>
-              {isSaving ? 'Saving...' : 'Save'}
+              {isSaving ? t('matchDetails.saving') : t('common.save')}
             </Button>
           )
         }
@@ -451,7 +449,7 @@ export function MatchDetailsPage() {
                 <span className={`px-4 py-1.5 text-sm font-semibold rounded-full ${
                   match.isHome ? 'bg-green-400/30' : 'bg-orange-400/30'
                 }`}>
-                  {match.isHome ? 'Home' : 'Away'}
+                  {match.isHome ? t('matches.home') : t('matches.away')}
                 </span>
                 {result && (
                   <span className="px-4 py-1.5 bg-white/30 text-white text-sm font-semibold rounded-full">
@@ -470,7 +468,7 @@ export function MatchDetailsPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{match.group.name}</p>
-                  <p className="text-white/70">{match.isHome ? 'Home team' : 'Away team'}</p>
+                  <p className="text-white/70">{match.isHome ? t('matchDetails.homeTeam') : t('matchDetails.awayTeam')}</p>
                 </div>
               </div>
 
@@ -496,7 +494,7 @@ export function MatchDetailsPage() {
                     }}
                     className="mt-4 px-4 py-2 bg-white/20 hover:bg-white/30 text-white text-sm font-medium rounded-lg transition-colors"
                   >
-                    {result ? 'Edit Score' : 'Set Score'}
+                    {result ? t('matchDetails.editScore') : t('matchDetails.setScore')}
                   </button>
                 )}
               </div>
@@ -505,7 +503,7 @@ export function MatchDetailsPage() {
               <div className="flex items-center gap-6 flex-1 justify-end text-right">
                 <div>
                   <p className="text-2xl font-bold">{match.opponent}</p>
-                  <p className="text-white/70">{match.isHome ? 'Away team' : 'Home team'}</p>
+                  <p className="text-white/70">{match.isHome ? t('matchDetails.awayTeam') : t('matchDetails.homeTeam')}</p>
                 </div>
                 <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center shadow-xl">
                   <span className="text-2xl font-bold text-amber-600">{getTeamInitials(match.opponent)}</span>
@@ -520,7 +518,7 @@ export function MatchDetailsPage() {
               </span>
               <span className="flex items-center gap-2 text-white/80">
                 <UsersIcon />
-                {totalPlayers} players
+                {t('matchDetails.playersCount', { count: totalPlayers })}
               </span>
               <span className="flex items-center gap-2 text-white/80">
                 <CalendarIcon />
@@ -536,7 +534,7 @@ export function MatchDetailsPage() {
             {/* Goals Section */}
             <Card>
               <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Match Events</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('matchDetails.events.title')}</h3>
                 {canEdit && (
                   <button
                     onClick={() => setIsAddGoalModalOpen(true)}
@@ -545,14 +543,14 @@ export function MatchDetailsPage() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
                     </svg>
-                    Add Goal
+                    {t('matchDetails.events.addGoal')}
                   </button>
                 )}
               </div>
               <CardContent>
                 {goals.length === 0 ? (
                   <div className="py-8 text-center text-gray-500 dark:text-gray-400">
-                    No goals recorded for this match
+                    {t('matchDetails.events.noGoals')}
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -575,7 +573,7 @@ export function MatchDetailsPage() {
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <span className="font-semibold text-gray-900 dark:text-white">
-                                {goal.isOwnGoal ? 'Own Goal' : 'Goal!'}
+                                {goal.isOwnGoal ? t('matchDetails.events.ownGoal') : t('matchDetails.events.goal')}
                               </span>
                               <span className="text-sm text-gray-500 dark:text-gray-400">
                                 {goal.scorer.firstName} {goal.scorer.lastName}
@@ -583,7 +581,7 @@ export function MatchDetailsPage() {
                             </div>
                             {goal.assist && (
                               <p className="text-sm text-gray-500 dark:text-gray-400">
-                                Assist: {goal.assist.firstName} {goal.assist.lastName}
+                                {t('matchDetails.events.assist')}: {goal.assist.firstName} {goal.assist.lastName}
                               </p>
                             )}
                           </div>
@@ -615,9 +613,9 @@ export function MatchDetailsPage() {
             <Card>
               <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Squad</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('matchDetails.squad.title')}</h3>
                   <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-semibold rounded-full">
-                    {stats.present}/{totalPlayers} present
+                    {t('matchDetails.attendance.presentCount', { present: stats.present, total: totalPlayers })}
                   </span>
                 </div>
                 {canEdit && (
@@ -625,7 +623,7 @@ export function MatchDetailsPage() {
                     onClick={markAllPresent}
                     className="text-sm text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium"
                   >
-                    Mark all present
+                    {t('matchDetails.attendance.markAll')}
                   </button>
                 )}
               </div>
@@ -674,7 +672,7 @@ export function MatchDetailsPage() {
                               }`}
                             >
                               {isPresent ? <CheckIcon /> : <XIcon />}
-                              {isPresent ? 'Present' : 'Absent'}
+                              {isPresent ? t('trainingDetails.attendance.present') : t('trainingDetails.attendance.absent')}
                             </button>
                           ) : (
                             <span
@@ -685,7 +683,7 @@ export function MatchDetailsPage() {
                               }`}
                             >
                               {isPresent ? <CheckIcon /> : <XIcon />}
-                              {isPresent ? 'Present' : 'Absent'}
+                              {isPresent ? t('trainingDetails.attendance.present') : t('trainingDetails.attendance.absent')}
                             </span>
                           )}
                           {canEdit && (
@@ -696,7 +694,7 @@ export function MatchDetailsPage() {
                                   ? 'text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30'
                                   : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
                               }`}
-                              title={playerCanEvaluate ? 'Rate player' : 'Player must be present to rate'}
+                              title={playerCanEvaluate ? t('trainingDetails.evaluations.ratePlayer') : t('trainingDetails.evaluations.presentRequired')}
                               disabled={!playerCanEvaluate}
                             >
                               <StarIcon filled={avgRating !== null} />
@@ -715,18 +713,18 @@ export function MatchDetailsPage() {
           <div className="space-y-6">
             {/* Match Summary */}
             <Card className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Match Summary</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('matchDetails.summary.title')}</h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Goals scored</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">{t('matchDetails.summary.goalsScored')}</span>
                   <span className="text-lg font-bold text-green-600 dark:text-green-400">{ourGoals ?? 0}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Goals conceded</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">{t('matchDetails.summary.goalsConceded')}</span>
                   <span className="text-lg font-bold text-red-600 dark:text-red-400">{theirGoals ?? 0}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Total goals recorded</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">{t('matchDetails.summary.goalsTotal')}</span>
                   <span className="text-lg font-bold text-blue-600 dark:text-blue-400">{goals.length}</span>
                 </div>
               </div>
@@ -734,10 +732,10 @@ export function MatchDetailsPage() {
 
             {/* Attendance Stats */}
             <Card className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Attendance</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('matchDetails.attendance.title')}</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Attendance rate</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">{t('matchDetails.attendance.rate')}</span>
                   <span className="text-lg font-bold text-green-600 dark:text-green-400">{attendancePercent}%</span>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -749,11 +747,11 @@ export function MatchDetailsPage() {
                 <div className="grid grid-cols-2 gap-3 pt-2">
                   <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
                     <p className="text-xl font-bold text-green-600 dark:text-green-400">{stats.present}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Present</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('trainingDetails.attendance.present')}</p>
                   </div>
                   <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
                     <p className="text-xl font-bold text-red-600 dark:text-red-400">{stats.absent}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Absent</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('trainingDetails.attendance.absent')}</p>
                   </div>
                 </div>
               </div>
@@ -763,7 +761,7 @@ export function MatchDetailsPage() {
             {evaluations.length > 0 && (
               <Card>
                 <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Top Players</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('matchDetails.topPlayers')}</h3>
                 </div>
                 <CardContent className="space-y-3">
                   {evaluations
@@ -812,7 +810,7 @@ export function MatchDetailsPage() {
       <Modal
         isOpen={!!selectedPlayer}
         onClose={() => setSelectedPlayer(null)}
-        title="Player Evaluation"
+        title={t('matchDetails.evaluations.title')}
       >
         {selectedPlayer && (
           <div>
@@ -826,15 +824,15 @@ export function MatchDetailsPage() {
                 <p className="text-lg font-semibold text-gray-900 dark:text-white">
                   {selectedPlayer.firstName} {selectedPlayer.lastName}
                 </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Match evaluation</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t('matchDetails.evaluations.subtitle')}</p>
               </div>
             </div>
 
             <div className="space-y-5">
-              {EVAL_CATEGORIES.map(({ key, label }) => (
+              {EVAL_CATEGORY_KEYS.map((key) => (
                 <div key={key}>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                    {label}
+                    {t(`trainingDetails.evaluations.categories.${key}`)}
                   </label>
                   <div className="flex items-center gap-2">
                     <input
@@ -859,13 +857,13 @@ export function MatchDetailsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Comment
+                  {t('trainingDetails.evaluations.comment')}
                 </label>
                 <textarea
                   value={evalComment}
                   onChange={(e) => setEvalComment(e.target.value)}
                   rows={3}
-                  placeholder="Add a comment about the player..."
+                  placeholder={t('trainingDetails.evaluations.commentPlaceholder')}
                   className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 />
               </div>
@@ -873,14 +871,14 @@ export function MatchDetailsPage() {
 
             <div className="flex items-center gap-3 mt-6">
               <Button variant="secondary" onClick={() => setSelectedPlayer(null)} className="flex-1">
-                Cancel
+                {t('common.cancel')}
               </Button>
               <button
                 onClick={saveEvaluations}
                 disabled={isSaving}
                 className="flex-1 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold rounded-xl shadow-lg shadow-amber-500/30 transition-all disabled:opacity-50"
               >
-                {isSaving ? 'Saving...' : 'Save Evaluation'}
+                {isSaving ? t('matchDetails.saving') : t('trainingDetails.evaluations.save')}
               </button>
             </div>
           </div>
@@ -891,19 +889,19 @@ export function MatchDetailsPage() {
       <Modal
         isOpen={isAddGoalModalOpen}
         onClose={() => setIsAddGoalModalOpen(false)}
-        title="Add Goal"
+        title={t('matchDetails.addGoal.title')}
       >
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Scorer *
+              {t('matchDetails.addGoal.scorer')}
             </label>
             <select
               value={goalForm.scorerId}
               onChange={(e) => setGoalForm((prev) => ({ ...prev, scorerId: e.target.value }))}
               className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
             >
-              <option value="">Select player</option>
+              <option value="">{t('matchDetails.addGoal.selectPlayer')}</option>
               {match.group.players.map((player) => (
                 <option key={player.id} value={player.id}>
                   {player.firstName} {player.lastName}
@@ -914,14 +912,14 @@ export function MatchDetailsPage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Assist <span className="text-gray-400 dark:text-gray-500 font-normal">(optional)</span>
+              {t('matchDetails.addGoal.assist')} <span className="text-gray-400 dark:text-gray-500 font-normal">({t('common.optional')})</span>
             </label>
             <select
               value={goalForm.assistId || ''}
               onChange={(e) => setGoalForm((prev) => ({ ...prev, assistId: e.target.value }))}
               className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
             >
-              <option value="">No assist</option>
+              <option value="">{t('matchDetails.addGoal.noAssist')}</option>
               {match.group.players
                 .filter((p) => p.id !== goalForm.scorerId)
                 .map((player) => (
@@ -934,7 +932,7 @@ export function MatchDetailsPage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Minute <span className="text-gray-400 dark:text-gray-500 font-normal">(optional)</span>
+              {t('matchDetails.addGoal.minute')} <span className="text-gray-400 dark:text-gray-500 font-normal">({t('common.optional')})</span>
             </label>
             <input
               type="number"
@@ -948,7 +946,7 @@ export function MatchDetailsPage() {
                 }))
               }
               className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-              placeholder="e.g., 45"
+              placeholder={t('matchDetails.addGoal.minutePlaceholder')}
             />
           </div>
 
@@ -961,16 +959,16 @@ export function MatchDetailsPage() {
               className="w-4 h-4 text-green-600 border-gray-300 dark:border-gray-600 rounded focus:ring-green-500"
             />
             <label htmlFor="isOwnGoal" className="text-sm text-gray-700 dark:text-gray-300">
-              Own goal
+              {t('matchDetails.addGoal.ownGoal')}
             </label>
           </div>
 
           <div className="flex items-center gap-3 pt-4">
             <Button variant="secondary" onClick={() => setIsAddGoalModalOpen(false)} className="flex-1">
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button onClick={handleAddGoal} disabled={isSaving} className="flex-1">
-              {isSaving ? 'Adding...' : 'Add Goal'}
+              {isSaving ? t('matchDetails.addGoal.adding') : t('matchDetails.addGoal.submit')}
             </Button>
           </div>
         </div>
@@ -980,7 +978,7 @@ export function MatchDetailsPage() {
       <Modal
         isOpen={isScoreModalOpen}
         onClose={() => setIsScoreModalOpen(false)}
-        title={match.homeGoals !== null ? 'Edit Score' : 'Set Score'}
+        title={match.homeGoals !== null ? t('matchDetails.editScore') : t('matchDetails.setScore')}
         size="sm"
       >
         <div className="flex items-center justify-center gap-6 py-4">
@@ -1025,10 +1023,10 @@ export function MatchDetailsPage() {
 
         <div className="flex items-center gap-3 mt-4">
           <Button variant="secondary" onClick={() => setIsScoreModalOpen(false)} className="flex-1">
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleUpdateScore} disabled={isSaving} className="flex-1">
-            {isSaving ? 'Saving...' : 'Save'}
+            {isSaving ? t('matchDetails.saving') : t('common.save')}
           </Button>
         </div>
       </Modal>

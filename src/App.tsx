@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { I18nProvider } from './contexts/I18nContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AdminRoute } from './components/AdminRoute';
 import { RoleRoute } from './components/RoleRoute';
@@ -24,10 +25,11 @@ function LayoutWrapper({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <ThemeProvider>
-      <BrowserRouter>
-        <AuthProvider>
-        <Routes>
+    <I18nProvider>
+      <ThemeProvider>
+        <BrowserRouter>
+          <AuthProvider>
+          <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route
             path="/admin/users"
@@ -199,10 +201,11 @@ function App() {
           />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </ThemeProvider>
+          </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </ThemeProvider>
+    </I18nProvider>
   );
 }
 

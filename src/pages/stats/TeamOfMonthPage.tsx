@@ -9,6 +9,7 @@ import { PageContent } from "../../components/layout/PageContent";
 import { FootballPitch } from "../../components/squad-builder";
 import { Card, EmptyState } from "../../components/ui";
 import { emptyStateIcons } from "../../components/EmptyState";
+import { getLocaleCode, useI18n } from "../../contexts/I18nContext";
 
 interface PitchSlot {
   x: number;
@@ -41,15 +42,15 @@ function getMonthKey(date: Date): string {
   return `${year}-${month}`;
 }
 
-function getMonthLabel(monthKey: string): string {
+function getMonthLabel(monthKey: string, locale: string): string {
   const [yearStr, monthStr] = monthKey.split("-");
   const year = Number(yearStr);
   const month = Number(monthStr);
   const date = new Date(year, month - 1, 1);
-  return date.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  return date.toLocaleDateString(locale, { month: "long", year: "numeric" });
 }
 
-function buildMonthOptions(): Array<{ value: string; label: string }> {
+function buildMonthOptions(locale: string): Array<{ value: string; label: string }> {
   const options: Array<{ value: string; label: string }> = [];
   const now = new Date();
   const current = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -57,7 +58,7 @@ function buildMonthOptions(): Array<{ value: string; label: string }> {
   for (let i = 0; i < 24; i++) {
     const date = new Date(current.getFullYear(), current.getMonth() - i, 1);
     const value = getMonthKey(date);
-    options.push({ value, label: getMonthLabel(value) });
+    options.push({ value, label: getMonthLabel(value, locale) });
   }
 
   return options;
@@ -143,7 +144,9 @@ function PitchPlayer({
 }
 
 export function TeamOfMonthPage() {
-  const monthOptions = useMemo(buildMonthOptions, []);
+  const { t, locale } = useI18n();
+  const localeCode = getLocaleCode(locale);
+  const monthOptions = useMemo(() => buildMonthOptions(localeCode), [localeCode]);
   const monthOptionSet = useMemo(
     () => new Set(monthOptions.map((option) => option.value)),
     [monthOptions],
@@ -171,7 +174,7 @@ export function TeamOfMonthPage() {
         const response = await statsApi.getTeamOfMonth(selectedMonth);
         setData(response);
       } catch {
-        setError("Failed to load Team of the Month");
+        setError(t("teamOfMonth.errors.loadFailed"));
       } finally {
         setIsLoading(false);
       }
@@ -185,8 +188,8 @@ export function TeamOfMonthPage() {
   return (
     <>
       <PageHeader
-        title="Team of the Month"
-        subtitle="Symbolic XI (4-3-3)"
+        title={t("teamOfMonth.title")}
+        subtitle={t("teamOfMonth.subtitle")}
         actions={
           <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-2 py-1">
             <button
@@ -194,7 +197,7 @@ export function TeamOfMonthPage() {
               onClick={() => canGoPrev && setSelectedMonth(prevMonth)}
               disabled={!canGoPrev}
               className="h-9 w-9 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
-              aria-label="Previous month"
+              aria-label={t("teamOfMonth.controls.prevMonth")}
             >
               ←
             </button>
@@ -225,7 +228,7 @@ export function TeamOfMonthPage() {
                 onBlur={() => setIsMonthPickerOpen(false)}
                 className="h-9 min-w-36 px-2 text-sm text-center font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 appearance-none"
                 style={{ WebkitAppearance: "none" }}
-                aria-label="Choose month"
+                aria-label={t("teamOfMonth.controls.chooseMonth")}
                 autoFocus
               />
             ) : (
@@ -233,9 +236,9 @@ export function TeamOfMonthPage() {
                 type="button"
                 onClick={() => setIsMonthPickerOpen(true)}
                 className="h-9 min-w-36 px-2 text-sm font-medium text-gray-900 dark:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-                aria-label="Open month picker"
+                aria-label={t("teamOfMonth.controls.openPicker")}
               >
-                {getMonthLabel(selectedMonth)}
+                {getMonthLabel(selectedMonth, localeCode)}
               </button>
             )}
             <button
@@ -243,7 +246,7 @@ export function TeamOfMonthPage() {
               onClick={() => canGoNext && setSelectedMonth(nextMonth)}
               disabled={!canGoNext}
               className="h-9 w-9 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
-              aria-label="Next month"
+              aria-label={t("teamOfMonth.controls.nextMonth")}
             >
               →
             </button>
@@ -266,8 +269,8 @@ export function TeamOfMonthPage() {
               {noData ? (
                 <EmptyState
                   icon={emptyStateIcons.stats}
-                  title="No Team of the Month data for selected month"
-                  description="There are no eligible player records for this month yet."
+                  title={t("teamOfMonth.empty.title")}
+                  description={t("teamOfMonth.empty.description")}
                 />
               ) : (
                 <FootballPitch>
@@ -313,28 +316,26 @@ export function TeamOfMonthPage() {
 
             <Card className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Selection criteria
+                {t("teamOfMonth.selection.title")}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-300">
                 <div className="rounded-xl bg-gray-50 dark:bg-gray-800 p-4">
                   <p>
-                    <span className="font-medium">Formation:</span>{" "}
+                    <span className="font-medium">{t("teamOfMonth.selection.formation")}:</span>{" "}
                     {data.formation}
                   </p>
                   <p>
-                    <span className="font-medium">Month:</span>{" "}
-                    {getMonthLabel(data.month)}
+                    <span className="font-medium">{t("teamOfMonth.selection.month")}:</span>{" "}
+                    {getMonthLabel(data.month, localeCode)}
                   </p>
                 </div>
                 <div className="rounded-xl bg-gray-50 dark:bg-gray-800 p-4">
                   <p>
-                    <span className="font-medium">Total events:</span>{" "}
+                    <span className="font-medium">{t("teamOfMonth.selection.totalEvents")}:</span>{" "}
                     {data.groupTotalEvents}
                   </p>
                   <p>
-                    <span className="font-medium">
-                      Min attended events required:
-                    </span>{" "}
+                    <span className="font-medium">{t("teamOfMonth.selection.minRequired")}:</span>{" "}
                     {data.minRequiredEvents}
                   </p>
                 </div>

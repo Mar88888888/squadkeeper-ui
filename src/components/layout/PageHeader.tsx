@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useI18n } from '../../contexts/I18nContext';
+import { LanguageToggle } from '../LanguageToggle';
 
 interface PageHeaderProps {
   title: string;
@@ -36,6 +38,7 @@ const MoonIcon = () => (
 export function PageHeader({ title, subtitle, actions, backTo }: PageHeaderProps) {
   const { user } = useAuth();
   const { resolvedTheme, toggleTheme } = useTheme();
+  const { t } = useI18n();
 
   const initials = user ? getUserInitials(user.firstName, user.lastName) : 'U';
 
@@ -60,10 +63,12 @@ export function PageHeader({ title, subtitle, actions, backTo }: PageHeaderProps
         </div>
         <div className="flex items-center gap-3">
           {actions}
+          <LanguageToggle />
           <button
             onClick={toggleTheme}
             className="p-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all"
-            title="Toggle theme"
+            title={t('theme.toggle')}
+            aria-label={t('theme.toggle')}
           >
             {resolvedTheme === 'dark' ? <SunIcon /> : <MoonIcon />}
           </button>

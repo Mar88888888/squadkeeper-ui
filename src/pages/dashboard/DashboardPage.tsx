@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { getLocaleCode, useI18n } from '../../contexts/I18nContext';
 import { UserRole } from '../../types';
 import { PageHeader, PageContent } from '../../components/layout';
 import { StatCard, Card, CardHeader, CardTitle, CardContent, Badge } from '../../components/ui';
@@ -18,7 +19,7 @@ import {
   type PlayerStats,
 } from '../../api/stats';
 import { evaluationsApi, type RatingStats } from '../../api/evaluations';
-import { objectivesApi, objectiveMetricLabels, type Objective } from '../../api/objectives';
+import { objectivesApi, type Objective } from '../../api/objectives';
 import { PerformanceScoreRing } from '../../components/dashboard/PerformanceScoreRing';
 import { RatingTrendChart } from '../../components/dashboard/RatingTrendChart';
 
@@ -171,36 +172,48 @@ function findNextEvent(trainings: Training[], matches: Match[]): UpcomingEvent |
     : { type: 'match', data: nextMatch };
 }
 
-function formatEventTime(startTime: string, endTime: string): string {
+function formatEventTime(startTime: string, endTime: string, locale: string): string {
   const start = new Date(startTime);
   const end = new Date(endTime);
-  return `${start.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })} - ${end.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}`;
+  return `${start.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false })} - ${end.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false })}`;
 }
 
-function getTimeUntil(dateStr: string): string {
+function getTimeUntil(dateStr: string, t: (key: string, vars?: Record<string, string | number>) => string): string {
   const date = new Date(dateStr);
   const now = new Date();
   const diff = date.getTime() - now.getTime();
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const days = Math.floor(hours / 24);
 
-  if (days > 0) return `in ${days} day${days > 1 ? 's' : ''}`;
-  if (hours > 0) return `in ${hours} hour${hours > 1 ? 's' : ''}`;
-  return 'soon';
+  if (days > 0) {
+    return days > 1
+      ? t('dashboard.timeUntilDaysPlural', { count: days })
+      : t('dashboard.timeUntilDays', { count: days });
+  }
+  if (hours > 0) {
+    return hours > 1
+      ? t('dashboard.timeUntilHoursPlural', { count: hours })
+      : t('dashboard.timeUntilHours', { count: hours });
+  }
+  return t('dashboard.timeSoon');
 }
 
-function formatEventDate(dateStr: string): string {
+function formatEventDate(
+  dateStr: string,
+  locale: string,
+  t: (key: string, vars?: Record<string, string | number>) => string,
+): string {
   const date = new Date(dateStr);
   const now = new Date();
   const tomorrow = new Date(now);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const time = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+  const time = date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false });
 
-  if (date.toDateString() === now.toDateString()) return `Today, ${time}`;
-  if (date.toDateString() === tomorrow.toDateString()) return `Tomorrow, ${time}`;
+  if (date.toDateString() === now.toDateString()) return `${t('common.today')}, ${time}`;
+  if (date.toDateString() === tomorrow.toDateString()) return `${t('common.tomorrow')}, ${time}`;
 
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString(locale, {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
@@ -212,6 +225,8 @@ function formatEventDate(dateStr: string): string {
 
 export function DashboardPage() {
   const { user } = useAuth();
+  const { t, locale } = useI18n();
+  const localeCode = getLocaleCode(locale);
   const [loading, setLoading] = useState(true);
   const [attendanceStats, setAttendanceStats] = useState<AttendanceStats | null>(null);
   const [childrenStats, setChildrenStats] = useState<PlayerAttendanceStats[]>([]);
@@ -311,10 +326,10 @@ export function DashboardPage() {
     if (!ratingStats?.byCategory) return undefined;
     const { technical, tactical, physical, psychological } = ratingStats.byCategory;
     return [
-      { label: 'Technical', value: technical ?? 0, maxValue: 10, color: 'bg-blue-500' },
-      { label: 'Tactical', value: tactical ?? 0, maxValue: 10, color: 'bg-green-500' },
-      { label: 'Physical', value: physical ?? 0, maxValue: 10, color: 'bg-red-500' },
-      { label: 'Mental', value: psychological ?? 0, maxValue: 10, color: 'bg-purple-500' },
+      { label: t('dashboard.technical'), value: technical ?? 0, maxValue: 10, color: 'bg-blue-500' },
+      { label: t('dashboard.tactical'), value: tactical ?? 0, maxValue: 10, color: 'bg-green-500' },
+      { label: t('dashboard.physical'), value: physical ?? 0, maxValue: 10, color: 'bg-red-500' },
+      { label: t('dashboard.mental'), value: psychological ?? 0, maxValue: 10, color: 'bg-purple-500' },
     ];
   };
 
@@ -328,31 +343,31 @@ export function DashboardPage() {
     switch (user?.role) {
       case UserRole.COACH:
         return [
-          { to: '/trainings', label: 'New Training', icon: <PlusIcon />, color: 'green' },
-          { to: '/matches', label: 'New Match', icon: <PlusIcon />, color: 'blue' },
-          { to: '/squads', label: 'Create Squad', icon: <SquadsIcon />, color: 'purple' },
-          { to: '/objectives/manage', label: 'Set Objectives', icon: <GoalsIcon />, color: 'amber' },
+          { to: '/trainings', label: t('dashboard.newTraining'), icon: <PlusIcon />, color: 'green' },
+          { to: '/matches', label: t('dashboard.newMatch'), icon: <PlusIcon />, color: 'blue' },
+          { to: '/squads', label: t('dashboard.createSquad'), icon: <SquadsIcon />, color: 'purple' },
+          { to: '/objectives/manage', label: t('dashboard.setObjectives'), icon: <GoalsIcon />, color: 'amber' },
         ];
       case UserRole.ADMIN:
         return [
-          { to: '/admin/users', label: 'Create User', icon: <PlusIcon />, color: 'green' },
-          { to: '/admin/groups', label: 'Manage Groups', icon: <TeamIcon />, color: 'blue' },
-          { to: '/trainings', label: 'View Trainings', icon: <TrainingsIcon />, color: 'purple' },
-          { to: '/objectives/manage', label: 'Objectives', icon: <GoalsIcon />, color: 'amber' },
+          { to: '/admin/users', label: t('dashboard.createUser'), icon: <PlusIcon />, color: 'green' },
+          { to: '/admin/groups', label: t('dashboard.manageGroups'), icon: <TeamIcon />, color: 'blue' },
+          { to: '/trainings', label: t('dashboard.viewTrainings'), icon: <TrainingsIcon />, color: 'purple' },
+          { to: '/objectives/manage', label: t('dashboard.objectives'), icon: <GoalsIcon />, color: 'amber' },
         ];
       case UserRole.PLAYER:
         return [
-          { to: '/trainings', label: 'My Trainings', icon: <TrainingsIcon />, color: 'green' },
-          { to: '/matches', label: 'My Matches', icon: <MatchesIcon />, color: 'blue' },
-          { to: '/stats/my', label: 'My Statistics', icon: <StatsIcon />, color: 'purple' },
-          { to: '/objectives/my', label: 'My Objectives', icon: <GoalsIcon />, color: 'amber' },
+          { to: '/trainings', label: t('dashboard.myTrainings'), icon: <TrainingsIcon />, color: 'green' },
+          { to: '/matches', label: t('dashboard.myMatches'), icon: <MatchesIcon />, color: 'blue' },
+          { to: '/stats/my', label: t('nav.myStatistics'), icon: <StatsIcon />, color: 'purple' },
+          { to: '/objectives/my', label: t('nav.myObjectives'), icon: <GoalsIcon />, color: 'amber' },
         ];
       case UserRole.PARENT:
         return [
-          { to: '/trainings', label: 'View Trainings', icon: <TrainingsIcon />, color: 'green' },
-          { to: '/matches', label: 'View Matches', icon: <MatchesIcon />, color: 'blue' },
-          { to: '/stats/children', label: 'Children Stats', icon: <StatsIcon />, color: 'purple' },
-          { to: '/calendar', label: 'Calendar', icon: <ClockIcon />, color: 'amber' },
+          { to: '/trainings', label: t('dashboard.viewTrainings'), icon: <TrainingsIcon />, color: 'green' },
+          { to: '/matches', label: t('dashboard.viewMatches'), icon: <MatchesIcon />, color: 'blue' },
+          { to: '/stats/children', label: t('nav.childrenStats'), icon: <StatsIcon />, color: 'purple' },
+          { to: '/calendar', label: t('dashboard.calendar'), icon: <ClockIcon />, color: 'amber' },
         ];
       default:
         return [];
@@ -369,22 +384,22 @@ export function DashboardPage() {
   return (
     <>
       <PageHeader
-        title={`Welcome, ${user?.firstName || 'User'}!`}
-        subtitle="Here's what's happening today"
+        title={t('dashboard.welcome', { name: user?.firstName || t('roles.user') })}
+        subtitle={t('dashboard.subtitle')}
         actions={
           user?.role === UserRole.PLAYER ? (
             <div className="flex items-center gap-2">
               <StreakBadge
                 value={attendanceStats?.streaks?.trainings ?? 0}
                 icon={<ConeIcon />}
-                label="Training streak"
-                description="Consecutive trainings attended. Missing a training resets this streak."
+                label={t('dashboard.trainingStreak')}
+                description={t('dashboard.trainingStreakDescription')}
               />
               <StreakBadge
                 value={attendanceStats?.streaks?.matches ?? 0}
                 icon={<BallIcon />}
-                label="Match streak"
-                description="Consecutive matches attended. Missing a match resets this streak."
+                label={t('dashboard.matchStreak')}
+                description={t('dashboard.matchStreakDescription')}
               />
             </div>
           ) : undefined
@@ -402,7 +417,10 @@ export function DashboardPage() {
             <div className="relative">
               <h2 className="text-2xl font-bold mb-2">Next Event</h2>
               <p className="text-green-100 mb-4">
-                {upcomingEvent.type === 'training' ? 'Training' : 'Match'} {getTimeUntil(upcomingEvent.data.startTime)}
+                {t('dashboard.nextEventLabel', {
+                  type: upcomingEvent.type === 'training' ? t('dashboard.training') : t('dashboard.match'),
+                  timeUntil: getTimeUntil(upcomingEvent.data.startTime, t),
+                })}
               </p>
               <div className="flex items-center gap-6 flex-wrap">
                 <div className="flex items-center gap-2">
@@ -412,7 +430,7 @@ export function DashboardPage() {
                     upcomingEvent.type === 'training'
                       ? getTrainingEndTime(upcomingEvent.data).toISOString()
                       : getMatchEndTime(upcomingEvent.data).toISOString()
-                  )}</span>
+                  , localeCode)}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="text-green-200"><LocationIcon /></div>
@@ -423,12 +441,12 @@ export function DashboardPage() {
                   <span className="font-medium">
                     {upcomingEvent.type === 'training'
                       ? upcomingEvent.data.group.name
-                      : `vs ${(upcomingEvent.data as Match).opponent}`}
+                      : t('dashboard.upcomingMatch', { opponent: (upcomingEvent.data as Match).opponent })}
                   </span>
                 </div>
               </div>
               <button className="mt-6 px-6 py-3 bg-white text-green-600 font-semibold rounded-xl hover:bg-green-50 transition-colors">
-                View Details
+                {t('common.viewDetails')}
               </button>
             </div>
           </Link>
@@ -437,20 +455,20 @@ export function DashboardPage() {
         {/* Stats Grid - Player */}
         {user?.role === UserRole.PLAYER && playerStats && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <StatCard icon={<GoalsIcon />} value={playerStats.goals} label="Goals" color="green" />
-            <StatCard icon={<PlayersIcon />} value={playerStats.assists} label="Assists" color="blue" />
-            <StatCard icon={<MatchesIcon />} value={playerStats.matchesPlayed} label="Matches Played" color="purple" />
-            <StatCard icon={<AttendanceIcon />} value={`${attendanceStats?.rate ?? 0}%`} label="Attendance" color="amber" />
+            <StatCard icon={<GoalsIcon />} value={playerStats.goals} label={t('dashboard.goals')} color="green" />
+            <StatCard icon={<PlayersIcon />} value={playerStats.assists} label={t('dashboard.assists')} color="blue" />
+            <StatCard icon={<MatchesIcon />} value={playerStats.matchesPlayed} label={t('dashboard.matchesPlayed')} color="purple" />
+            <StatCard icon={<AttendanceIcon />} value={`${attendanceStats?.rate ?? 0}%`} label={t('dashboard.attendance')} color="amber" />
           </div>
         )}
 
         {/* Stats Grid - Coach/Admin */}
         {(user?.role === UserRole.COACH || user?.role === UserRole.ADMIN) && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <StatCard icon={<PlayersIcon />} value={childrenWithGroups.length || '-'} label="Players" color="green" />
-            <StatCard icon={<GroupsIcon />} value="-" label="Groups" color="blue" />
-            <StatCard icon={<TrainingsIcon />} value="-" label="Trainings" color="purple" />
-            <StatCard icon={<MatchesIcon />} value="-" label="Matches" color="amber" />
+            <StatCard icon={<PlayersIcon />} value={childrenWithGroups.length || '-'} label={t('dashboard.players')} color="green" />
+            <StatCard icon={<GroupsIcon />} value="-" label={t('dashboard.groups')} color="blue" />
+            <StatCard icon={<TrainingsIcon />} value="-" label={t('nav.trainings')} color="purple" />
+            <StatCard icon={<MatchesIcon />} value="-" label={t('nav.matches')} color="amber" />
           </div>
         )}
 
@@ -470,12 +488,12 @@ export function DashboardPage() {
         {user?.role === UserRole.PLAYER && (
           <Card className="mb-8">
             <CardHeader>
-              <CardTitle>Completed Objectives</CardTitle>
+              <CardTitle>{t('dashboard.completedObjectives')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {myObjectives.filter((objective) => objective.status === 'achieved').length === 0 ? (
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  No completed objectives yet.
+                  {t('dashboard.noCompletedObjectives')}
                 </p>
               ) : (
                 <>
@@ -491,13 +509,13 @@ export function DashboardPage() {
                       <div key={objective.id} className="border border-gray-100 dark:border-gray-800 rounded-xl p-4">
                         <div className="flex items-center justify-between gap-3">
                           <p className="font-medium text-gray-900 dark:text-white">{objective.title}</p>
-                          <Badge variant="success">COMPLETED</Badge>
+                          <Badge variant="success">{t('dashboard.completed')}</Badge>
                         </div>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                          {objectiveMetricLabels[objective.metric]} target: {objective.targetValue.toFixed(2)}
+                          {t(`objectives.metrics.${objective.metric}`)} {t('dashboard.target')}: {objective.targetValue.toFixed(2)}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                          Completed: {objective.achievedAt ? new Date(objective.achievedAt).toLocaleDateString() : '-'}
+                          {t('dashboard.completedOn')}: {objective.achievedAt ? new Date(objective.achievedAt).toLocaleDateString(localeCode) : '-'}
                         </p>
                       </div>
                     ))}
@@ -511,7 +529,7 @@ export function DashboardPage() {
         {user?.role === UserRole.PARENT && childrenStats.length > 0 && (
           <Card className="mb-8">
             <CardHeader>
-              <CardTitle>Children Attendance</CardTitle>
+              <CardTitle>{t('dashboard.childrenAttendance')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -526,7 +544,7 @@ export function DashboardPage() {
                         <p className="text-2xl font-bold text-gray-900 dark:text-white">{child.rate}%</p>
                         {child.total > 0 && (
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {child.present} / {child.total} events
+                            {child.present} / {child.total} {t('dashboard.events')}
                           </p>
                         )}
                       </div>
@@ -542,8 +560,14 @@ export function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Upcoming Events */}
           <Card className="lg:col-span-2">
-            <CardHeader action={<Link to="/calendar" className="text-sm text-green-600 hover:text-green-700 font-medium">View All</Link>}>
-              <CardTitle>Upcoming Events</CardTitle>
+            <CardHeader
+              action={
+                <Link to="/calendar" className="text-sm text-green-600 hover:text-green-700 font-medium">
+                  {t('common.viewAll')}
+                </Link>
+              }
+            >
+              <CardTitle>{t('dashboard.upcomingEvents')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {loading ? (
@@ -581,19 +605,25 @@ export function DashboardPage() {
                       </div>
                       <div className="flex-1">
                         <p className="font-semibold text-gray-900 dark:text-white">
-                          {isTraining ? `Training - ${event.data.group.name}` : `Match vs ${(event.data as Match).opponent}`}
+                          {isTraining
+                            ? t('dashboard.upcomingTraining', { group: event.data.group.name })
+                            : t('dashboard.upcomingMatch', { opponent: (event.data as Match).opponent })}
                         </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{formatEventDate(event.data.startTime)}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{formatEventDate(event.data.startTime, localeCode, t)}</p>
                       </div>
                       <Badge variant={isToday && index === 0 ? 'success' : isTraining ? 'default' : 'info'}>
-                        {isToday && index === 0 ? 'Today' : isTraining ? 'Training' : 'Match'}
+                        {isToday && index === 0
+                          ? t('dashboard.todayLabel')
+                          : isTraining
+                            ? t('dashboard.trainingLabel')
+                            : t('dashboard.matchLabel')}
                       </Badge>
                     </Link>
                   );
                 })
               ) : (
                 <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  No upcoming events
+                  {t('dashboard.noUpcomingEvents')}
                 </div>
               )}
             </CardContent>
@@ -602,7 +632,7 @@ export function DashboardPage() {
           {/* Quick Actions */}
           <Card>
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
+              <CardTitle>{t('dashboard.quickActions')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {quickActions.map((action) => (

@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { getLocaleCode, useI18n } from '../contexts/I18nContext';
 
 export interface CalendarEvent {
   id: string;
@@ -21,11 +22,15 @@ interface CalendarProps {
   selectedDate?: Date | null;
 }
 
-const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
-];
+function getWeekdayLabels(locale: string): string[] {
+  const start = new Date(Date.UTC(2021, 10, 1)); // Monday, Nov 1 2021
+  const formatter = new Intl.DateTimeFormat(locale, { weekday: 'short' });
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(start);
+    date.setUTCDate(start.getUTCDate() + index);
+    return formatter.format(date);
+  });
+}
 
 function getDaysInMonth(year: number, month: number): number {
   return new Date(year, month + 1, 0).getDate();
@@ -36,9 +41,9 @@ function getFirstDayOfMonth(year: number, month: number): number {
   return day === 0 ? 6 : day - 1;
 }
 
-function formatTime(dateStr: string): string {
+function formatTime(dateStr: string, locale: string): string {
   const date = new Date(dateStr);
-  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+  return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
 function isSameDay(date1: Date, date2: Date): boolean {
@@ -60,10 +65,13 @@ export function Calendar({
   onToday,
   selectedDate,
 }: CalendarProps) {
+  const { t, locale } = useI18n();
+  const localeCode = getLocaleCode(locale);
   const today = new Date();
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfMonth(year, month);
   const prevMonthDays = getDaysInMonth(year, month - 1);
+  const weekdayLabels = useMemo(() => getWeekdayLabels(localeCode), [localeCode]);
 
   const eventsByDay = useMemo(() => {
     const map = new Map<number, CalendarEvent[]>();
@@ -126,19 +134,19 @@ export function Calendar({
           <button
             onClick={onPrevMonth}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-            aria-label="Previous month"
+            aria-label={t('calendar.controls.prevMonth')}
           >
             <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
           <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-            {MONTHS[month]} {year}
+            {new Date(year, month, 1).toLocaleDateString(localeCode, { month: 'long', year: 'numeric' })}
           </h3>
           <button
             onClick={onNextMonth}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-            aria-label="Next month"
+            aria-label={t('calendar.controls.nextMonth')}
           >
             <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -149,7 +157,7 @@ export function Calendar({
           onClick={onToday}
           className="px-4 py-2 text-sm font-medium text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition-colors"
         >
-          Today
+          {t('calendar.controls.today')}
         </button>
       </div>
 
@@ -157,7 +165,7 @@ export function Calendar({
       <div className="p-4">
         {/* Week days header */}
         <div className="grid grid-cols-7 gap-1 mb-2">
-          {WEEKDAYS.map((day, index) => (
+          {weekdayLabels.map((day, index) => (
             <div
               key={day}
               className={`text-center text-sm font-semibold py-3 ${
@@ -220,12 +228,12 @@ export function Calendar({
                             : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50'
                         }`}
                       >
-                        {formatTime(event.startTime)} {event.title}
+                        {formatTime(event.startTime, localeCode)} {event.title}
                       </button>
                     ))}
                     {dayEvents.length > 2 && (
                       <div className="text-xs text-gray-500 dark:text-gray-400 pl-1">
-                        +{dayEvents.length - 2} more
+                        {t('calendar.more', { count: dayEvents.length - 2 })}
                       </div>
                     )}
                   </div>

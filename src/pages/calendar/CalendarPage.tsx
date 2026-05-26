@@ -5,6 +5,7 @@ import { trainingsApi, getTrainingEndTime, type Training } from '../../api/train
 import { matchesApi, getMatchEndTime, type Match } from '../../api/matches';
 import { groupsApi, type GroupInfo } from '../../api/groups';
 import { useAuth } from '../../contexts/AuthContext';
+import { getLocaleCode, useI18n } from '../../contexts/I18nContext';
 import { UserRole } from '../../types';
 import { PageHeader, PageContent } from '../../components/layout';
 import { Card, CardContent } from '../../components/ui';
@@ -22,32 +23,26 @@ const MatchIcon = () => (
   </svg>
 );
 
-const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
-];
-
-function formatTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString('en-US', {
+function formatTime(dateStr: string, locale: string): string {
+  return new Date(dateStr).toLocaleTimeString(locale, {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
   });
 }
 
-function formatDateRelative(date: Date): string {
+function formatDateRelative(date: Date, locale: string, t: (key: string) => string): string {
   const today = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
   if (date.toDateString() === today.toDateString()) {
-    return 'Today';
+    return t('common.today');
   }
   if (date.toDateString() === tomorrow.toDateString()) {
-    return 'Tomorrow';
+    return t('common.tomorrow');
   }
-  return WEEKDAYS[date.getDay()];
+  return new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(date);
 }
 
 function isSameDay(date1: Date, date2: Date): boolean {
@@ -61,6 +56,8 @@ function isSameDay(date1: Date, date2: Date): boolean {
 function CalendarPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t, locale } = useI18n();
+  const localeCode = getLocaleCode(locale);
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
   const [groups, setGroups] = useState<GroupInfo[]>([]);
@@ -89,7 +86,7 @@ function CalendarPage() {
       setMatches(matchesData.items);
       setGroups(groupsData);
     } catch {
-      setError('Failed to load data');
+      setError(t('calendar.errors.loadFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -113,7 +110,7 @@ function CalendarPage() {
     const trainingEvents: CalendarEvent[] = filteredTrainings.map((t) => ({
       id: t.id,
       type: 'training' as const,
-      title: t.topic || 'Training',
+      title: t.topic || t('calendar.training'),
       startTime: t.startTime,
       endTime: getTrainingEndTime(t).toISOString(),
       group: t.group.name,
@@ -122,7 +119,9 @@ function CalendarPage() {
     const matchEvents: CalendarEvent[] = filteredMatches.map((m) => ({
       id: m.id,
       type: 'match' as const,
-      title: m.isHome ? `vs ${m.opponent}` : `@ ${m.opponent}`,
+      title: m.isHome
+        ? t('calendar.matchHome', { opponent: m.opponent })
+        : t('calendar.matchAway', { opponent: m.opponent }),
       startTime: m.startTime,
       endTime: getMatchEndTime(m).toISOString(),
       group: m.group.name,
@@ -187,26 +186,26 @@ function CalendarPage() {
 
   const formatSelectedDate = () => {
     if (!selectedDate) return '';
-    return `${MONTHS[selectedDate.getMonth()]} ${selectedDate.getDate()}`;
+    return new Intl.DateTimeFormat(localeCode, { month: 'long', day: 'numeric' }).format(selectedDate);
   };
 
   const getSelectedDayOfWeek = () => {
     if (!selectedDate) return '';
-    return WEEKDAYS[selectedDate.getDay()];
+    return new Intl.DateTimeFormat(localeCode, { weekday: 'long' }).format(selectedDate);
   };
 
   return (
     <>
       <PageHeader
-        title="Calendar"
-        subtitle="Trainings and matches"
+        title={t('calendar.title')}
+        subtitle={t('calendar.subtitle')}
         actions={
           <select
             value={filterGroupId}
             onChange={(e) => setFilterGroupId(e.target.value)}
             className="px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 text-gray-900 dark:text-white"
           >
-            <option value="">All Groups</option>
+            <option value="">{t('calendar.allGroups')}</option>
             {groups.map((group) => (
               <option key={group.id} value={group.id}>
                 {group.name}
@@ -259,7 +258,7 @@ function CalendarPage() {
                 <CardContent>
                   {selectedDayEvents.length === 0 ? (
                     <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                      No events on this day
+                      {t('calendar.noEvents')}
                     </p>
                   ) : (
                     <div className="space-y-3">
@@ -286,7 +285,7 @@ function CalendarPage() {
                                 {event.title}
                               </p>
                               <p className="text-sm text-gray-500 dark:text-gray-400">
-                                {formatTime(event.startTime)} - {formatTime(event.endTime)}
+                              {formatTime(event.startTime, localeCode)} - {formatTime(event.endTime, localeCode)}
                               </p>
                             </div>
                           </div>
@@ -308,11 +307,11 @@ function CalendarPage() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-4 h-4 bg-green-500 rounded"></div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Trainings</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{t('calendar.legend.trainings')}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-4 h-4 bg-blue-500 rounded"></div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Matches</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{t('calendar.legend.matches')}</span>
                   </div>
                 </div>
               </Card>
@@ -321,13 +320,13 @@ function CalendarPage() {
               <Card>
                 <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Upcoming Events
+                    {t('calendar.upcoming')}
                   </h3>
                 </div>
                 <div className="p-4 space-y-3">
                   {upcomingEvents.length === 0 ? (
                     <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                      No upcoming events
+                      {t('calendar.noUpcoming')}
                     </p>
                   ) : (
                     upcomingEvents.map((event) => (
@@ -348,7 +347,7 @@ function CalendarPage() {
                             {event.title}
                           </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {formatDateRelative(new Date(event.startTime))}, {formatTime(event.startTime)}
+                            {formatDateRelative(new Date(event.startTime), localeCode, t)}, {formatTime(event.startTime, localeCode)}
                           </p>
                         </div>
                       </button>

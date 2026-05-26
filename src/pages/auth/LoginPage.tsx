@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useI18n } from '../../contexts/I18nContext';
 
 const EmailIcon = () => (
   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -41,6 +42,7 @@ export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const { login } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -55,7 +57,7 @@ export function LoginPage() {
       await login(email, password);
       navigate(from, { replace: true });
     } catch {
-      setError('Invalid email or password');
+      setError(t('auth.invalidCredentials'));
     } finally {
       setIsLoading(false);
     }
@@ -81,14 +83,14 @@ export function LoginPage() {
               className="w-full h-full object-cover"
             />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">SquadKeeper</h1>
-          <p className="text-green-100">Academy Management System</p>
+          <h1 className="text-3xl font-bold text-white mb-2">{t('common.appName')}</h1>
+          <p className="text-green-100">{t('auth.heroSubtitle')}</p>
         </div>
 
         {/* Form Card */}
         <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Sign In</h2>
-          <p className="text-gray-500 mb-6">Enter your credentials to login</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('auth.title')}</h2>
+          <p className="text-gray-500 mb-6">{t('auth.subtitle')}</p>
 
           {error && (
             <div className="mb-5 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
@@ -99,13 +101,13 @@ export function LoginPage() {
           <form onSubmit={handleSubmit}>
             {/* Email */}
             <div className="mb-5">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('auth.email')}</label>
               <div className="relative">
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@squadkeeper.com"
+                  placeholder={t('auth.placeholderEmail')}
                   required
                   className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all placeholder:text-gray-400"
                 />
@@ -117,13 +119,13 @@ export function LoginPage() {
 
             {/* Password */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('auth.password')}</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder={t('auth.placeholderPassword')}
                   required
                   minLength={4}
                   className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all placeholder:text-gray-400"
@@ -135,6 +137,7 @@ export function LoginPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
                 >
                   {showPassword ? <EyeOffIcon /> : <EyeIcon />}
                 </button>
@@ -153,11 +156,11 @@ export function LoginPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  <span>Signing in...</span>
+                  <span>{t('auth.signingIn')}</span>
                 </>
               ) : (
                 <>
-                  <span>Sign In</span>
+                  <span>{t('auth.signIn')}</span>
                   <ArrowIcon />
                 </>
               )}
@@ -168,7 +171,7 @@ export function LoginPage() {
 
         {/* Footer */}
         <p className="text-center text-green-100 text-sm mt-6">
-          &copy; {new Date().getFullYear()} SquadKeeper. All rights reserved.
+          &copy; {new Date().getFullYear()} {t('common.appName')}. {t('auth.footer')}
         </p>
       </div>
     </div>

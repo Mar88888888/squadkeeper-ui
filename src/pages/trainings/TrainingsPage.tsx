@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import DatePicker from 'react-datepicker';
+import DatePicker, { registerLocale } from 'react-datepicker';
+import { enUS, uk as ukLocale } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import { PageHeader, PageContent } from '../../components/layout';
 import {
@@ -20,15 +21,11 @@ import {
 } from '../../api/trainings';
 import { groupsApi, type GroupInfo } from '../../api/groups';
 import { useAuth } from '../../contexts/AuthContext';
+import { getLocaleCode, useI18n } from '../../contexts/I18nContext';
 import { UserRole } from '../../types';
 
-const TIME_FILTER_OPTIONS = [
-  { id: 'all', label: 'All' },
-  { id: 'upcoming', label: 'Upcoming' },
-  { id: 'past', label: 'Past' },
-  { id: 'this_week', label: 'This Week' },
-  { id: 'this_month', label: 'This Month' },
-];
+registerLocale('en', enUS);
+registerLocale('uk', ukLocale);
 
 const PlusIcon = () => (
   <svg
@@ -116,8 +113,8 @@ const SearchIcon = () => (
   </svg>
 );
 
-function formatTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString('en-US', {
+function formatTime(dateStr: string, locale: string): string {
+  return new Date(dateStr).toLocaleTimeString(locale, {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
@@ -135,6 +132,8 @@ function formatDateForApi(date: Date): string {
 
 function groupTrainingsByDate(
   trainings: Training[],
+  locale: string,
+  t: (key: string) => string,
 ): Record<string, Training[]> {
   const grouped: Record<string, Training[]> = {};
   const now = new Date();
@@ -149,11 +148,11 @@ function groupTrainingsByDate(
     let key: string;
 
     if (dateStr === today) {
-      key = 'Today';
+      key = t('common.today');
     } else if (dateStr === tomorrowStr) {
-      key = 'Tomorrow';
+      key = t('common.tomorrow');
     } else {
-      key = date.toLocaleDateString('en-US', {
+      key = date.toLocaleDateString(locale, {
         weekday: 'long',
         month: 'short',
         day: 'numeric',
@@ -169,6 +168,8 @@ function groupTrainingsByDate(
 
 export function TrainingsPage() {
   const { user } = useAuth();
+  const { t, locale } = useI18n();
+  const localeCode = getLocaleCode(locale);
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [groups, setGroups] = useState<GroupInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -220,7 +221,7 @@ export function TrainingsPage() {
       setTotalTrainings(trainingsData.total);
       setGroups(groupsData);
     } catch {
-      setError('Failed to load data');
+      setError(t('trainings.errors.loadFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -230,7 +231,7 @@ export function TrainingsPage() {
     if (user) loadData();
   }, [user, loadData]);
 
-  const groupedTrainings = groupTrainingsByDate(trainings);
+  const groupedTrainings = groupTrainingsByDate(trainings, localeCode, t);
   const totalPages = Math.ceil(totalTrainings / itemsPerPage);
 
   useEffect(() => {
@@ -255,15 +256,15 @@ export function TrainingsPage() {
 
   const handleCreate = async () => {
     if (!formData.groupId) {
-      setError('Please select a group');
+      setError(t('trainings.errors.selectGroup'));
       return;
     }
     if (!formData.startTime) {
-      setError('Please set start time');
+      setError(t('trainings.errors.selectStartTime'));
       return;
     }
     if (!formData.location.trim()) {
-      setError('Please enter a location');
+      setError(t('trainings.errors.enterLocation'));
       return;
     }
 
@@ -281,7 +282,7 @@ export function TrainingsPage() {
       setIsModalOpen(false);
       loadData();
     } catch {
-      setError('Failed to create training');
+      setError(t('trainings.errors.createFailed'));
     }
   };
 
@@ -290,12 +291,12 @@ export function TrainingsPage() {
   return (
     <>
       <PageHeader
-        title="Trainings"
-        subtitle="Manage training sessions"
+        title={t('trainings.title')}
+        subtitle={t('trainings.subtitle')}
         actions={
           canCreate && (
             <Button onClick={openCreateModal} icon={<PlusIcon />}>
-              New Training
+              {t('trainings.newTraining')}
             </Button>
           )
         }
@@ -314,7 +315,7 @@ export function TrainingsPage() {
                       setSearchQuery(e.target.value);
                       setCurrentPage(1);
                     }}
-                    placeholder="Search trainings..."
+                    placeholder={t('trainings.searchPlaceholder')}
                     className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:text-white"
                   />
                   <div className="absolute left-3 top-1/2 -translate-y-1/2">
@@ -330,7 +331,7 @@ export function TrainingsPage() {
                 }}
                 className="px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:text-white"
               >
-                <option value="">All groups</option>
+                <option value="">{t('trainings.allGroups')}</option>
                 {groups.map((group) => (
                   <option key={group.id} value={group.id}>
                     {group.name}
@@ -348,10 +349,11 @@ export function TrainingsPage() {
                 startDate={dateFrom}
                 endDate={dateTo}
                 maxDate={dateTo || undefined}
-                dateFormat="MMM d, yyyy"
-                placeholderText="From date"
+                dateFormat={locale === 'uk' ? 'dd MMM yyyy' : 'MMM d, yyyy'}
+                placeholderText={t('trainings.fromDate')}
                 className="px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 w-36 dark:text-white"
                 isClearable
+                locale={locale}
               />
               <DatePicker
                 selected={dateTo}
@@ -364,10 +366,11 @@ export function TrainingsPage() {
                 startDate={dateFrom}
                 endDate={dateTo}
                 minDate={dateFrom || undefined}
-                dateFormat="MMM d, yyyy"
-                placeholderText="To date"
+                dateFormat={locale === 'uk' ? 'dd MMM yyyy' : 'MMM d, yyyy'}
+                placeholderText={t('trainings.toDate')}
                 className="px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 w-36 dark:text-white"
                 isClearable
+                locale={locale}
               />
             </div>
           </div>
@@ -376,7 +379,13 @@ export function TrainingsPage() {
         {/* Time Filter Tabs */}
         <div className="flex items-center justify-between mb-6">
           <Tabs
-            tabs={TIME_FILTER_OPTIONS}
+            tabs={[
+              { id: 'all', label: t('trainings.filters.all') },
+              { id: 'upcoming', label: t('trainings.filters.upcoming') },
+              { id: 'past', label: t('trainings.filters.past') },
+              { id: 'this_week', label: t('trainings.filters.thisWeek') },
+              { id: 'this_month', label: t('trainings.filters.thisMonth') },
+            ]}
             activeTab={timeFilter}
             onChange={(id) => {
               setTimeFilter(id as TrainingTimeFilter);
@@ -386,11 +395,11 @@ export function TrainingsPage() {
             }}
           />
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Found:{' '}
+            {t('trainings.found')}{' '}
             <span className="font-semibold text-gray-900 dark:text-white">
               {totalTrainings}
             </span>{' '}
-            trainings
+            {t('trainings.trainingsLabel')}
           </p>
         </div>
 
@@ -410,17 +419,17 @@ export function TrainingsPage() {
           <EmptyState
             title={
               totalTrainings === 0
-                ? 'No trainings scheduled'
-                : 'No trainings found'
+                ? t('trainings.empty.noScheduled')
+                : t('trainings.empty.noFound')
             }
             description={
               totalTrainings === 0
-                ? 'Start by scheduling your first training session.'
-                : 'No trainings match your current filters.'
+                ? t('trainings.empty.scheduleFirst')
+                : t('trainings.empty.noMatches')
             }
             action={
               canCreate && totalTrainings === 0 ? (
-                <Button onClick={openCreateModal}>Schedule Training</Button>
+                <Button onClick={openCreateModal}>{t('trainings.empty.scheduleAction')}</Button>
               ) : undefined
             }
           />
@@ -473,21 +482,22 @@ export function TrainingsPage() {
                                         : 'text-gray-500 dark:text-gray-400'
                                     }`}
                                   >
-                                    Training Session
+                                    {t('trainings.sessionTitle')}
                                   </h4>
                                   {training.topic && (
                                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                                      Topic: {training.topic}
+                                      {t('trainings.topicLabel')}: {training.topic}
                                     </p>
                                   )}
                                   <div className="flex items-center gap-4 mt-1">
                                     <span className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
                                       <ClockIcon />
-                                      {formatTime(training.startTime)} -{' '}
+                                      {formatTime(training.startTime, localeCode)} -{' '}
                                       {formatTime(
                                         getTrainingEndTime(
                                           training,
                                         ).toISOString(),
+                                        localeCode,
                                       )}
                                     </span>
                                     <span className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
@@ -509,8 +519,8 @@ export function TrainingsPage() {
                                   }
                                 >
                                   {isUpcoming(training.startTime)
-                                    ? 'Planned'
-                                    : 'Completed'}
+                                    ? t('trainings.status.planned')
+                                    : t('trainings.status.completed')}
                                 </Badge>
                               </div>
                             </div>
@@ -527,8 +537,11 @@ export function TrainingsPage() {
               <Card>
                 <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Showing {(currentPage - 1) * itemsPerPage + 1}-
-                    {Math.min(currentPage * itemsPerPage, totalTrainings)} of {totalTrainings} trainings
+                    {t('trainings.pagination.showing', {
+                      start: (currentPage - 1) * itemsPerPage + 1,
+                      end: Math.min(currentPage * itemsPerPage, totalTrainings),
+                      total: totalTrainings,
+                    })}
                   </p>
                   <div className="flex items-center gap-2">
                     <button
@@ -536,7 +549,7 @@ export function TrainingsPage() {
                       disabled={currentPage === 1}
                       className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
                     >
-                      Previous
+                      {t('trainings.pagination.previous')}
                     </button>
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                       let pageNum: number;
@@ -568,7 +581,7 @@ export function TrainingsPage() {
                       disabled={currentPage === totalPages}
                       className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
                     >
-                      Next
+                      {t('trainings.pagination.next')}
                     </button>
                   </div>
                 </div>
@@ -582,21 +595,21 @@ export function TrainingsPage() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="New Training"
+        title={t('trainings.newTraining')}
         size="lg"
         footer={
           <>
             <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
-              Cancel
+              {t('common.cancel')}
             </Button>
-            <Button onClick={handleCreate}>Create Training</Button>
+            <Button onClick={handleCreate}>{t('trainings.createTraining')}</Button>
           </>
         }
       >
         <div className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Topic (optional)
+              {t('trainings.form.topicOptional')}
             </label>
             <input
               type="text"
@@ -604,14 +617,14 @@ export function TrainingsPage() {
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, topic: e.target.value }))
               }
-              placeholder="e.g., Ball control & passing drills"
+              placeholder={t('trainings.form.topicPlaceholder')}
               className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Group *
+              {t('trainings.form.group')}
             </label>
             <select
               value={formData.groupId}
@@ -620,7 +633,7 @@ export function TrainingsPage() {
               }
               className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
             >
-              <option value="">Select group</option>
+              <option value="">{t('trainings.form.selectGroup')}</option>
               {groups.map((group) => (
                 <option key={group.id} value={group.id}>
                   {group.name}
@@ -632,7 +645,7 @@ export function TrainingsPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Date & Time *
+                {t('trainings.form.dateTime')}
               </label>
               <input
                 type="datetime-local"
@@ -649,7 +662,7 @@ export function TrainingsPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Duration *
+                {t('trainings.form.duration')}
               </label>
               <select
                 value={formData.duration}
@@ -661,18 +674,18 @@ export function TrainingsPage() {
                 }
                 className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
               >
-                <option value={60}>1 hour</option>
-                <option value={90}>1.5 hours</option>
-                <option value={120}>2 hours</option>
-                <option value={150}>2.5 hours</option>
-                <option value={180}>3 hours</option>
+                <option value={60}>{t('trainings.form.durationOptions.oneHour')}</option>
+                <option value={90}>{t('trainings.form.durationOptions.oneHalfHours')}</option>
+                <option value={120}>{t('trainings.form.durationOptions.twoHours')}</option>
+                <option value={150}>{t('trainings.form.durationOptions.twoHalfHours')}</option>
+                <option value={180}>{t('trainings.form.durationOptions.threeHours')}</option>
               </select>
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Location *
+              {t('trainings.form.location')}
             </label>
             <select
               value={formData.location}
@@ -681,11 +694,11 @@ export function TrainingsPage() {
               }
               className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
             >
-              <option value="">Select location</option>
-              <option value="Main Field">Main Field</option>
-              <option value="Training Field 2">Training Field 2</option>
-              <option value="Gym">Gym</option>
-              <option value="Indoor Arena">Indoor Arena</option>
+              <option value="">{t('trainings.form.selectLocation')}</option>
+              <option value="Main Field">{t('trainings.locations.mainField')}</option>
+              <option value="Training Field 2">{t('trainings.locations.trainingField2')}</option>
+              <option value="Gym">{t('trainings.locations.gym')}</option>
+              <option value="Indoor Arena">{t('trainings.locations.indoorArena')}</option>
             </select>
           </div>
 

@@ -7,9 +7,12 @@ import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { PageContent } from '../../components/layout/PageContent';
 import { Card, Modal, Button, EmptyState } from '../../components/ui';
+import { getLocaleCode, useI18n } from '../../contexts/I18nContext';
 
 export function SquadListPage() {
   const navigate = useNavigate();
+  const { t, locale } = useI18n();
+  const localeCode = getLocaleCode(locale);
 
   const [groups, setGroups] = useState<GroupInfo[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<string>('');
@@ -36,7 +39,7 @@ export function SquadListPage() {
           setSelectedGroupId(data[0].id);
         }
       } catch {
-        setError('Failed to load groups');
+        setError(t('squads.errors.loadGroups'));
       } finally {
         setIsLoading(false);
       }
@@ -56,7 +59,7 @@ export function SquadListPage() {
         const data = await squadsApi.getByGroup(selectedGroupId);
         setSquads(data);
       } catch {
-        setError('Failed to load squads');
+        setError(t('squads.errors.loadSquads'));
       } finally {
         setIsLoading(false);
       }
@@ -70,13 +73,13 @@ export function SquadListPage() {
       setSquads((prev) => prev.filter((s) => s.id !== deleteDialog.squadId));
       setDeleteDialog({ isOpen: false, squadId: '', squadName: '' });
     } catch {
-      setError('Failed to delete squad');
+      setError(t('squads.errors.deleteFailed'));
     }
   };
 
   const handleDuplicate = async () => {
     if (!duplicateDialog.newName.trim()) {
-      setError('Please enter a name for the duplicate');
+      setError(t('squads.errors.duplicateName'));
       return;
     }
     try {
@@ -87,12 +90,12 @@ export function SquadListPage() {
       setSquads((prev) => [newSquad, ...prev]);
       setDuplicateDialog({ isOpen: false, squadId: '', newName: '' });
     } catch {
-      setError('Failed to duplicate squad');
+      setError(t('squads.errors.duplicateFailed'));
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString(localeCode, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -114,14 +117,14 @@ export function SquadListPage() {
   return (
     <>
       <PageHeader
-        title="Squads"
-        subtitle="Team formations and lineups"
+        title={t('squads.title')}
+        subtitle={t('squads.subtitle')}
         actions={
           <Button onClick={() => navigate('/squads/new')}>
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Create Squad
+            {t('squads.create')}
           </Button>
         }
       />
@@ -130,17 +133,17 @@ export function SquadListPage() {
         {/* Group Selector */}
         <Card className="p-6 mb-6">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Select Group
+            {t('squads.selectGroup')}
           </label>
           <select
             value={selectedGroupId}
             onChange={(e) => setSelectedGroupId(e.target.value)}
             className="w-full md:w-64 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 dark:bg-gray-800 dark:text-white"
           >
-            <option value="">Select a group...</option>
+            <option value="">{t('squads.selectGroupPlaceholder')}</option>
             {groups.map((group) => (
               <option key={group.id} value={group.id}>
-                {group.name} ({group.players.length} players)
+                {t('squads.groupOption', { name: group.name, count: group.players.length })}
               </option>
             ))}
           </select>
@@ -160,19 +163,19 @@ export function SquadListPage() {
           <Card>
             <EmptyState
               icon={<SelectGroupIcon />}
-              title="Select a group"
-              description="Choose a group from the dropdown above to view and manage squads."
+              title={t('squads.empty.selectGroupTitle')}
+              description={t('squads.empty.selectGroupDescription')}
             />
           </Card>
         ) : squads.length === 0 ? (
           <Card>
             <EmptyState
               icon={<NoSquadsIcon />}
-              title="No squads created"
-              description="Create your first squad to start planning your team formations."
+              title={t('squads.empty.noSquadsTitle')}
+              description={t('squads.empty.noSquadsDescription')}
               action={
                 <Button onClick={() => navigate('/squads/new')}>
-                  Create Squad
+                  {t('squads.create')}
                 </Button>
               }
             />
@@ -199,10 +202,10 @@ export function SquadListPage() {
 
                   <div className="p-5">
                     <div className="flex items-center justify-between text-sm mb-3">
-                      <span className="text-gray-500 dark:text-gray-400">Players</span>
+                      <span className="text-gray-500 dark:text-gray-400">{t('squads.players')}</span>
                       <span className="font-medium text-gray-900 dark:text-white">
-                        {filledCount}/{starterCount} starters
-                        {benchCount > 0 && ` + ${benchCount} subs`}
+                        {t('squads.startersCount', { filled: filledCount, total: starterCount })}
+                        {benchCount > 0 && ` + ${t('squads.subsCount', { count: benchCount })}`}
                       </span>
                     </div>
 
@@ -220,7 +223,7 @@ export function SquadListPage() {
                         ))}
                       {squad.positions.filter((p) => p.player).length > 6 && (
                         <span className="px-2 py-0.5 text-gray-400 dark:text-gray-500 text-xs">
-                          +{squad.positions.filter((p) => p.player).length - 6} more
+                          {t('squads.morePlayers', { count: squad.positions.filter((p) => p.player).length - 6 })}
                         </span>
                       )}
                     </div>
@@ -228,10 +231,10 @@ export function SquadListPage() {
                     <div className="text-xs text-gray-400 dark:text-gray-500 mb-4">
                       {squad.createdBy && (
                         <span>
-                          By {squad.createdBy.firstName} {squad.createdBy.lastName} •{' '}
+                          {t('squads.createdBy', { name: `${squad.createdBy.firstName} ${squad.createdBy.lastName}` })} •{' '}
                         </span>
                       )}
-                      Updated {formatDate(squad.updatedAt)}
+                      {t('squads.updatedAt', { date: formatDate(squad.updatedAt) })}
                     </div>
 
                     <div className="flex gap-2">
@@ -239,18 +242,18 @@ export function SquadListPage() {
                         onClick={() => navigate(`/squads/${squad.id}`)}
                         className="flex-1 px-4 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-medium rounded-xl hover:from-green-600 hover:to-emerald-700 shadow-md shadow-green-500/25 transition-all"
                       >
-                        Edit
+                        {t('common.edit')}
                       </button>
                       <button
                         onClick={() =>
                           setDuplicateDialog({
                             isOpen: true,
                             squadId: squad.id,
-                            newName: `${squad.name} (Copy)`,
+                            newName: t('squads.copyName', { name: squad.name }),
                           })
                         }
                         className="px-3 py-2.5 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                        title="Duplicate"
+                        title={t('squads.duplicate')}
                       >
                         <svg
                           className="w-5 h-5"
@@ -275,7 +278,7 @@ export function SquadListPage() {
                           })
                         }
                         className="px-3 py-2.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
-                        title="Delete"
+                        title={t('common.delete')}
                       >
                         <svg
                           className="w-5 h-5"
@@ -303,10 +306,10 @@ export function SquadListPage() {
       {/* Delete Dialog */}
       <ConfirmDialog
         isOpen={deleteDialog.isOpen}
-        title="Delete Squad"
-        message={`Are you sure you want to delete "${deleteDialog.squadName}"? This action cannot be undone.`}
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
+        title={t('squads.delete.title')}
+        message={t('squads.delete.message', { name: deleteDialog.squadName })}
+        confirmLabel={t('common.delete')}
+        cancelLabel={t('common.cancel')}
         variant="danger"
         onConfirm={handleDelete}
         onCancel={() => setDeleteDialog({ isOpen: false, squadId: '', squadName: '' })}
@@ -316,13 +319,13 @@ export function SquadListPage() {
       <Modal
         isOpen={duplicateDialog.isOpen}
         onClose={() => setDuplicateDialog({ isOpen: false, squadId: '', newName: '' })}
-        title="Duplicate Squad"
+        title={t('squads.duplicate')}
         size="sm"
       >
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              New Squad Name
+              {t('squads.duplicateLabel')}
             </label>
             <input
               type="text"
@@ -340,10 +343,10 @@ export function SquadListPage() {
               }
               className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <Button onClick={handleDuplicate} className="flex-1">
-              Duplicate
+              {t('squads.duplicate')}
             </Button>
           </div>
         </div>

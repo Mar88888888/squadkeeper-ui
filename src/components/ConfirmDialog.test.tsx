@@ -1,5 +1,9 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ConfirmDialog } from './ConfirmDialog';
+import { I18nProvider } from '../contexts/I18nContext';
+
+const renderWithI18n = (ui: React.ReactElement) =>
+  render(<I18nProvider>{ui}</I18nProvider>);
 
 describe('ConfirmDialog', () => {
   const defaultProps = {
@@ -19,27 +23,27 @@ describe('ConfirmDialog', () => {
   });
 
   it('should render dialog when isOpen is true', () => {
-    render(<ConfirmDialog {...defaultProps} />);
+    renderWithI18n(<ConfirmDialog {...defaultProps} />);
 
     expect(screen.getByText('Confirm Action')).toBeInTheDocument();
     expect(screen.getByText('Are you sure you want to proceed?')).toBeInTheDocument();
   });
 
   it('should not render when isOpen is false', () => {
-    render(<ConfirmDialog {...defaultProps} isOpen={false} />);
+    renderWithI18n(<ConfirmDialog {...defaultProps} isOpen={false} />);
 
     expect(screen.queryByText('Confirm Action')).not.toBeInTheDocument();
   });
 
   it('should render default button labels', () => {
-    render(<ConfirmDialog {...defaultProps} />);
+    renderWithI18n(<ConfirmDialog {...defaultProps} />);
 
     expect(screen.getByText('Confirm')).toBeInTheDocument();
     expect(screen.getByText('Cancel')).toBeInTheDocument();
   });
 
   it('should render custom button labels', () => {
-    render(
+    renderWithI18n(
       <ConfirmDialog
         {...defaultProps}
         confirmLabel="Yes, Delete"
@@ -52,7 +56,7 @@ describe('ConfirmDialog', () => {
   });
 
   it('should call onConfirm when confirm button is clicked', () => {
-    render(<ConfirmDialog {...defaultProps} />);
+    renderWithI18n(<ConfirmDialog {...defaultProps} />);
 
     fireEvent.click(screen.getByText('Confirm'));
 
@@ -60,7 +64,7 @@ describe('ConfirmDialog', () => {
   });
 
   it('should call onCancel when cancel button is clicked', () => {
-    render(<ConfirmDialog {...defaultProps} />);
+    renderWithI18n(<ConfirmDialog {...defaultProps} />);
 
     fireEvent.click(screen.getByText('Cancel'));
 
@@ -68,7 +72,7 @@ describe('ConfirmDialog', () => {
   });
 
   it('should call onCancel when backdrop is clicked', () => {
-    render(<ConfirmDialog {...defaultProps} />);
+    renderWithI18n(<ConfirmDialog {...defaultProps} />);
 
     const backdrop = document.querySelector('.bg-black\\/50');
     if (backdrop) {
@@ -83,7 +87,7 @@ describe('ConfirmDialog', () => {
   });
 
   it('should call onCancel when Escape key is pressed', () => {
-    render(<ConfirmDialog {...defaultProps} />);
+    renderWithI18n(<ConfirmDialog {...defaultProps} />);
 
     fireEvent.keyDown(document, { key: 'Escape' });
 
@@ -91,7 +95,7 @@ describe('ConfirmDialog', () => {
   });
 
   it('should not call onCancel on Escape when dialog is closed', () => {
-    render(<ConfirmDialog {...defaultProps} isOpen={false} />);
+    renderWithI18n(<ConfirmDialog {...defaultProps} isOpen={false} />);
 
     fireEvent.keyDown(document, { key: 'Escape' });
 
@@ -100,21 +104,21 @@ describe('ConfirmDialog', () => {
 
   describe('variants', () => {
     it('should render warning variant by default', () => {
-      render(<ConfirmDialog {...defaultProps} />);
+      renderWithI18n(<ConfirmDialog {...defaultProps} />);
 
       const iconContainer = document.querySelector('.bg-amber-100');
       expect(iconContainer).toBeTruthy();
     });
 
     it('should render danger variant', () => {
-      render(<ConfirmDialog {...defaultProps} variant="danger" />);
+      renderWithI18n(<ConfirmDialog {...defaultProps} variant="danger" />);
 
       const iconContainer = document.querySelector('.bg-red-100');
       expect(iconContainer).toBeTruthy();
     });
 
     it('should render info variant', () => {
-      render(<ConfirmDialog {...defaultProps} variant="info" />);
+      renderWithI18n(<ConfirmDialog {...defaultProps} variant="info" />);
 
       const iconContainer = document.querySelector('.bg-blue-100');
       expect(iconContainer).toBeTruthy();
@@ -122,21 +126,25 @@ describe('ConfirmDialog', () => {
   });
 
   it('should set body overflow to hidden when open', () => {
-    render(<ConfirmDialog {...defaultProps} />);
+    renderWithI18n(<ConfirmDialog {...defaultProps} />);
 
     expect(document.body.style.overflow).toBe('hidden');
   });
 
   it('should reset body overflow when closed', () => {
-    const { rerender } = render(<ConfirmDialog {...defaultProps} />);
+    const { rerender } = renderWithI18n(<ConfirmDialog {...defaultProps} />);
     expect(document.body.style.overflow).toBe('hidden');
 
-    rerender(<ConfirmDialog {...defaultProps} isOpen={false} />);
+    rerender(
+      <I18nProvider>
+        <ConfirmDialog {...defaultProps} isOpen={false} />
+      </I18nProvider>,
+    );
     expect(document.body.style.overflow).toBe('');
   });
 
   it('should handle multiline messages', () => {
-    render(
+    renderWithI18n(
       <ConfirmDialog
         {...defaultProps}
         message={'Line 1\nLine 2\nLine 3'}
@@ -147,7 +155,7 @@ describe('ConfirmDialog', () => {
   });
 
   it('should stop propagation when clicking dialog content', () => {
-    render(<ConfirmDialog {...defaultProps} />);
+    renderWithI18n(<ConfirmDialog {...defaultProps} />);
 
     const dialogContent = screen.getByText('Confirm Action').closest('.bg-white');
     if (dialogContent) {

@@ -1,4 +1,5 @@
 import { useTheme } from '../contexts/ThemeContext';
+import { useI18n } from '../contexts/I18nContext';
 
 interface ThemeToggleProps {
   className?: string;
@@ -6,12 +7,15 @@ interface ThemeToggleProps {
 
 export function ThemeToggle({ className = '' }: ThemeToggleProps) {
   const { resolvedTheme, toggleTheme } = useTheme();
+  const { t } = useI18n();
 
   return (
     <button
       onClick={toggleTheme}
       className={`relative inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors ${className}`}
-      aria-label={`Switch to ${resolvedTheme === 'light' ? 'dark' : 'light'} mode`}
+      aria-label={t('theme.switchTo', {
+        mode: resolvedTheme === 'light' ? t('theme.dark') : t('theme.light'),
+      })}
     >
       {/* Sun icon */}
       <svg

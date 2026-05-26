@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useI18n } from '../../contexts/I18nContext';
 import { contactsApi, type ContactInfo, type ContactsResponse } from '../../api/contacts';
 import { UserRole } from '../../types';
 import { PageHeader } from '../../components/layout/PageHeader';
@@ -8,6 +9,7 @@ import { Card, Avatar, Badge, EmptyState } from '../../components/ui';
 
 export function ContactsPage() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [contacts, setContacts] = useState<ContactsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +25,7 @@ export function ContactsPage() {
       const data = await contactsApi.getContacts();
       setContacts(data);
     } catch {
-      setError('Failed to load contacts');
+      setError(t('contacts.errors.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -49,8 +51,8 @@ export function ContactsPage() {
   return (
     <>
       <PageHeader
-        title="Contacts"
-        subtitle="Staff and administration directory"
+        title={t('contacts.title')}
+        subtitle={t('contacts.subtitle')}
       />
 
       <PageContent>
@@ -76,7 +78,7 @@ export function ContactsPage() {
                       onChange={(e) => setShowOnlyMyCoaches(e.target.checked)}
                       className="w-4 h-4 text-green-600 border-gray-300 dark:border-gray-600 rounded focus:ring-green-500 dark:bg-gray-800"
                     />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">Only my coaches</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{t('contacts.onlyMyCoaches')}</span>
                   </label>
                 )}
               </div>
@@ -84,8 +86,12 @@ export function ContactsPage() {
               {filteredCoaches.length === 0 ? (
                 <EmptyState
                   icon={<NoContactsIcon />}
-                  title="No coaches found"
-                  description={showOnlyMyCoaches ? "You don't have any assigned coaches. Try turning off the filter." : "No coaches are available at the moment."}
+                  title={t('contacts.empty.coachesTitle')}
+                  description={
+                    showOnlyMyCoaches
+                      ? t('contacts.empty.onlyMyCoaches')
+                      : t('contacts.empty.noCoaches')
+                  }
                 />
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -104,7 +110,7 @@ export function ContactsPage() {
             {contacts && contacts.admins.length > 0 && (
               <Card className="p-6">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-                  Administration
+                  {t('contacts.administration')}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {contacts.admins.map((admin) => (
@@ -128,6 +134,7 @@ function ContactCard({
   isMyCoach?: boolean;
 }) {
   const [copiedField, setCopiedField] = useState<'email' | 'phone' | null>(null);
+  const { t } = useI18n();
 
   const copyToClipboard = useCallback(async (text: string, field: 'email' | 'phone') => {
     try {
@@ -162,19 +169,19 @@ function ContactCard({
             </h3>
             {isMyCoach && (
               <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                My coach
+                {t('contacts.badge.myCoach')}
               </Badge>
             )}
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            {contact.role === 'COACH' ? 'Coach' : 'Administrator'}
+            {contact.role === 'COACH' ? t('roles.coach') : t('roles.admin')}
           </p>
 
           <div className="mt-3 space-y-1">
             <button
               onClick={() => copyToClipboard(contact.email, 'email')}
               className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 truncate w-full text-left group cursor-pointer"
-              title="Click to copy"
+              title={t('contacts.copy')}
             >
               <svg
                 className="w-4 h-4 flex-shrink-0"
@@ -191,7 +198,7 @@ function ContactCard({
               </svg>
               <span className="truncate">{contact.email}</span>
               {copiedField === 'email' ? (
-                <span className="text-xs text-green-600 dark:text-green-400 flex-shrink-0">Copied!</span>
+                <span className="text-xs text-green-600 dark:text-green-400 flex-shrink-0">{t('contacts.copied')}</span>
               ) : (
                 <svg
                   className="w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-50"
@@ -212,7 +219,7 @@ function ContactCard({
               <button
                 onClick={() => copyToClipboard(contact.phoneNumber!, 'phone')}
                 className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 w-full text-left group cursor-pointer"
-                title="Click to copy"
+                title={t('contacts.copy')}
               >
                 <svg
                   className="w-4 h-4 flex-shrink-0"
@@ -229,7 +236,7 @@ function ContactCard({
                 </svg>
                 <span>{contact.phoneNumber}</span>
                 {copiedField === 'phone' ? (
-                  <span className="text-xs text-green-600 dark:text-green-400 flex-shrink-0">Copied!</span>
+                  <span className="text-xs text-green-600 dark:text-green-400 flex-shrink-0">{t('contacts.copied')}</span>
                 ) : (
                   <svg
                     className="w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-50"
